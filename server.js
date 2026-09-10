@@ -137,6 +137,158 @@ const supabase =
 
 /*
 ========================================
+EARNING PLANS CATALOG
+========================================
+
+This is the SERVER-SIDE source of truth
+for plan pricing.
+
+The client (plans.html) only sends the
+plan NAME. We never trust amounts sent
+from the browser — they are looked up
+here so a tampered request can't
+activate a plan for the wrong price.
+
+Keep this in sync with plans.html.
+========================================
+*/
+
+const EARNING_PLANS = {
+
+    Starter: {
+        amount: 3000,
+        daily: 200,
+        total: 6000,
+        durationDays: 30
+    },
+
+    Basic: {
+        amount: 5000,
+        daily: 350,
+        total: 10500,
+        durationDays: 30
+    },
+
+    Growth: {
+        amount: 10000,
+        daily: 750,
+        total: 22500,
+        durationDays: 30
+    },
+
+    Pro: {
+        amount: 25000,
+        daily: 2000,
+        total: 60000,
+        durationDays: 30
+    },
+
+    Elite: {
+        amount: 50000,
+        daily: 4500,
+        total: 135000,
+        durationDays: 30
+    },
+
+    Premium: {
+        amount: 100000,
+        daily: 10000,
+        total: 300000,
+        durationDays: 30
+    },
+
+    VIP: {
+        amount: 250000,
+        daily: 27500,
+        total: 825000,
+        durationDays: 30
+    },
+
+    Ultimate: {
+        amount: 500000,
+        daily: 60000,
+        total: 1800000,
+        durationDays: 30
+    }
+
+};
+
+
+/*
+========================================
+DAILY EARNINGS SWEEP
+========================================
+
+Calls the process_daily_earnings() Postgres
+function, which credits every active plan
+that hasn't been paid for "today" yet.
+
+It is safe to call this often — it is a
+no-op for any plan already credited today,
+and it CATCHES UP any days that were missed
+(e.g. the server was asleep/restarted on a
+free hosting tier) by crediting however many
+days have actually elapsed since the last
+credit, capped at the plan's remaining days.
+
+Because of that, we don't need a precise
+midnight scheduler: running this on an
+interval (plus once at startup) is enough
+for every plan to keep paying out daily.
+========================================
+*/
+
+async function runDailyEarningsSweep() {
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabase
+            .rpc(
+                "process_daily_earnings"
+            );
+
+
+        if (error) {
+
+            console.error(
+                "Daily earnings sweep error:",
+                error
+            );
+
+            return;
+
+        }
+
+
+        if (
+            data &&
+            data.credited_count
+        ) {
+
+            console.log(
+                `Daily earnings sweep: credited ${data.credited_count} plan(s).`
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Daily earnings sweep failed:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+========================================
 MULTER
 ========================================
 
@@ -2217,6 +2369,113 @@ app.get(
             }
 
 
+            /*
+            ========================================
+            ACTIVE PLAN
+            ========================================
+
+            A user can only have one plan running
+            at a time (see activate_plan RPC), so
+            the most recent "active" row is it.
+            ========================================
+            */
+
+            const {
+                data: activePlanRow,
+                error: activePlanError
+            } = await supabase
+                .from("user_plans")
+                .select(
+                    "id, plan_name, daily_income, duration_days, days_paid, last_credited_at, started_at"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .eq(
+                    "status",
+                    "active"
+                )
+                .order(
+                    "started_at",
+                    {
+                        ascending:
+                            false
+                    }
+                )
+                .limit(1)
+                .maybeSingle();
+
+
+            if (activePlanError) {
+
+                console.error(
+                    "Active plan error:",
+                    activePlanError
+                );
+
+            }
+
+
+            let activePlan = null;
+            let dailyEarning = 0;
+            let daysCompleted = 0;
+            let daysRemaining = 0;
+            let progress = 0;
+            let todayEarned = 0;
+
+            if (activePlanRow) {
+
+                activePlan =
+                    activePlanRow.plan_name;
+
+                dailyEarning =
+                    Number(
+                        activePlanRow.daily_income || 0
+                    );
+
+                daysCompleted =
+                    activePlanRow.days_paid || 0;
+
+                daysRemaining =
+                    Math.max(
+                        0,
+                        activePlanRow.duration_days -
+                            daysCompleted
+                    );
+
+                progress =
+                    Math.round(
+                        (daysCompleted /
+                            activePlanRow.duration_days) *
+                            100
+                    );
+
+                /*
+                todayEarned only shows the daily
+                amount once TODAY's credit has
+                actually landed (the sweep runs on
+                an interval, not exactly at midnight).
+                */
+
+                const todayDateString =
+                    new Date()
+                        .toISOString()
+                        .slice(0, 10);
+
+                if (
+                    activePlanRow.last_credited_at ===
+                    todayDateString
+                ) {
+
+                    todayEarned =
+                        dailyEarning;
+
+                }
+
+            }
+
+
             return res.json({
 
                 success:
@@ -2244,22 +2503,22 @@ app.get(
                         ),
 
                     todayEarned:
-                        0,
+                        todayEarned,
 
                     activePlan:
-                        null,
+                        activePlan,
 
                     dailyEarning:
-                        0,
+                        dailyEarning,
 
                     daysCompleted:
-                        0,
+                        daysCompleted,
 
                     daysRemaining:
-                        0,
+                        daysRemaining,
 
                     progress:
-                        0,
+                        progress,
 
                     recentDeposits:
                         recentDeposits ||
@@ -2281,6 +2540,305 @@ app.get(
                 success: false,
                 message:
                     "Unable to load dashboard."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+PLAN ACTIVATION
+========================================
+
+Activates an earning plan using the
+user's balance.
+
+Everything that matters (price, daily
+income, duration) is looked up from
+EARNING_PLANS on the server — the
+client only tells us the plan NAME.
+
+The actual balance check + deduction +
+first day's payout happen atomically
+inside the activate_plan() Postgres
+function, so two rapid clicks (or two
+tabs) can't double-activate or overdraw
+the balance.
+========================================
+*/
+
+app.post(
+    "/api/plans/activate",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const planName =
+                typeof req.body?.plan === "string"
+                    ? req.body.plan.trim()
+                    : "";
+
+
+            const plan =
+                EARNING_PLANS[planName];
+
+
+            if (!plan) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Unknown plan selected."
+                });
+
+            }
+
+
+            const {
+                data,
+                error
+            } = await supabase
+                .rpc(
+                    "activate_plan",
+                    {
+                        p_user_id:
+                            req.userId,
+
+                        p_plan_name:
+                            planName,
+
+                        p_amount:
+                            plan.amount,
+
+                        p_daily_income:
+                            plan.daily,
+
+                        p_total_return:
+                            plan.total,
+
+                        p_duration_days:
+                            plan.durationDays
+                    }
+                );
+
+
+            if (error) {
+
+                console.error(
+                    "Plan activation RPC error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to activate plan."
+                });
+
+            }
+
+
+            if (
+                !data ||
+                data.success !== true
+            ) {
+
+                const failureMessage =
+                    (data && data.message) ||
+                    "Plan activation failed.";
+
+                /*
+                Insufficient balance is a normal,
+                expected case (not a server error) —
+                the plans.html page already checks
+                the balance client-side, but the
+                database check here is the real one.
+                */
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        failureMessage
+                });
+
+            }
+
+
+            console.log(
+                `Plan activated: user ${req.userId} | ${planName} | ₦${plan.amount}`
+            );
+
+
+            return res.json({
+
+                success:
+                    true,
+
+                message:
+                    `${planName} plan activated successfully.`,
+
+                planId:
+                    data.plan_id,
+
+                newBalance:
+                    Number(
+                        data.new_balance || 0
+                    ),
+
+                dailyIncome:
+                    Number(
+                        data.daily_income ||
+                        plan.daily
+                    )
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Plan activation error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to activate plan."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+DEPOSIT PAGE DATA
+========================================
+
+Used by deposit.html on load to show
+the current balance and the user's
+last 2 deposit requests.
+
+This endpoint did not exist before,
+which is why the deposit history and
+header balance on that page never
+loaded (the fetch to it was a 404).
+========================================
+*/
+
+app.get(
+    "/api/deposit-page",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                data: user,
+                error: userError
+            } = await supabase
+                .from("users")
+                .select(
+                    "balance"
+                )
+                .eq(
+                    "id",
+                    req.userId
+                )
+                .single();
+
+
+            if (
+                userError ||
+                !user
+            ) {
+
+                console.error(
+                    "Deposit page user error:",
+                    userError
+                );
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+
+            const {
+                data: history,
+                error: historyError
+            } = await supabase
+                .from("deposit_requests")
+                .select(
+                    "id, amount, status, created_at"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false
+                    }
+                )
+                .limit(2);
+
+
+            if (historyError) {
+
+                console.error(
+                    "Deposit page history error:",
+                    historyError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to load deposit history."
+                });
+
+            }
+
+
+            return res.json({
+
+                success:
+                    true,
+
+                balance:
+                    Number(
+                        user.balance || 0
+                    ),
+
+                history:
+                    history || []
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Deposit page error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load deposit page data."
             });
 
         }
@@ -2585,6 +3143,54 @@ app.post(
 
             /*
             ========================================
+            RESPOND TO CLIENT IMMEDIATELY
+            ========================================
+
+            The deposit request already exists in
+            the database as "pending" at this point.
+
+            Everything from here on (building the
+            Telegram caption, uploading the photo to
+            Telegram, handling Telegram failures) can
+            take several seconds if the connection is
+            slow, and that used to leave the client's
+            fetch() call open the whole time. On a
+            flaky mobile connection that easily times
+            out with "Failed to fetch" even though the
+            deposit was recorded successfully.
+
+            So we respond to the browser right away,
+            and do the Telegram notification in the
+            background. If it fails, the deposit is
+            marked "telegram_failed" (as before) so
+            the admin can be told to check manually
+            and the user is allowed to resubmit.
+            */
+
+            res.json({
+
+                success:
+                    true,
+
+                message:
+                    "Deposit verification submitted successfully.",
+
+                requestId:
+                    depositId,
+
+                amount:
+                    Number(
+                        deposit.amount
+                    ),
+
+                createdAt:
+                    deposit.created_at
+
+            });
+
+
+            /*
+            ========================================
             TELEGRAM CAPTION
             ========================================
             */
@@ -2638,178 +3244,178 @@ treated as proof of payment.`;
 
             /*
             ========================================
-            SEND TO TELEGRAM
+            SEND TO TELEGRAM (BACKGROUND)
             ========================================
             */
 
-            const telegramUrl =
-                `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+            try {
+
+                const telegramUrl =
+                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
 
-            const telegramForm =
-                new FormData();
+                const telegramForm =
+                    new FormData();
 
 
-            telegramForm.append(
-                "chat_id",
-                TELEGRAM_ADMIN_CHAT_ID
-            );
+                telegramForm.append(
+                    "chat_id",
+                    TELEGRAM_ADMIN_CHAT_ID
+                );
 
 
-            telegramForm.append(
-                "caption",
-                telegramCaption
-            );
+                telegramForm.append(
+                    "caption",
+                    telegramCaption
+                );
 
 
-            telegramForm.append(
-                "reply_markup",
-                JSON.stringify({
+                telegramForm.append(
+                    "reply_markup",
+                    JSON.stringify({
 
-                    inline_keyboard: [
+                        inline_keyboard: [
 
-                        [
+                            [
 
-                            {
-                                text:
-                                    "✅ Accept",
+                                {
+                                    text:
+                                        "✅ Accept",
 
-                                callback_data:
-                                    `deposit:approve:${depositId}`
-                            },
+                                    callback_data:
+                                        `deposit:approve:${depositId}`
+                                },
 
-                            {
-                                text:
-                                    "❌ Reject",
+                                {
+                                    text:
+                                        "❌ Reject",
 
-                                callback_data:
-                                    `deposit:reject:${depositId}`
-                            }
+                                    callback_data:
+                                        `deposit:reject:${depositId}`
+                                }
+
+                            ]
 
                         ]
 
-                    ]
-
-                })
-            );
-
-
-            telegramForm.append(
-                "photo",
-                new Blob(
-                    [
-                        req.file.buffer
-                    ],
-                    {
-                        type:
-                            req.file.mimetype
-                    }
-                ),
-                req.file.originalname
-            );
-
-
-            const telegramResponse =
-                await fetch(
-                    telegramUrl,
-                    {
-                        method:
-                            "POST",
-
-                        body:
-                            telegramForm
-                    }
+                    })
                 );
 
 
-            const telegramData =
-                await telegramResponse
-                    .json()
-                    .catch(
-                        () => null
+                telegramForm.append(
+                    "photo",
+                    new Blob(
+                        [
+                            req.file.buffer
+                        ],
+                        {
+                            type:
+                                req.file.mimetype
+                        }
+                    ),
+                    req.file.originalname
+                );
+
+
+                const telegramResponse =
+                    await fetch(
+                        telegramUrl,
+                        {
+                            method:
+                                "POST",
+
+                            body:
+                                telegramForm
+                        }
                     );
 
 
-            /*
-            ========================================
-            TELEGRAM FAILED
-            ========================================
-            */
-
-            if (
-                !telegramResponse.ok ||
-                !telegramData ||
-                !telegramData.ok
-            ) {
-
-                console.error(
-                    "Telegram API error:",
-                    telegramData
-                );
+                const telegramData =
+                    await telegramResponse
+                        .json()
+                        .catch(
+                            () => null
+                        );
 
 
                 /*
-                VERY IMPORTANT:
-
-                Do not leave the deposit
-                stuck as pending.
-
-                It becomes telegram_failed,
-                which allows the user to
-                submit again.
+                ========================================
+                TELEGRAM FAILED
+                ========================================
                 */
 
-                await supabase
-                    .from("deposit_requests")
-                    .update({
-                        status:
-                            "telegram_failed"
-                    })
-                    .eq(
-                        "id",
-                        depositId
+                if (
+                    !telegramResponse.ok ||
+                    !telegramData ||
+                    !telegramData.ok
+                ) {
+
+                    console.error(
+                        "Telegram API error:",
+                        telegramData
                     );
 
 
-                return res.status(500).json({
+                    /*
+                    VERY IMPORTANT:
 
-                    success:
-                        false,
+                    Do not leave the deposit
+                    stuck as pending.
 
-                    message:
-                        "We could not send your verification request. Please try again."
+                    It becomes telegram_failed,
+                    which allows the user to
+                    submit again.
+                    */
 
-                });
+                    await supabase
+                        .from("deposit_requests")
+                        .update({
+                            status:
+                                "telegram_failed"
+                        })
+                        .eq(
+                            "id",
+                            depositId
+                        );
+
+                }
+
+            } catch (telegramSendError) {
+
+                console.error(
+                    "Telegram send error:",
+                    telegramSendError
+                );
+
+                try {
+
+                    await supabase
+                        .from("deposit_requests")
+                        .update({
+                            status:
+                                "telegram_failed"
+                        })
+                        .eq(
+                            "id",
+                            depositId
+                        )
+                        .eq(
+                            "status",
+                            "pending"
+                        );
+
+                } catch (cleanupError) {
+
+                    console.error(
+                        "Deposit cleanup error:",
+                        cleanupError
+                    );
+
+                }
 
             }
 
-
-            /*
-            ========================================
-            SUCCESS
-            ========================================
-            */
-
-            return res.json({
-
-                success:
-                    true,
-
-                message:
-                    "Deposit verification submitted successfully.",
-
-                requestId:
-                    depositId,
-
-                amount:
-                    Number(
-                        deposit.amount
-                    ),
-
-                createdAt:
-                    deposit.created_at
-
-            });
+            return;
 
 
         } catch (error) {
@@ -2855,6 +3461,21 @@ treated as proof of payment.`;
 
                 }
 
+            }
+
+
+            /*
+            The response may have already been
+            sent to the client (we now respond
+            as soon as the deposit row exists,
+            before the Telegram step). Sending
+            a second response would crash the
+            process, so only respond here if
+            nothing has gone out yet.
+            */
+
+            if (res.headersSent) {
+                return;
             }
 
 
@@ -3066,6 +3687,33 @@ app.listen(
 
 
         await setupTelegramUpdates();
+
+
+        /*
+        ========================================
+        DAILY EARNINGS SWEEP
+        ========================================
+
+        Run once immediately (catches up any
+        plans that were due while the server
+        was offline), then keep checking every
+        15 minutes. Cheap no-op for plans that
+        are already paid up for today.
+        ========================================
+        */
+
+        await runDailyEarningsSweep();
+
+        setInterval(
+            runDailyEarningsSweep,
+            15 * 60 * 1000
+        );
+
+        console.log(
+            "Daily earnings sweep: RUNNING (every 15 min)"
+        );
+
+        console.log("");
 
     }
 );

@@ -1622,38 +1622,6 @@
       );
 
 
-    /* ================= DEMO USER DATA ================= */
-
-    /*
-      These values are temporary.
-
-      Later, server.js will load the authenticated
-      user's real information from Supabase.
-    */
-
-    const user = {
-
-      username: "User",
-
-      balance: 0,
-
-      totalEarned: 0,
-
-      todayEarned: 0,
-
-      activePlan: null,
-
-      dailyEarning: 0,
-
-      daysCompleted: 0,
-
-      daysRemaining: 0,
-
-      progress: 0
-
-    };
-
-
     /* ================= UPDATE DASHBOARD ================= */
 
     function updateDashboard(data) {
@@ -1778,9 +1746,124 @@
     }
 
 
-    /* ================= INITIAL LOAD ================= */
+    /* ================= LOAD REAL DASHBOARD DATA ================= */
 
-    updateDashboard(user);
+    /*
+      Single request on page load.
+
+      No polling / intervals here on purpose,
+      to keep egress to a minimum. The page
+      is refetched only when the user reloads
+      or navigates back to it.
+    */
+
+    async function loadDashboard() {
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/dashboard",
+            {
+              method: "GET",
+              credentials: "same-origin"
+            }
+          );
+
+
+        if (response.status === 401) {
+
+          window.location.href =
+            "/login.html";
+
+          return;
+
+        }
+
+
+        const result =
+          await response
+            .json()
+            .catch(
+              () => null
+            );
+
+
+        if (
+          !response.ok ||
+          !result ||
+          !result.success
+        ) {
+
+          console.error(
+            "Dashboard load error:",
+            result?.message
+          );
+
+          return;
+
+        }
+
+
+        const apiUser =
+          result.user;
+
+
+        const displayName =
+          (
+            apiUser.fullName ||
+            apiUser.username ||
+            "User"
+          )
+            .trim()
+            .split(" ")[0];
+
+
+        updateDashboard({
+
+          username:
+            displayName,
+
+          balance:
+            apiUser.balance,
+
+          totalEarned:
+            apiUser.totalEarned,
+
+          todayEarned:
+            apiUser.todayEarned,
+
+          activePlan:
+            apiUser.activePlan,
+
+          dailyEarning:
+            apiUser.dailyEarning,
+
+          daysCompleted:
+            apiUser.daysCompleted,
+
+          daysRemaining:
+            apiUser.daysRemaining,
+
+          progress:
+            apiUser.progress
+
+        });
+
+
+      } catch (error) {
+
+        console.error(
+          "Dashboard fetch failed:",
+          error
+        );
+
+      }
+
+    }
+
+
+    loadDashboard();
 
 
     /* ================= NOTIFICATION ================= */
@@ -1835,3 +1918,4 @@
 
 </body>
 </html>
+
