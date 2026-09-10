@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#07110c">
+  <title>Create Account — Netnaira</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --green: #16c784;
+      --green-light: #2be59b;
+      --bg: #07110c;
+      --card: #0d1a13;
+      --border: rgba(255,255,255,.08);
+      --text: #f4fff8;
+      --muted: #84958b;
+      --danger: #ff6874;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 350px;
+      height: 350px;
+      top: -180px;
+      right: -140px;
+      background: rgba(22,199,132,.11);
+      filter: blur(90px);
+      border-radius: 50%;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      margin: auto auto 12px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--green-light), #0a9e67);
+      color: #03150d;
+      font-size: 23px;
+      font-weight: 900;
+      box-shadow: 0 10px 30px rgba(22,199,132,.18);
+    }
+
+    .logo h1 {
+      font-size: 22px;
+      letter-spacing: -.6px;
+    }
+
+    .logo h1 span {
+      color: var(--green-light);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 27px 23px;
+    }
+
+    .title {
+      font-size: 25px;
+      letter-spacing: -.8px;
+      margin-bottom: 7px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #b8c5bd;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      height: 49px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      background: #09140e;
+      color: white;
+      padding: 0 14px;
+      font-size: 14px;
+      transition: .2s;
+    }
+
+    input:focus {
+      border-color: rgba(22,199,132,.55);
+      box-shadow: 0 0 0 3px rgba(22,199,132,.06);
+    }
+
+    input::placeholder {
+      color: #526159;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: none;
+      color: #718078;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      color: #74837b;
+      font-size: 11px;
+      line-height: 1.5;
+      margin: 4px 0 18px;
+    }
+
+    .terms input {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      margin-top: 1px;
+      accent-color: var(--green);
+    }
+
+    .terms a {
+      color: var(--green-light);
+    }
+
+    button.submit {
+      width: 100%;
+      height: 50px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green);
+      color: #03150d;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+      transition: transform .15s, opacity .2s;
+    }
+
+    button.submit:active {
+      transform: scale(.98);
+    }
+
+    button.submit:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      padding: 11px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      line-height: 1.4;
+      margin-bottom: 15px;
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(255,70,85,.08);
+      border: 1px solid rgba(255,70,85,.15);
+      color: #ff8790;
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(22,199,132,.08);
+      border: 1px solid rgba(22,199,132,.15);
+      color: #6ce9b4;
+    }
+
+    .login {
+      text-align: center;
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .login a {
+      color: var(--green-light);
+      font-weight: 700;
+    }
+
+    .country {
+      color: #718078;
+      font-size: 10px;
+      text-align: center;
+      margin-top: 17px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <a href="index.html" class="back">← Back to Netnaira</a>
+
+  <div class="logo">
+    <div class="logo-icon">₦</div>
+    <h1>Net<span>naira</span></h1>
+  </div>
+
+  <div class="card">
+
+    <h2 class="title">Create your account</h2>
+
+    <p class="subtitle">
+      Join Netnaira and manage your earning plans from your personal account.
+    </p>
+
+    <div id="message" class="message"></div>
+
+    <form id="signupForm">
+
+      <div class="field">
+        <label>Full name</label>
+        <input
+          id="fullName"
+          type="text"
+          placeholder="Enter your full name"
+          autocomplete="name"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label>Username</label>
+        <input
+          id="username"
+          type="text"
+          placeholder="Choose a username"
+          autocomplete="username"
+          minlength="3"
+          maxlength="20"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label>Email address</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+
+        <div class="input-wrap">
+          <input
+            id="password"
+            type="password"
+            placeholder="Create a strong password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          >
+
+          <button
+            type="button"
+            class="password-toggle"
+            onclick="togglePassword('password', this)"
+          >
+            Show
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Confirm password</label>
+
+        <div class="input-wrap">
+          <input
+            id="confirmPassword"
+            type="password"
+            placeholder="Enter password again"
+            autocomplete="new-password"
+            required
+          >
+
+          <button
+            type="button"
+            class="password-toggle"
+            onclick="togglePassword('confirmPassword', this)"
+          >
+            Show
+          </button>
+        </div>
+      </div>
+
+      <label class="terms">
+        <input id="terms" type="checkbox" required>
+
+        <span>
+          I agree to the Netnaira
+          <a href="#">Terms</a>
+          and
+          <a href="#">Privacy Policy</a>.
+        </span>
+      </label>
+
+      <button class="submit" id="submitBtn" type="submit">
+        Create Account
+      </button>
+
+    </form>
+
+    <div class="login">
+      Already have an account?
+      <a href="login.html">Log in</a>
+    </div>
+
+  </div>
+
+  <div class="country">
+    🇳🇬 Built for Nigerians
+  </div>
+
+</div>
+
+
+<script>
+
+  function togglePassword(id, button) {
+    const input = document.getElementById(id);
+
+    if (input.type === "password") {
+      input.type = "text";
+      button.textContent = "Hide";
+    } else {
+      input.type = "password";
+      button.textContent = "Show";
+    }
+  }
+
+
+  function showMessage(text, type) {
+    const message = document.getElementById("message");
+
+    message.textContent = text;
+    message.className = "message " + type;
+  }
+
+
+  document.getElementById("signupForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const fullName = document.getElementById("fullName").value.trim();
+    const username = document.getElementById("username").value.trim().toLowerCase();
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const terms = document.getElementById("terms").checked;
+
+    const button = document.getElementById("submitBtn");
+
+    if (password !== confirmPassword) {
+      showMessage("Passwords do not match.", "error");
+      return;
+    }
+
+    if (password.length < 8) {
+      showMessage("Password must contain at least 8 characters.", "error");
+      return;
+    }
+
+    if (!terms) {
+      showMessage("Please accept the terms and privacy policy.", "error");
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Creating account...";
+
+    try {
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          fullName,
+          username,
+          email,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to create account.");
+      }
+
+      showMessage(
+        "Account created successfully. Redirecting...",
+        "success"
+      );
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 900);
+
+    } catch (error) {
+
+      showMessage(error.message, "error");
+
+      button.disabled = false;
+      button.textContent = "Create Account";
+    }
+
+  });
+
+</script>
+
+</body>
+</html>

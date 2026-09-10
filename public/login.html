@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#07110c">
+  <title>Login — Netnaira</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --green: #16c784;
+      --green-light: #2be59b;
+      --bg: #07110c;
+      --card: #0d1a13;
+      --border: rgba(255,255,255,.08);
+      --text: #f4fff8;
+      --muted: #84958b;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 350px;
+      height: 350px;
+      top: -170px;
+      left: -140px;
+      background: rgba(22,199,132,.10);
+      filter: blur(90px);
+      border-radius: 50%;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .back {
+      display: inline-flex;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      margin: auto auto 12px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--green-light), #0a9e67);
+      color: #03150d;
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .logo h1 {
+      font-size: 22px;
+    }
+
+    .logo span {
+      color: var(--green-light);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 27px 23px;
+    }
+
+    h2 {
+      font-size: 25px;
+      letter-spacing: -.8px;
+      margin-bottom: 7px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+    label {
+      display: block;
+      color: #b8c5bd;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      background: #09140e;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      color: white;
+      padding: 0 14px;
+      font-size: 14px;
+    }
+
+    input:focus {
+      border-color: rgba(22,199,132,.55);
+      box-shadow: 0 0 0 3px rgba(22,199,132,.06);
+    }
+
+    input::placeholder {
+      color: #526159;
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .show {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: none;
+      color: #718078;
+      font-size: 12px;
+    }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      color: var(--green-light);
+      font-size: 11px;
+      margin-top: -5px;
+      margin-bottom: 20px;
+      text-decoration: none;
+    }
+
+    .submit {
+      width: 100%;
+      height: 50px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green);
+      color: #03150d;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .submit:disabled {
+      opacity: .55;
+    }
+
+    .message {
+      display: none;
+      padding: 11px 12px;
+      border-radius: 9px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(255,70,85,.08);
+      border: 1px solid rgba(255,70,85,.15);
+      color: #ff8790;
+    }
+
+    .register {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 20px;
+    }
+
+    .register a {
+      color: var(--green-light);
+      font-weight: 700;
+    }
+
+    .country {
+      text-align: center;
+      color: #68766e;
+      font-size: 10px;
+      margin-top: 17px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <a href="index.html" class="back">← Back to Netnaira</a>
+
+  <div class="logo">
+    <div class="logo-icon">₦</div>
+    <h1>Net<span>naira</span></h1>
+  </div>
+
+  <div class="card">
+
+    <h2>Welcome back</h2>
+
+    <p class="subtitle">
+      Log in to access your personal Netnaira account.
+    </p>
+
+    <div id="message" class="message"></div>
+
+    <form id="loginForm">
+
+      <div class="field">
+        <label>Email or username</label>
+
+        <input
+          id="identifier"
+          type="text"
+          placeholder="Email or username"
+          autocomplete="username"
+          required
+        >
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+
+        <div class="password-wrap">
+
+          <input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+
+          <button
+            type="button"
+            class="show"
+            onclick="togglePassword()"
+          >
+            Show
+          </button>
+
+        </div>
+      </div>
+
+      <a href="#" class="forgot">
+        Forgot password?
+      </a>
+
+      <button
+        type="submit"
+        class="submit"
+        id="loginBtn"
+      >
+        Log In
+      </button>
+
+    </form>
+
+    <div class="register">
+      Don't have an account?
+      <a href="signup.html">Create one</a>
+    </div>
+
+  </div>
+
+  <div class="country">
+    🇳🇬 Built for Nigerians
+  </div>
+
+</div>
+
+
+<script>
+
+  function togglePassword() {
+
+    const input = document.getElementById("password");
+    const button = document.querySelector(".show");
+
+    if (input.type === "password") {
+      input.type = "text";
+      button.textContent = "Hide";
+    } else {
+      input.type = "password";
+      button.textContent = "Show";
+    }
+
+  }
+
+
+  function showMessage(text) {
+
+    const message = document.getElementById("message");
+
+    message.textContent = text;
+    message.className = "message error";
+
+  }
+
+
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const identifier =
+      document.getElementById("identifier").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const button =
+      document.getElementById("loginBtn");
+
+    button.disabled = true;
+    button.textContent = "Logging in...";
+
+    try {
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          identifier,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed.");
+      }
+
+      window.location.href = "dashboard.html";
+
+    } catch (error) {
+
+      showMessage(error.message);
+
+      button.disabled = false;
+      button.textContent = "Log In";
+
+    }
+
+  });
+
+</script>
+
+</body>
+</html>
