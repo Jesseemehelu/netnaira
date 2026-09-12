@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-checking">
 <head>
   <meta charset="UTF-8">
 
@@ -18,6 +18,21 @@
   <title>Netnaira — Earn Daily</title>
 
   <style>
+    /*
+    ================================
+    AUTH CHECK GATE
+    ================================
+
+    Hides the entire page while we ask the
+    server whether a valid session cookie
+    already exists. Removed by the script
+    right after <body> once the check
+    resolves either way.
+    */
+    html.auth-checking body {
+      visibility: hidden;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -1190,6 +1205,55 @@
 
 <body>
 
+  <!-- ================= AUTH CHECK ================= -->
+
+  <script>
+
+    /*
+    If a valid session cookie already exists,
+    send the visitor straight to their dashboard
+    instead of showing the marketing homepage.
+    Runs before anything else in <body> so the
+    redirect happens as early as possible.
+    */
+
+    (function () {
+
+      fetch("/api/auth/me", { credentials: "same-origin" })
+
+        .then(function (response) {
+
+          return response.ok
+            ? response.json()
+            : Promise.reject();
+
+        })
+
+        .then(function (data) {
+
+          if (data && data.success) {
+
+            window.location.replace("/dashboard.html");
+
+          } else {
+
+            document.documentElement.classList.remove("auth-checking");
+
+          }
+
+        })
+
+        .catch(function () {
+
+          document.documentElement.classList.remove("auth-checking");
+
+        });
+
+    })();
+
+  </script>
+
+
   <!-- ================= HEADER ================= -->
 
   <header>
@@ -2017,4 +2081,5 @@
 
 </body>
 </html>
+
 

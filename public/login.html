@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-checking">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -7,6 +7,15 @@
   <title>Login — Netnaira</title>
 
   <style>
+    /*
+    Hides the page while we check for an
+    existing valid session. Removed by the
+    script right after <body>.
+    */
+    html.auth-checking body {
+      visibility: hidden;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -220,6 +229,52 @@
 
 <body>
 
+<!-- ================= AUTH CHECK ================= -->
+
+<script>
+
+  /*
+  If already logged in, skip the login form
+  and go straight to the dashboard.
+  */
+
+  (function () {
+
+    fetch("/api/auth/me", { credentials: "same-origin" })
+
+      .then(function (response) {
+
+        return response.ok
+          ? response.json()
+          : Promise.reject();
+
+      })
+
+      .then(function (data) {
+
+        if (data && data.success) {
+
+          window.location.replace("/dashboard.html");
+
+        } else {
+
+          document.documentElement.classList.remove("auth-checking");
+
+        }
+
+      })
+
+      .catch(function () {
+
+        document.documentElement.classList.remove("auth-checking");
+
+      });
+
+  })();
+
+</script>
+
+
 <div class="container">
 
   <a href="index.html" class="back">← Back to Netnaira</a>
@@ -390,4 +445,5 @@
 
 </body>
 </html>
+
 

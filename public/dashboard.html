@@ -2885,15 +2885,6 @@
         return;
       }
 
-      const prefersReducedMotion =
-        window.matchMedia(
-          "(prefers-reduced-motion: reduce)"
-        ).matches;
-
-      if (prefersReducedMotion) {
-        return;
-      }
-
       const DURATION_SECONDS = 240;
 
       // The track's content is duplicated once (see
@@ -2903,7 +2894,14 @@
         track.scrollWidth / 2;
 
       if (!halfWidth) {
+
+        // Layout may not have settled yet on a slower
+        // device — try again shortly instead of giving up
+        // on the ticker permanently.
+        setTimeout(startTickerAnimation, 200);
+
         return;
+
       }
 
       let speed =
