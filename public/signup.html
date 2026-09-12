@@ -113,6 +113,28 @@
       margin-bottom: 25px;
     }
 
+    .referral-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 13px;
+      border-radius: 12px;
+      background: rgba(22,199,132,.08);
+      border: 1px solid rgba(22,199,132,.16);
+      color: #6ce9b4;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .referral-banner.show {
+      display: flex;
+    }
+
+    .referral-banner strong {
+      color: var(--green-light);
+    }
+
     .field {
       margin-bottom: 16px;
     }
@@ -270,6 +292,10 @@
       Join Netnaira and manage your earning plans from your personal account.
     </p>
 
+    <div id="referralBanner" class="referral-banner">
+      🎉 You were invited by <strong id="referralUsername"></strong>
+    </div>
+
     <div id="message" class="message"></div>
 
     <form id="signupForm">
@@ -387,6 +413,37 @@
 
 <script>
 
+  /*
+  ================================
+  REFERRAL CODE
+  ================================
+
+  Captured once, on page load, from
+  ?ref=<username> in the URL. Kept in
+  memory for the lifetime of the page
+  and sent along with the signup
+  request — never re-read from the URL
+  again, so it survives even if the
+  user edits the address bar afterward.
+  */
+
+  const referralCode =
+    new URLSearchParams(window.location.search)
+      .get("ref")
+      ?.trim()
+      .toLowerCase() || "";
+
+
+  if (referralCode) {
+
+    document.getElementById("referralUsername").textContent =
+      "@" + referralCode;
+
+    document.getElementById("referralBanner").classList.add("show");
+
+  }
+
+
   function togglePassword(id, button) {
     const input = document.getElementById(id);
 
@@ -450,7 +507,8 @@
           fullName,
           username,
           email,
-          password
+          password,
+          ref: referralCode
         })
       });
 
@@ -483,3 +541,4 @@
 
 </body>
 </html>
+

@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<title>Refer &amp; Earn | Netnaira</title>
+
+<style>
+
+:root{
+    --bg:#06100b;
+    --card:#0c1b13;
+    --card2:#102219;
+    --green:#16c784;
+    --green-light:#27e59a;
+    --text:#f3faf6;
+    --muted:#8ea69a;
+    --border:rgba(255,255,255,.07);
+    --danger:#ff6b6b;
+    --warning:#f0cf6b;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    min-height:100vh;
+
+    position:relative;
+    overflow-x:hidden;
+
+    background:var(--bg);
+
+    color:var(--text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    padding-bottom:40px;
+}
+
+body::before{
+    content:"";
+
+    position:fixed;
+
+    width:380px;
+    height:380px;
+
+    top:-160px;
+    right:-160px;
+
+    background:rgba(22,199,132,.10);
+
+    filter:blur(110px);
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    z-index:-1;
+}
+
+body::after{
+    content:"";
+
+    position:fixed;
+
+    width:300px;
+    height:300px;
+
+    bottom:-140px;
+    left:-140px;
+
+    background:rgba(22,199,132,.05);
+
+    filter:blur(110px);
+
+    border-radius:50%;
+
+    pointer-events:none;
+
+    z-index:-1;
+}
+
+button{
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+}
+
+@media(prefers-reduced-motion:no-preference){
+
+    .hero,
+    .stats-grid,
+    .referral-balance-card,
+    .bonus-callout,
+    .card{
+        animation:rise .45s ease both;
+    }
+
+    .stats-grid{ animation-delay:.04s; }
+    .referral-balance-card{ animation-delay:.08s; }
+    .bonus-callout{ animation-delay:.12s; }
+
+    @keyframes rise{
+        from{ opacity:0; transform:translateY(8px); }
+        to{ opacity:1; transform:translateY(0); }
+    }
+
+}
+
+/* HEADER */
+
+.header{
+    height:68px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 18px;
+
+    position:sticky;
+    top:0;
+    z-index:100;
+
+    background:rgba(6,16,11,.96);
+
+    border-bottom:1px solid var(--border);
+
+    backdrop-filter:blur(12px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    color:white;
+    text-decoration:none;
+
+    font-size:20px;
+    font-weight:850;
+}
+
+.brand-icon{
+    width:35px;
+    height:35px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(
+            145deg,
+            var(--green-light),
+            #0c9f67
+        );
+
+    color:#04110a;
+
+    font-weight:900;
+}
+
+.balance{
+    text-align:right;
+}
+
+.balance-label{
+    display:block;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    margin-bottom:2px;
+}
+
+.balance-value{
+    color:var(--green-light);
+
+    font-size:14px;
+
+    font-weight:850;
+}
+
+/* MAIN */
+
+.container{
+    width:min(650px,calc(100% - 24px));
+
+    margin:auto;
+}
+
+/* BACK BUTTON */
+
+.back-btn{
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    margin-top:18px;
+
+    color:var(--text);
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    font-weight:900;
+
+    letter-spacing:-.2px;
+
+    padding:9px 14px 9px 10px;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.back-btn:active{
+    transform:scale(.97);
+}
+
+.back-btn .arrow{
+    font-size:17px;
+
+    line-height:1;
+}
+
+.hero{
+    padding:20px 0 18px;
+}
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+
+    padding:7px 11px;
+
+    margin-bottom:13px;
+
+    border-radius:999px;
+
+    background:rgba(22,199,132,.08);
+
+    border:1px solid rgba(22,199,132,.14);
+
+    color:var(--green-light);
+
+    font-size:10px;
+    font-weight:800;
+}
+
+h1{
+    font-size:31px;
+
+    letter-spacing:-1px;
+
+    margin-bottom:9px;
+}
+
+h1 span{
+    color:var(--green-light);
+}
+
+.hero p{
+    color:var(--muted);
+
+    font-size:13px;
+
+    line-height:1.6;
+}
+
+/* CARDS */
+
+.card{
+    background:
+        linear-gradient(
+            145deg,
+            var(--card2),
+            var(--card)
+        );
+
+    border:1px solid var(--border);
+
+    border-radius:21px;
+
+    padding:18px;
+
+    margin-bottom:14px;
+}
+
+/* STATS */
+
+.stats-grid{
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:11px;
+
+    margin-bottom:14px;
+}
+
+.stat-box{
+    background:
+        linear-gradient(
+            145deg,
+            var(--card2),
+            var(--card)
+        );
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:16px;
+}
+
+.stat-label{
+    color:var(--muted);
+
+    font-size:10px;
+
+    margin-bottom:8px;
+}
+
+.stat-value{
+    font-size:22px;
+
+    font-weight:900;
+
+    letter-spacing:-.5px;
+}
+
+.stat-value.green{
+    color:var(--green-light);
+}
+
+/* REFERRAL BALANCE + WITHDRAW */
+
+.referral-balance-card{
+    position:relative;
+    overflow:hidden;
+
+    padding:20px;
+
+    border-radius:21px;
+
+    margin-bottom:14px;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(22,199,132,.14),
+            transparent 55%
+        ),
+        linear-gradient(
+            145deg,
+            var(--card2),
+            var(--card)
+        );
+
+    border:1px solid rgba(22,199,132,.18);
+}
+
+.rb-top{
+    display:flex;
+
+    align-items:flex-start;
+
+    justify-content:space-between;
+
+    gap:14px;
+}
+
+.rb-amount{
+    font-size:30px;
+
+    font-weight:900;
+
+    letter-spacing:-1px;
+
+    color:var(--green-light);
+
+    margin:6px 0 4px;
+}
+
+.rb-note{
+    color:var(--muted);
+
+    font-size:10.5px;
+
+    line-height:1.5;
+}
+
+.rb-icon{
+    width:44px;
+    height:44px;
+
+    flex-shrink:0;
+
+    border-radius:13px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(22,199,132,.12);
+
+    font-size:20px;
+}
+
+.rb-requirements{
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:8px;
+
+    margin-top:16px;
+}
+
+.rb-chip{
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    padding:6px 10px;
+
+    border-radius:999px;
+
+    font-size:9.5px;
+
+    font-weight:800;
+
+    background:rgba(255,255,255,.045);
+
+    border:1px solid var(--border);
+
+    color:var(--muted);
+}
+
+.rb-chip.ok{
+    color:var(--green-light);
+
+    background:rgba(22,199,132,.09);
+
+    border-color:rgba(22,199,132,.2);
+}
+
+.rb-chip.no{
+    color:var(--warning);
+
+    background:rgba(240,207,107,.08);
+
+    border-color:rgba(240,207,107,.18);
+}
+
+.rb-withdraw-row{
+    display:flex;
+
+    gap:8px;
+
+    margin-top:16px;
+}
+
+.rb-input{
+    flex:1;
+
+    min-width:0;
+
+    height:46px;
+
+    padding:0 14px;
+
+    border-radius:12px;
+
+    border:1px solid rgba(255,255,255,.09);
+
+    background:rgba(0,0,0,.2);
+
+    color:var(--text);
+
+    font-size:13px;
+
+    font-family:inherit;
+}
+
+.rb-input::placeholder{
+    color:#5b6f65;
+}
+
+.rb-input:focus{
+    outline:none;
+
+    border-color:rgba(22,199,132,.4);
+}
+
+.rb-withdraw-btn{
+    flex-shrink:0;
+
+    height:46px;
+
+    padding:0 18px;
+
+    border:0;
+
+    border-radius:12px;
+
+    background:var(--green);
+
+    color:#04110a;
+
+    font-size:12px;
+
+    font-weight:900;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+}
+
+.rb-withdraw-btn:active{
+    transform:scale(.96);
+}
+
+.rb-withdraw-btn:disabled{
+    background:rgba(255,255,255,.07);
+
+    color:var(--muted);
+
+    cursor:not-allowed;
+}
+
+.rb-helper{
+    margin-top:10px;
+
+    color:var(--muted);
+
+    font-size:9.5px;
+
+    line-height:1.5;
+}
+
+@media(max-width:420px){
+
+    .rb-withdraw-row{
+        flex-wrap:wrap;
+    }
+
+    .rb-withdraw-btn{
+        width:100%;
+    }
+
+}
+
+/* BONUS CALLOUT */
+
+.bonus-callout{
+    display:flex;
+
+    align-items:center;
+
+    gap:13px;
+
+    padding:16px;
+
+    border-radius:17px;
+
+    background:rgba(22,199,132,.07);
+
+    border:1px solid rgba(22,199,132,.16);
+
+    margin-bottom:14px;
+}
+
+.bonus-icon{
+    width:46px;
+    height:46px;
+
+    flex-shrink:0;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(22,199,132,.12);
+
+    font-size:22px;
+}
+
+.bonus-callout strong{
+    display:block;
+
+    font-size:15px;
+
+    margin-bottom:3px;
+}
+
+.bonus-callout p{
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+/* LINK BOX */
+
+.link-title{
+    font-size:16px;
+
+    font-weight:850;
+
+    margin-bottom:4px;
+}
+
+.link-subtitle{
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+
+    margin-bottom:15px;
+}
+
+.link-box{
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    background:rgba(0,0,0,.18);
+
+    border:1px solid rgba(255,255,255,.07);
+
+    border-radius:14px;
+
+    padding:6px 6px 6px 14px;
+
+    margin-bottom:12px;
+}
+
+.link-text{
+    flex:1;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    font-size:12px;
+
+    color:#c9d8d0;
+}
+
+.link-copy{
+    flex-shrink:0;
+
+    border:0;
+
+    height:40px;
+
+    padding:0 15px;
+
+    border-radius:10px;
+
+    background:var(--green);
+
+    color:#04110a;
+
+    font-size:11px;
+
+    font-weight:900;
+
+    cursor:pointer;
+}
+
+.link-copy:active{
+    transform:scale(.96);
+}
+
+.share-row{
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:9px;
+}
+
+.share-btn{
+    height:46px;
+
+    border-radius:12px;
+
+    border:1px solid rgba(255,255,255,.09);
+
+    background:rgba(255,255,255,.04);
+
+    color:white;
+
+    font-size:12px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:7px;
+}
+
+.share-btn:active{
+    transform:scale(.97);
+}
+
+.share-btn.primary{
+    background:var(--green);
+
+    color:#04110a;
+
+    border-color:transparent;
+}
+
+/* STEPS */
+
+.instructions-title{
+    font-size:13px;
+
+    font-weight:850;
+
+    margin-bottom:8px;
+}
+
+.step{
+    display:flex;
+
+    gap:11px;
+
+    padding:10px 0;
+
+    border-bottom:1px solid rgba(255,255,255,.045);
+}
+
+.step:last-child{
+    border-bottom:0;
+}
+
+.step-number{
+    width:25px;
+    height:25px;
+
+    flex-shrink:0;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(22,199,132,.1);
+
+    color:var(--green-light);
+
+    font-size:10px;
+
+    font-weight:900;
+}
+
+.step strong{
+    display:block;
+
+    font-size:12px;
+
+    margin-bottom:3px;
+}
+
+.step p{
+    color:var(--muted);
+
+    font-size:10px;
+
+    line-height:1.5;
+}
+
+/* HISTORY */
+
+.history-header{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-bottom:13px;
+}
+
+.history-title{
+    font-size:17px;
+
+    font-weight:850;
+}
+
+.history-subtitle{
+    color:var(--muted);
+
+    font-size:10px;
+
+    margin-top:3px;
+}
+
+.history-badge{
+    padding:6px 9px;
+
+    border-radius:999px;
+
+    background:rgba(255,255,255,.04);
+
+    color:var(--muted);
+
+    font-size:9px;
+
+    font-weight:800;
+
+    white-space:nowrap;
+}
+
+.history-list{
+    display:grid;
+
+    gap:9px;
+}
+
+.history-item{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:12px;
+
+    padding:12px;
+
+    border-radius:14px;
+
+    background:rgba(0,0,0,.14);
+
+    border:1px solid rgba(255,255,255,.045);
+}
+
+.history-left{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    min-width:0;
+}
+
+.history-icon{
+    width:36px;
+    height:36px;
+
+    flex-shrink:0;
+
+    border-radius:11px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(22,199,132,.08);
+
+    font-size:15px;
+}
+
+.history-name{
+    font-size:12px;
+
+    font-weight:800;
+
+    margin-bottom:3px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+}
+
+.history-date{
+    color:var(--muted);
+
+    font-size:9px;
+}
+
+.history-amount{
+    color:var(--green-light);
+
+    font-size:12px;
+
+    font-weight:850;
+
+    white-space:nowrap;
+}
+
+.history-empty{
+    padding:22px 10px;
+
+    text-align:center;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+/* TOAST */
+
+.toast{
+    position:fixed;
+
+    left:50%;
+
+    bottom:26px;
+
+    z-index:800;
+
+    max-width:calc(100% - 30px);
+
+    padding:11px 15px;
+
+    border-radius:12px;
+
+    background:#12261b;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    color:white;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    transform:translate(-50%,20px);
+
+    opacity:0;
+
+    pointer-events:none;
+
+    transition:.2s ease;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+
+    opacity:1;
+}
+
+@media(min-width:700px){
+
+    .header{
+        padding:0 35px;
+    }
+
+    .hero{
+        padding-top:28px;
+    }
+
+}
+
+@media(max-width:360px){
+
+    .stat-value{
+        font-size:19px;
+    }
+
+    h1{
+        font-size:27px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<header class="header">
+
+    <a
+        href="/dashboard.html"
+        class="brand"
+    >
+
+        <div class="brand-icon">
+            ₦
+        </div>
+
+        <span>
+            Netnaira
+        </span>
+
+    </a>
+
+
+    <div class="balance">
+
+        <span class="balance-label">
+            Current Balance
+        </span>
+
+        <span
+            class="balance-value"
+            id="balance"
+        >
+            ₦0.00
+        </span>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+<a href="/dashboard.html" class="back-btn">
+    <span class="arrow">←</span>
+    <span>Back</span>
+</a>
+
+<section class="hero">
+
+    <div class="badge">
+        👥 REFER &amp; EARN
+    </div>
+
+    <h1>
+        Invite friends.<br>
+        <span>Earn ₦500 each.</span>
+    </h1>
+
+    <p>
+        Share your referral link. When someone joins
+        Netnaira using it, your bonus is credited to your
+        referral balance automatically — no waiting, no
+        limit on how many people you invite.
+    </p>
+
+</section>
+
+
+<!-- STATS -->
+
+<section class="stats-grid">
+
+    <div class="stat-box">
+        <div class="stat-label">Total referrals</div>
+        <div
+            class="stat-value"
+            id="totalReferrals"
+        >
+            0
+        </div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-label">Total earned</div>
+        <div
+            class="stat-value green"
+            id="totalEarned"
+        >
+            ₦0.00
+        </div>
+    </div>
+
+</section>
+
+
+<!-- REFERRAL BALANCE + WITHDRAW -->
+
+<section class="referral-balance-card">
+
+    <div class="rb-top">
+
+        <div>
+            <div class="stat-label">Referral balance</div>
+            <div class="rb-amount" id="referralBalance">₦0.00</div>
+            <div class="rb-note">
+                Kept separate from your main balance until you withdraw it.
+            </div>
+        </div>
+
+        <div class="rb-icon">🎁</div>
+
+    </div>
+
+
+    <div class="rb-requirements" id="rbRequirements">
+
+        <span class="rb-chip" id="chipMinBalance">
+            Min. ₦2,000 balance
+        </span>
+
+        <span class="rb-chip" id="chipActivePlan">
+            Active earning plan
+        </span>
+
+    </div>
+
+
+    <div class="rb-withdraw-row">
+
+        <input
+            type="number"
+            id="withdrawAmount"
+            class="rb-input"
+            placeholder="Amount (min ₦2,000)"
+            min="2000"
+            step="1"
+        >
+
+        <button
+            type="button"
+            class="rb-withdraw-btn"
+            id="withdrawBtn"
+            onclick="withdrawReferralBalance()"
+            disabled
+        >
+            Withdraw to main balance
+        </button>
+
+    </div>
+
+    <div class="rb-helper" id="rbHelper">
+        Checking your withdrawal eligibility...
+    </div>
+
+</section>
+
+
+<!-- BONUS CALLOUT -->
+
+<div class="bonus-callout">
+
+    <div class="bonus-icon">
+        🎁
+    </div>
+
+    <div>
+        <strong id="bonusAmount">₦500 per referral</strong>
+        <p>Added to your referral balance as soon as your friend creates their account.</p>
+    </div>
+
+</div>
+
+
+<!-- LINK -->
+
+<section class="card">
+
+    <div class="link-title">
+        Your referral link
+    </div>
+
+    <div class="link-subtitle">
+        Anyone who signs up through this link is linked to
+        your account automatically.
+    </div>
+
+
+    <div class="link-box">
+
+        <span
+            class="link-text"
+            id="referralLinkText"
+        >
+            Loading your link...
+        </span>
+
+
+        <button
+            type="button"
+            class="link-copy"
+            onclick="copyLink()"
+        >
+            Copy
+        </button>
+
+    </div>
+
+
+    <div class="share-row">
+
+        <button
+            type="button"
+            class="share-btn primary"
+            onclick="shareLink()"
+        >
+            📤 Share link
+        </button>
+
+        <button
+            type="button"
+            class="share-btn"
+            onclick="shareToWhatsApp()"
+        >
+            💬 WhatsApp
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- HOW IT WORKS -->
+
+<section class="card">
+
+    <div class="instructions-title">
+        How it works
+    </div>
+
+
+    <div class="step">
+
+        <div class="step-number">
+            1
+        </div>
+
+        <div>
+            <strong>Share your link</strong>
+            <p>Send your referral link to friends, family or your audience.</p>
+        </div>
+
+    </div>
+
+
+    <div class="step">
+
+        <div class="step-number">
+            2
+        </div>
+
+        <div>
+            <strong>They sign up</strong>
+            <p>As long as they use your link, their account is linked to yours automatically.</p>
+        </div>
+
+    </div>
+
+
+    <div class="step">
+
+        <div class="step-number">
+            3
+        </div>
+
+        <div>
+            <strong>You get paid</strong>
+            <p id="howItWorksAmount">₦500 is added to your referral balance the moment their account is created.</p>
+        </div>
+
+    </div>
+
+
+    <div class="step">
+
+        <div class="step-number">
+            4
+        </div>
+
+        <div>
+            <strong>Move it to your main balance</strong>
+            <p>Once your referral balance hits ₦2,000 and you have an active earning plan, withdraw it into your main balance anytime.</p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- HISTORY -->
+
+<section class="card">
+
+    <div class="history-header">
+
+        <div>
+
+            <div class="history-title">
+                Referral history
+            </div>
+
+            <div class="history-subtitle">
+                Everyone you've referred so far
+            </div>
+
+        </div>
+
+
+        <div
+            class="history-badge"
+            id="historyBadge"
+        >
+            0 TOTAL
+        </div>
+
+    </div>
+
+
+    <div
+        class="history-list"
+        id="historyList"
+    >
+
+        <div class="history-empty">
+            Loading referral history...
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+
+<script>
+
+let referralLink = "";
+let referralState = {
+    referralBalance: 0,
+    minWithdrawal: 2000,
+    hasActivePlan: false
+};
+
+
+/* ================================
+   MONEY
+================================ */
+
+function formatNaira(amount){
+
+    return "₦" +
+        Number(amount || 0).toLocaleString(
+            "en-NG",
+            {
+                minimumFractionDigits:2,
+                maximumFractionDigits:2
+            }
+        );
+
+}
+
+
+/* ================================
+   LOAD PAGE DATA
+================================ */
+
+async function loadReferralData(){
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/referrals",
+                {
+                    credentials:"include",
+                    cache:"no-store"
+                }
+            );
+
+
+        if(response.status === 401){
+
+            window.location.href =
+                "/login.html";
+
+            return;
+
+        }
+
+
+        if(!response.ok){
+
+            showToast(
+                "Unable to load referral data."
+            );
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if(!data.success){
+            return;
+        }
+
+
+        referralLink =
+            data.referralLink;
+
+
+        document.getElementById(
+            "referralLinkText"
+        ).textContent =
+            data.referralLink;
+
+
+        document.getElementById(
+            "totalReferrals"
+        ).textContent =
+            data.totalReferrals;
+
+
+        document.getElementById(
+            "totalEarned"
+        ).textContent =
+            formatNaira(
+                data.totalEarned
+            );
+
+
+        document.getElementById(
+            "bonusAmount"
+        ).textContent =
+            formatNaira(
+                data.bonusPerReferral
+            ) + " per referral";
+
+
+        document.getElementById(
+            "howItWorksAmount"
+        ).textContent =
+            formatNaira(
+                data.bonusPerReferral
+            ) +
+            " is added to your balance the moment their account is created.";
+
+
+        document.getElementById(
+            "historyBadge"
+        ).textContent =
+            `${data.totalReferrals} TOTAL`;
+
+
+        referralState = {
+            referralBalance:
+                Number(data.referralBalance || 0),
+
+            minWithdrawal:
+                Number(data.minWithdrawal || 2000),
+
+            hasActivePlan:
+                Boolean(data.hasActivePlan)
+        };
+
+
+        renderReferralBalance();
+
+
+        renderHistory(
+            data.history || []
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Referral page error:",
+            error
+        );
+
+        document.getElementById(
+            "historyList"
+        ).innerHTML = `
+            <div class="history-empty">
+                Referral history could not be loaded.
+            </div>
+        `;
+
+    }
+
+}
+
+
+/* ================================
+   BALANCE (header)
+================================ */
+
+async function loadBalance(){
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/dashboard",
+                {
+                    credentials:"include",
+                    cache:"no-store"
+                }
+            );
+
+
+        if(response.status === 401){
+            return;
+        }
+
+
+        if(!response.ok){
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if(
+            data.success &&
+            data.user
+        ){
+
+            document.getElementById(
+                "balance"
+            ).textContent =
+                formatNaira(
+                    data.user.balance
+                );
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Balance load error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================
+   HISTORY
+================================ */
+
+function renderHistory(history){
+
+    const list =
+        document.getElementById(
+            "historyList"
+        );
+
+
+    if(!history.length){
+
+        list.innerHTML = `
+            <div class="history-empty">
+                No referrals yet. Share your link to start earning.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    list.innerHTML =
+        history.map(item => {
+
+            const date =
+                new Date(
+                    item.createdAt
+                ).toLocaleString(
+                    "en-NG",
+                    {
+                        day:"numeric",
+                        month:"short",
+                        hour:"2-digit",
+                        minute:"2-digit"
+                    }
+                );
+
+
+            return `
+
+                <div class="history-item">
+
+                    <div class="history-left">
+
+                        <div class="history-icon">
+                            👤
+                        </div>
+
+                        <div style="min-width:0;">
+
+                            <div class="history-name">
+                                @${item.username}
+                            </div>
+
+                            <div class="history-date">
+                                ${date}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="history-amount">
+                        +${formatNaira(item.amount)}
+                    </div>
+
+                </div>
+
+            `;
+
+        }).join("");
+
+}
+
+
+/* ================================
+   REFERRAL BALANCE + WITHDRAW
+================================ */
+
+function renderReferralBalance(){
+
+    document.getElementById(
+        "referralBalance"
+    ).textContent =
+        formatNaira(
+            referralState.referralBalance
+        );
+
+
+    const hasMinBalance =
+        referralState.referralBalance >=
+        referralState.minWithdrawal;
+
+
+    const chipMinBalance =
+        document.getElementById(
+            "chipMinBalance"
+        );
+
+    chipMinBalance.textContent =
+        (hasMinBalance ? "✓ " : "") +
+        `Min. ${formatNaira(referralState.minWithdrawal)} balance`;
+
+    chipMinBalance.className =
+        "rb-chip " +
+        (hasMinBalance ? "ok" : "no");
+
+
+    const chipActivePlan =
+        document.getElementById(
+            "chipActivePlan"
+        );
+
+    chipActivePlan.textContent =
+        (referralState.hasActivePlan ? "✓ " : "") +
+        "Active earning plan";
+
+    chipActivePlan.className =
+        "rb-chip " +
+        (referralState.hasActivePlan ? "ok" : "no");
+
+
+    const input =
+        document.getElementById(
+            "withdrawAmount"
+        );
+
+    input.min =
+        referralState.minWithdrawal;
+
+
+    const helper =
+        document.getElementById(
+            "rbHelper"
+        );
+
+    if(!referralState.hasActivePlan){
+
+        helper.textContent =
+            "Activate an earning plan to unlock withdrawals from your referral balance.";
+
+    }else if(!hasMinBalance){
+
+        helper.textContent =
+            `You need at least ${formatNaira(referralState.minWithdrawal)} in your referral balance to withdraw.`;
+
+    }else{
+
+        helper.textContent =
+            `Minimum withdrawal: ${formatNaira(referralState.minWithdrawal)}. Moves instantly to your main balance.`;
+
+    }
+
+
+    updateWithdrawButtonState();
+
+}
+
+
+function updateWithdrawButtonState(){
+
+    const input =
+        document.getElementById(
+            "withdrawAmount"
+        );
+
+    const btn =
+        document.getElementById(
+            "withdrawBtn"
+        );
+
+    const amount =
+        Number(input.value);
+
+    const eligible =
+        referralState.hasActivePlan &&
+        referralState.referralBalance >= referralState.minWithdrawal;
+
+    const validAmount =
+        input.value !== "" &&
+        Number.isFinite(amount) &&
+        amount >= referralState.minWithdrawal &&
+        amount <= referralState.referralBalance;
+
+    btn.disabled =
+        !eligible || !validAmount;
+
+}
+
+
+document.getElementById(
+    "withdrawAmount"
+).addEventListener(
+    "input",
+    updateWithdrawButtonState
+);
+
+
+async function withdrawReferralBalance(){
+
+    const input =
+        document.getElementById(
+            "withdrawAmount"
+        );
+
+    const btn =
+        document.getElementById(
+            "withdrawBtn"
+        );
+
+    const amount =
+        Number(input.value);
+
+
+    if(
+        !Number.isFinite(amount) ||
+        amount < referralState.minWithdrawal
+    ){
+
+        showToast(
+            `Minimum withdrawal is ${formatNaira(referralState.minWithdrawal)}.`
+        );
+
+        return;
+
+    }
+
+
+    if(amount > referralState.referralBalance){
+
+        showToast(
+            "That's more than your referral balance."
+        );
+
+        return;
+
+    }
+
+
+    btn.disabled = true;
+
+    const originalLabel =
+        btn.textContent;
+
+    btn.textContent =
+        "Processing...";
+
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/referrals/withdraw",
+                {
+                    method:"POST",
+                    credentials:"include",
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({ amount })
+                }
+            );
+
+
+        const result =
+            await response.json().catch(() => null);
+
+
+        if(!response.ok || !result || !result.success){
+
+            showToast(
+                result?.message ||
+                "Unable to process withdrawal."
+            );
+
+            btn.textContent =
+                originalLabel;
+
+            updateWithdrawButtonState();
+
+            return;
+
+        }
+
+
+        showToast(
+            result.message ||
+            "Withdrawal successful."
+        );
+
+        input.value = "";
+
+        await Promise.all([
+            loadReferralData(),
+            loadBalance()
+        ]);
+
+
+    }catch(error){
+
+        console.error(
+            "Referral withdrawal error:",
+            error
+        );
+
+        showToast(
+            "Unable to process withdrawal."
+        );
+
+        btn.textContent =
+            originalLabel;
+
+        updateWithdrawButtonState();
+
+    }
+
+}
+
+
+/* ================================
+   COPY LINK
+================================ */
+
+async function copyLink(){
+
+    if(!referralLink){
+        return;
+    }
+
+    try{
+
+        await navigator.clipboard.writeText(
+            referralLink
+        );
+
+        showToast(
+            "Referral link copied."
+        );
+
+    }catch{
+
+        showToast(
+            "Unable to copy link."
+        );
+
+    }
+
+}
+
+
+/* ================================
+   SHARE LINK
+================================ */
+
+async function shareLink(){
+
+    if(!referralLink){
+        return;
+    }
+
+    const shareText =
+        "Join me on Netnaira and start earning daily:";
+
+
+    if(navigator.share){
+
+        try{
+
+            await navigator.share({
+                title:"Netnaira",
+                text:shareText,
+                url:referralLink
+            });
+
+        }catch(error){
+
+            /*
+            Ignore — the user likely
+            cancelled the share sheet.
+            */
+
+        }
+
+        return;
+
+    }
+
+
+    copyLink();
+
+}
+
+
+function shareToWhatsApp(){
+
+    if(!referralLink){
+        return;
+    }
+
+    const text =
+        encodeURIComponent(
+            `Join me on Netnaira and start earning daily: ${referralLink}`
+        );
+
+
+    window.open(
+        `https://wa.me/?text=${text}`,
+        "_blank"
+    );
+
+}
+
+
+/* ================================
+   TOAST
+================================ */
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add("show");
+
+
+    setTimeout(
+        () => {
+            toast.classList.remove("show");
+        },
+        2600
+    );
+
+}
+
+
+/* ================================
+   START
+================================ */
+
+loadReferralData();
+loadBalance();
+
+</script>
+
+</body>
+
+</html>
+

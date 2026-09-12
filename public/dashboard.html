@@ -33,6 +33,7 @@
       --border: rgba(255,255,255,.07);
       --danger: #ff6577;
       --yellow: #f5c451;
+      --glow: #3dffb0;
     }
 
     html {
@@ -56,7 +57,7 @@
 
       overflow-x: hidden;
 
-      padding-bottom: 90px;
+      padding-bottom: 110px;
     }
 
     a {
@@ -114,6 +115,97 @@
       pointer-events: none;
 
       z-index: -1;
+    }
+
+    /* ================= PAGE TRANSITION LOADER ================= */
+
+    .page-loader {
+      position: fixed;
+      inset: 0;
+
+      z-index: 999;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(7,17,12,.92);
+
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+
+      opacity: 0;
+      pointer-events: none;
+
+      transition: opacity .22s ease;
+    }
+
+    .page-loader.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .page-loader-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-loader-logo {
+      width: 52px;
+      height: 52px;
+
+      border-radius: 15px;
+
+      display: grid;
+      place-items: center;
+
+      background:
+        linear-gradient(
+          145deg,
+          var(--green-light),
+          #0b9f68
+        );
+
+      color: #03150d;
+
+      font-size: 22px;
+      font-weight: 900;
+
+      box-shadow:
+        0 0 0 1px rgba(61,255,176,.3),
+        0 10px 30px rgba(22,199,132,.45);
+
+      animation: loader-pulse 1.1s ease-in-out infinite;
+    }
+
+    @keyframes loader-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .page-loader-ring {
+      width: 34px;
+      height: 34px;
+
+      border-radius: 50%;
+
+      border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--green-light);
+
+      animation: loader-spin .7s linear infinite;
+    }
+
+    @keyframes loader-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .page-loader-text {
+      color: #8fa197;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
     }
 
     /* ================= APP ================= */
@@ -220,6 +312,165 @@
 
       top: 8px;
       right: 8px;
+
+      display: none;
+    }
+
+    .notification-dot.show {
+      display: block;
+    }
+
+    .notification-panel {
+      position: absolute;
+
+      top: 56px;
+      right: 16px;
+
+      width: min(340px, calc(100vw - 32px));
+      max-height: 360px;
+
+      overflow-y: auto;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+
+      z-index: 60;
+
+      display: none;
+    }
+
+    .notification-panel.show {
+      display: block;
+    }
+
+    .notification-panel-header {
+      padding: 14px 16px;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .notification-item {
+      padding: 12px 16px;
+
+      border-bottom: 1px solid var(--border);
+
+      font-size: 13px;
+      line-height: 1.45;
+
+      color: var(--text);
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-item-time {
+      display: block;
+
+      margin-top: 4px;
+
+      font-size: 11px;
+      color: rgba(244,255,248,.5);
+    }
+
+    .notification-empty {
+      padding: 20px 16px;
+
+      font-size: 13px;
+      text-align: center;
+
+      color: rgba(244,255,248,.5);
+    }
+
+    .notification-modal-overlay {
+      position: fixed;
+      inset: 0;
+
+      z-index: 90;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background: rgba(3,8,5,.72);
+
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .notification-modal-overlay.show {
+      display: flex;
+    }
+
+    .notification-modal {
+      width: min(360px, 100%);
+
+      border-radius: 18px;
+
+      padding: 26px 22px 22px;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+
+      text-align: center;
+    }
+
+    .notification-modal-icon {
+      width: 46px;
+      height: 46px;
+
+      margin: 0 auto 14px;
+
+      border-radius: 50%;
+
+      background: rgba(22,199,132,.12);
+      border: 1px solid rgba(22,199,132,.25);
+
+      display: grid;
+      place-items: center;
+
+      font-size: 20px;
+    }
+
+    .notification-modal-message {
+      font-size: 14px;
+      line-height: 1.55;
+
+      color: var(--text);
+
+      white-space: pre-wrap;
+
+      margin-bottom: 22px;
+    }
+
+    .notification-modal-close {
+      width: 100%;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      background: var(--green);
+
+      color: #03150d;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .notification-modal-close:active {
+      transform: scale(.98);
     }
 
     .avatar {
@@ -415,6 +666,110 @@
       transform: scale(.97);
     }
 
+    /* ================= REFERRAL ================= */
+
+    .referral-card {
+      margin-top: 12px;
+
+      padding: 16px;
+
+      border-radius: 16px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 13px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(22,199,132,.10),
+          rgba(22,199,132,.03)
+        );
+
+      border: 1px solid rgba(22,199,132,.18);
+    }
+
+    .referral-icon {
+      width: 42px;
+      height: 42px;
+
+      flex-shrink: 0;
+
+      border-radius: 12px;
+
+      background: rgba(22,199,132,.14);
+
+      display: grid;
+
+      place-items: center;
+
+      font-size: 18px;
+    }
+
+    .referral-copy {
+      flex: 1;
+
+      min-width: 0;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 3px;
+    }
+
+    .referral-copy strong {
+      font-size: 12.5px;
+
+      font-weight: 800;
+    }
+
+    .referral-copy span {
+      color: #8fa197;
+
+      font-size: 10.5px;
+
+      line-height: 1.4;
+    }
+
+    .referral-btn {
+      flex-shrink: 0;
+
+      padding: 10px 15px;
+
+      border-radius: 10px;
+
+      background: var(--green);
+
+      color: #03150d;
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      white-space: nowrap;
+    }
+
+    .referral-btn:active {
+      transform: scale(.96);
+    }
+
+    @media (max-width: 420px) {
+
+      .referral-card {
+        flex-wrap: wrap;
+      }
+
+      .referral-btn {
+        width: 100%;
+
+        text-align: center;
+      }
+
+    }
+
     /* ================= STAT GRID ================= */
 
     .stat-grid {
@@ -484,11 +839,20 @@
     /* ================= ACTIVE PLAN ================= */
 
     .active-plan {
-      padding: 20px;
+      position: relative;
+      overflow: hidden;
 
-      border-radius: 17px;
+      padding: 22px;
 
-      background: var(--card);
+      border-radius: 18px;
+
+      background:
+        radial-gradient(
+          circle at 100% 0%,
+          rgba(22,199,132,.10),
+          transparent 55%
+        ),
+        var(--card);
 
       border: 1px solid var(--border);
     }
@@ -512,10 +876,10 @@
     }
 
     .plan-icon {
-      width: 43px;
-      height: 43px;
+      width: 46px;
+      height: 46px;
 
-      border-radius: 12px;
+      border-radius: 13px;
 
       background: rgba(22,199,132,.10);
 
@@ -525,29 +889,125 @@
 
       place-items: center;
 
-      font-size: 19px;
+      font-size: 20px;
+
+      flex-shrink: 0;
+    }
+
+    .plan-icon.idle {
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
     }
 
     .plan-name {
-      font-size: 14px;
+      font-size: 15px;
 
       font-weight: 800;
 
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
 
     .plan-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+
       color: var(--green-light);
 
-      font-size: 10px;
+      background: rgba(22,199,132,.10);
 
-      font-weight: 700;
+      padding: 3px 8px;
+
+      border-radius: 999px;
+
+      font-size: 9.5px;
+
+      font-weight: 800;
+
+      letter-spacing: .2px;
+    }
+
+    .plan-status.idle {
+      color: var(--yellow);
+      background: rgba(245,196,81,.10);
+    }
+
+    .plan-status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
     }
 
     .plan-amount {
-      font-size: 16px;
+      font-size: 17px;
+
+      font-weight: 850;
+
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .plan-amount small {
+      display: block;
+
+      color: #718078;
+
+      font-size: 9px;
+
+      font-weight: 700;
+
+      margin-top: 3px;
+    }
+
+    /* ---- plan detail grid (new) ---- */
+
+    .plan-details {
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 10px;
+
+      margin-top: 20px;
+
+      padding-top: 18px;
+
+      border-top: 1px dashed var(--border);
+    }
+
+    .plan-detail {
+      padding: 12px 10px;
+
+      border-radius: 12px;
+
+      background: rgba(255,255,255,.02);
+
+      border: 1px solid var(--border);
+    }
+
+    .plan-detail-label {
+      color: #718078;
+
+      font-size: 8.5px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: .3px;
+
+      margin-bottom: 6px;
+    }
+
+    .plan-detail-value {
+      font-size: 13px;
 
       font-weight: 800;
+    }
+
+    .plan-detail-value.green {
+      color: var(--green-light);
     }
 
     .progress-area {
@@ -566,26 +1026,66 @@
       margin-bottom: 8px;
     }
 
+    .progress-label strong {
+      color: var(--text);
+      font-weight: 800;
+    }
+
     .progress-bar {
       width: 100%;
 
-      height: 7px;
+      height: 8px;
 
       border-radius: 999px;
 
       background: rgba(255,255,255,.06);
 
       overflow: hidden;
+
+      position: relative;
     }
 
     .progress-fill {
-      width: 63%;
+      width: 0%;
 
       height: 100%;
 
       border-radius: inherit;
 
-      background: var(--green);
+      background:
+        linear-gradient(
+          90deg,
+          var(--green),
+          var(--green-light)
+        );
+
+      transition: width .6s ease;
+
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      background:
+        linear-gradient(
+          110deg,
+          transparent 30%,
+          rgba(255,255,255,.35) 45%,
+          transparent 60%
+        );
+
+      background-size: 200% 100%;
+
+      animation: shimmer 2.6s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 160% 0; }
+      100% { background-position: -60% 0; }
     }
 
     .plan-footer {
@@ -604,6 +1104,30 @@
       color: white;
 
       font-weight: 700;
+    }
+
+    .plan-cta {
+      display: block;
+
+      margin-top: 18px;
+
+      text-align: center;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      font-size: 12px;
+
+      font-weight: 800;
+
+      background: var(--green);
+
+      color: #03150d;
+    }
+
+    .plan-cta:active {
+      transform: scale(.98);
     }
 
     /* ================= QUICK ACTIONS ================= */
@@ -697,6 +1221,14 @@
       letter-spacing: -1px;
     }
 
+    .earnings-sub {
+      color: #718078;
+
+      font-size: 10.5px;
+
+      margin-top: 4px;
+    }
+
     .earnings-change {
       color: var(--green-light);
 
@@ -709,12 +1241,19 @@
       font-size: 10px;
 
       font-weight: 800;
+
+      white-space: nowrap;
+    }
+
+    .earnings-change.idle {
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
     }
 
     .chart {
-      height: 100px;
+      height: 110px;
 
-      margin-top: 20px;
+      margin-top: 22px;
 
       display: flex;
 
@@ -723,20 +1262,69 @@
       justify-content: space-between;
 
       gap: 8px;
+      position: relative;
+    }
+
+    .bar-col {
+      flex: 1;
+
+      height: 100%;
+
+      display: flex;
+      align-items: flex-end;
+
+      position: relative;
     }
 
     .bar {
-      flex: 1;
+      width: 100%;
 
-      border-radius: 5px 5px 2px 2px;
+      border-radius: 6px 6px 2px 2px;
 
-      background: rgba(22,199,132,.18);
+      background: rgba(22,199,132,.16);
 
-      min-height: 15px;
+      min-height: 4px;
+
+      transition: height .5s ease;
+
+      position: relative;
+    }
+
+    .bar.earned {
+      background: rgba(22,199,132,.4);
     }
 
     .bar.active {
-      background: var(--green);
+      background:
+        linear-gradient(
+          180deg,
+          var(--green-light),
+          var(--green)
+        );
+
+      box-shadow: 0 0 14px rgba(39,229,154,.35);
+    }
+
+    .bar-value {
+      position: absolute;
+
+      top: -18px;
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      font-size: 8px;
+      font-weight: 800;
+
+      color: var(--green-light);
+
+      white-space: nowrap;
+
+      opacity: 0;
+    }
+
+    .bar.active .bar-value {
+      opacity: 1;
     }
 
     .chart-labels {
@@ -749,6 +1337,29 @@
       color: #5e6c64;
 
       font-size: 8px;
+    }
+
+    .chart-labels span.today {
+      color: var(--green-light);
+      font-weight: 800;
+    }
+
+    .chart-empty {
+      margin-top: 20px;
+
+      padding: 22px 14px;
+
+      text-align: center;
+
+      border-radius: 12px;
+
+      border: 1px dashed var(--border);
+
+      color: var(--muted);
+
+      font-size: 11px;
+
+      line-height: 1.6;
     }
 
     /* ================= NOTICE ================= */
@@ -791,37 +1402,51 @@
       line-height: 1.5;
     }
 
-    /* ================= BOTTOM NAV ================= */
+    /* ================= BOTTOM NAV (floating) ================= */
 
     .bottom-nav {
       position: fixed;
 
-      bottom: 0;
+      bottom: 16px;
       left: 0;
       right: 0;
 
-      height: 70px;
-
       z-index: 100;
-
-      background: rgba(7,17,12,.94);
-
-      border-top: 1px solid var(--border);
-
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
 
       display: flex;
 
       justify-content: center;
+
+      pointer-events: none;
     }
 
     .bottom-inner {
-      width: min(600px, 100%);
+      position: relative;
+
+      width: min(280px, calc(100% - 28px));
+
+      height: 68px;
 
       display: grid;
 
-      grid-template-columns: repeat(5,1fr);
+      grid-template-columns: repeat(2, 1fr);
+
+      align-items: center;
+
+      background: rgba(14,28,20,.82);
+
+      border: 1px solid rgba(255,255,255,.09);
+
+      border-radius: 22px;
+
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+
+      box-shadow:
+        0 16px 40px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.04);
+
+      pointer-events: all;
     }
 
     .nav-item {
@@ -835,7 +1460,7 @@
 
       gap: 4px;
 
-      color: #68776e;
+      color: #6c7b72;
 
       font-size: 9px;
 
@@ -858,33 +1483,107 @@
       transform: scale(.95);
     }
 
+    /* ---- raised, glowing center "Earn" button ---- */
+
+    .nav-earn {
+      position: absolute;
+
+      top: -30px;
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      width: 62px;
+      height: 62px;
+
+      border-radius: 50%;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 1px;
+
+      background:
+        linear-gradient(
+          150deg,
+          var(--glow),
+          var(--green) 65%
+        );
+
+      color: #03150d;
+
+      border: 3px solid var(--dark);
+
+      box-shadow:
+        0 0 0 1px rgba(61,255,176,.35),
+        0 10px 26px rgba(22,199,132,.55),
+        0 0 30px rgba(61,255,176,.45);
+
+      animation: earn-pulse 2.6s ease-in-out infinite;
+    }
+
+    .nav-earn-icon {
+      font-size: 20px;
+
+      font-weight: 900;
+
+      line-height: 1;
+    }
+
+    .nav-earn-label {
+      font-size: 8px;
+
+      font-weight: 900;
+
+      letter-spacing: .3px;
+    }
+
+    .nav-earn:active {
+      transform: translateX(-50%) scale(.94);
+    }
+
+    @keyframes earn-pulse {
+
+      0%, 100% {
+        box-shadow:
+          0 0 0 1px rgba(61,255,176,.35),
+          0 10px 26px rgba(22,199,132,.55),
+          0 0 30px rgba(61,255,176,.45);
+      }
+
+      50% {
+        box-shadow:
+          0 0 0 1px rgba(61,255,176,.5),
+          0 10px 30px rgba(22,199,132,.7),
+          0 0 42px rgba(61,255,176,.7);
+      }
+
+    }
+
     /* ================= DESKTOP ================= */
 
     @media (min-width: 800px) {
 
       body {
-        padding-bottom: 35px;
+        padding-bottom: 40px;
       }
 
       .bottom-nav {
         position: static;
 
-        margin-top: 40px;
+        margin-top: 46px;
 
-        height: 58px;
-
-        border: 1px solid var(--border);
-
-        border-radius: 15px;
-
-        max-width: 600px;
-
-        margin-left: auto;
-        margin-right: auto;
+        justify-content: center;
       }
 
       .bottom-inner {
         width: 100%;
+        max-width: 460px;
       }
 
     }
@@ -972,6 +1671,7 @@
 
       .welcome,
       .balance-card,
+      .referral-card,
       .stat-grid,
       .active-plan,
       .quick-grid,
@@ -982,6 +1682,10 @@
 
       .balance-card {
         animation-delay: .04s;
+      }
+
+      .referral-card {
+        animation-delay: .06s;
       }
 
       .stat-grid {
@@ -1021,6 +1725,56 @@
 
 <body>
 
+  <!-- ================= PAGE TRANSITION LOADER ================= -->
+
+  <div class="page-loader" id="pageLoader">
+
+    <div class="page-loader-inner">
+
+      <div class="page-loader-logo">
+        ₦
+      </div>
+
+      <div class="page-loader-ring"></div>
+
+      <div class="page-loader-text">
+        Loading…
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= NOTIFICATION POPUP ================= -->
+
+  <div
+    class="notification-modal-overlay"
+    id="notificationModalOverlay"
+  >
+
+    <div class="notification-modal">
+
+      <div class="notification-modal-icon">
+        🔔
+      </div>
+
+      <div
+        class="notification-modal-message"
+        id="notificationModalMessage"
+      ></div>
+
+      <button
+        class="notification-modal-close"
+        onclick="closeNotificationPopup()"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
   <!-- ================= HEADER ================= -->
 
   <header>
@@ -1050,15 +1804,37 @@
 
           <button
             class="notification"
-            onclick="showNotification()"
+            onclick="toggleNotificationPanel()"
             aria-label="Notifications"
           >
 
             🔔
 
-            <span class="notification-dot"></span>
+            <span
+              class="notification-dot"
+              id="notificationDot"
+            ></span>
 
           </button>
+
+          <div
+            class="notification-panel"
+            id="notificationPanel"
+          >
+
+            <div class="notification-panel-header">
+              Notifications
+            </div>
+
+            <div id="notificationList">
+
+              <div class="notification-empty">
+                You have no notifications yet.
+              </div>
+
+            </div>
+
+          </div>
 
 
           <div
@@ -1150,6 +1926,26 @@
     </section>
 
 
+    <!-- REFERRAL -->
+
+    <section class="referral-card">
+
+      <div class="referral-icon">
+        👥
+      </div>
+
+      <div class="referral-copy">
+        <strong>Invite friends, earn ₦500</strong>
+        <span>Get ₦500 for every friend who signs up with your link.</span>
+      </div>
+
+      <a href="/refer.html" class="referral-btn">
+        Refer &amp; earn
+      </a>
+
+    </section>
+
+
     <!-- STAT GRID -->
 
     <section class="stat-grid">
@@ -1212,7 +2008,7 @@
         Active earning plan
       </h2>
 
-      <a href="#plans">
+      <a href="/plans.html">
         View plans
       </a>
 
@@ -1225,7 +2021,7 @@
 
         <div class="plan-info">
 
-          <div class="plan-icon">
+          <div class="plan-icon" id="planIcon">
             ⚡
           </div>
 
@@ -1238,8 +2034,9 @@
               No active plan
             </div>
 
-            <div class="plan-status">
-              ● Waiting for activation
+            <div class="plan-status" id="planStatus">
+              <span class="plan-status-dot"></span>
+              Waiting for activation
             </div>
 
           </div>
@@ -1247,11 +2044,9 @@
         </div>
 
 
-        <div
-          class="plan-amount"
-          id="planDaily"
-        >
-          ₦0/day
+        <div class="plan-amount">
+          <span id="planDaily">₦0/day</span>
+          <small>Daily payout</small>
         </div>
 
       </div>
@@ -1265,8 +2060,8 @@
             Earning progress
           </span>
 
-          <span id="progressText">
-            0%
+          <span>
+            <strong id="progressText">0%</strong>
           </span>
 
         </div>
@@ -1302,6 +2097,33 @@
         </span>
 
       </div>
+
+
+      <!-- extra detail grid so users understand exactly what the plan is doing -->
+
+      <div class="plan-details">
+
+        <div class="plan-detail">
+          <div class="plan-detail-label">Invested</div>
+          <div class="plan-detail-value" id="planAmount">—</div>
+        </div>
+
+        <div class="plan-detail">
+          <div class="plan-detail-label">Total return</div>
+          <div class="plan-detail-value green" id="planTotalReturn">—</div>
+        </div>
+
+        <div class="plan-detail">
+          <div class="plan-detail-label">Matures</div>
+          <div class="plan-detail-value" id="planMatures">—</div>
+        </div>
+
+      </div>
+
+
+      <a href="/plans.html" class="plan-cta" id="planCta">
+        Activate an earning plan
+      </a>
 
     </section>
 
@@ -1433,59 +2255,32 @@
             ₦0.00
           </div>
 
+          <div class="earnings-sub" id="chartSub">
+            No earnings yet
+          </div>
+
         </div>
 
 
-        <div class="earnings-change">
-          + Active
+        <div class="earnings-change" id="earningsChange">
+          No plan
         </div>
 
       </div>
 
 
-      <div class="chart">
-
-        <div class="bar" style="height:25%"></div>
-        <div class="bar" style="height:42%"></div>
-        <div class="bar" style="height:31%"></div>
-        <div class="bar" style="height:55%"></div>
-        <div class="bar" style="height:47%"></div>
-        <div class="bar" style="height:70%"></div>
-        <div class="bar active" style="height:82%"></div>
-
+      <div class="chart" id="chart">
+        <!-- bars are rendered by JS from real account data -->
       </div>
 
 
-      <div class="chart-labels">
+      <div class="chart-labels" id="chartLabels">
+        <!-- labels are rendered by JS -->
+      </div>
 
-        <span>
-          Mon
-        </span>
 
-        <span>
-          Tue
-        </span>
-
-        <span>
-          Wed
-        </span>
-
-        <span>
-          Thu
-        </span>
-
-        <span>
-          Fri
-        </span>
-
-        <span>
-          Sat
-        </span>
-
-        <span>
-          Sun
-        </span>
-
+      <div class="chart-empty" id="chartEmpty" style="display:none">
+        Your last 7 days will appear here once an earning plan is active.
       </div>
 
     </section>
@@ -1539,48 +2334,6 @@
 
 
       <a
-        href="/plans.html"
-        class="nav-item"
-      >
-
-        <div class="nav-item-icon">
-          ⚡
-        </div>
-
-        Plans
-
-      </a>
-
-
-      <a
-        href="/earn.html"
-        class="nav-item"
-      >
-
-        <div class="nav-item-icon">
-          💰
-        </div>
-
-        Earn
-
-      </a>
-
-
-      <a
-        href="/refer.html"
-        class="nav-item"
-      >
-
-        <div class="nav-item-icon">
-          👥
-        </div>
-
-        Refer
-
-      </a>
-
-
-      <a
         href="/profile.html"
         class="nav-item"
       >
@@ -1591,6 +2344,15 @@
 
         Profile
 
+      </a>
+
+
+      <!-- raised, glowing center button — this replaces the old
+           separate Plans + Earn items -->
+
+      <a href="/plans.html" class="nav-earn" aria-label="Earn">
+        <div class="nav-earn-icon">₦</div>
+        <div class="nav-earn-label">Earn</div>
       </a>
 
     </div>
@@ -1622,6 +2384,29 @@
       );
 
 
+    /* ================= HELPERS ================= */
+
+    function formatNaira(amount, decimals) {
+
+      return (
+        "₦" +
+        Number(amount || 0).toLocaleString(
+          "en-NG",
+          {
+            minimumFractionDigits:
+              decimals === false ? 0 : 2,
+            maximumFractionDigits:
+              decimals === false ? 0 : 2
+          }
+        )
+      );
+
+    }
+
+    const WEEKDAY_LABELS =
+      ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+
     /* ================= UPDATE DASHBOARD ================= */
 
     function updateDashboard(data) {
@@ -1645,28 +2430,12 @@
 
       document.getElementById("totalEarned")
         .textContent =
-        "₦" +
-        Number(data.totalEarned || 0)
-          .toLocaleString(
-            "en-NG",
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            }
-          );
+        formatNaira(data.totalEarned);
 
 
       document.getElementById("todayEarned")
         .textContent =
-        "₦" +
-        Number(data.todayEarned || 0)
-          .toLocaleString(
-            "en-NG",
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            }
-          );
+        formatNaira(data.todayEarned);
 
 
       document.getElementById("activePlan")
@@ -1676,15 +2445,7 @@
 
       document.getElementById("chartTotal")
         .textContent =
-        "₦" +
-        Number(data.totalEarned || 0)
-          .toLocaleString(
-            "en-NG",
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            }
-          );
+        formatNaira(data.totalEarned);
 
 
       document.getElementById("planName")
@@ -1694,11 +2455,7 @@
 
       document.getElementById("planDaily")
         .textContent =
-        "₦" +
-        Number(data.dailyEarning || 0)
-          .toLocaleString(
-            "en-NG"
-          ) +
+        formatNaira(data.dailyEarning, false) +
         "/day";
 
 
@@ -1742,6 +2499,256 @@
       document.getElementById("avatar")
         .textContent =
         firstLetter;
+
+
+      const hasPlan =
+        Boolean(data.activePlan);
+
+
+      /* ---- plan icon + status pill ---- */
+
+      const planIcon =
+        document.getElementById("planIcon");
+
+      const planStatus =
+        document.getElementById("planStatus");
+
+      const planCta =
+        document.getElementById("planCta");
+
+      if (hasPlan) {
+
+        planIcon.classList.remove("idle");
+        planIcon.textContent = "⚡";
+
+        planStatus.classList.remove("idle");
+        planStatus.innerHTML =
+          '<span class="plan-status-dot"></span> Active — earning daily';
+
+        planCta.textContent = "View plan details";
+        planCta.href = "/plans.html";
+
+      } else {
+
+        planIcon.classList.add("idle");
+        planIcon.textContent = "⏸";
+
+        planStatus.classList.add("idle");
+        planStatus.innerHTML =
+          '<span class="plan-status-dot"></span> Waiting for activation';
+
+        planCta.textContent = "Activate an earning plan";
+        planCta.href = "/plans.html";
+
+      }
+
+
+      /* ---- plan detail grid ---- */
+
+      document.getElementById("planAmount")
+        .textContent =
+        hasPlan ? formatNaira(data.planAmount, false) : "—";
+
+      document.getElementById("planTotalReturn")
+        .textContent =
+        hasPlan ? formatNaira(data.planTotalReturn, false) : "—";
+
+      const maturesEl =
+        document.getElementById("planMatures");
+
+      if (
+        hasPlan &&
+        data.startedAt &&
+        data.durationDays
+      ) {
+
+        const start =
+          new Date(data.startedAt);
+
+        const matures =
+          new Date(start);
+
+        matures.setDate(
+          matures.getDate() + Number(data.durationDays)
+        );
+
+        maturesEl.textContent =
+          matures.toLocaleDateString(
+            "en-NG",
+            { day: "numeric", month: "short", year: "numeric" }
+          );
+
+      } else {
+
+        maturesEl.textContent = "—";
+
+      }
+
+
+      /* ---- earnings overview (real data, last 7 days) ---- */
+
+      renderEarningsChart(data);
+
+    }
+
+
+    /*
+      Builds the last-7-days chart from real account
+      numbers (no fake/random data):
+
+      - dailyEarning: the plan's daily payout
+      - daysCompleted: how many days have been credited
+        so far by the server's daily sweep
+      - todayEarned: > 0 once today's credit has landed
+
+      The sweep credits consecutive calendar days, so we
+      can work backwards from today (or yesterday, if
+      today hasn't been credited yet) and mark exactly
+      `daysCompleted` of the last days as earned.
+    */
+
+    function renderEarningsChart(data) {
+
+      const chart =
+        document.getElementById("chart");
+
+      const labelsRow =
+        document.getElementById("chartLabels");
+
+      const emptyState =
+        document.getElementById("chartEmpty");
+
+      const changeBadge =
+        document.getElementById("earningsChange");
+
+      const subLabel =
+        document.getElementById("chartSub");
+
+      chart.innerHTML = "";
+      labelsRow.innerHTML = "";
+
+      const hasPlan =
+        Boolean(data.activePlan) &&
+        Number(data.dailyEarning) > 0;
+
+      if (!hasPlan) {
+
+        chart.style.display = "none";
+        labelsRow.style.display = "none";
+        emptyState.style.display = "block";
+
+        changeBadge.textContent = "No plan";
+        changeBadge.classList.add("idle");
+
+        subLabel.textContent = "No earnings yet";
+
+        return;
+
+      }
+
+      chart.style.display = "flex";
+      labelsRow.style.display = "flex";
+      emptyState.style.display = "none";
+
+      changeBadge.textContent = "+ Active";
+      changeBadge.classList.remove("idle");
+
+      const dailyEarning =
+        Number(data.dailyEarning || 0);
+
+      const daysCompleted =
+        Number(data.daysCompleted || 0);
+
+      const lastCreditedOffset =
+        Number(data.todayEarned) > 0 ? 0 : 1;
+
+      let earnedDaysInWindow = 0;
+
+      const days = [];
+
+      for (let offset = 6; offset >= 0; offset--) {
+
+        const date = new Date();
+
+        date.setDate(date.getDate() - offset);
+
+        const wasCredited =
+          offset >= lastCreditedOffset &&
+          (offset - lastCreditedOffset) < daysCompleted;
+
+        const amount =
+          wasCredited ? dailyEarning : 0;
+
+        if (wasCredited) {
+          earnedDaysInWindow++;
+        }
+
+        days.push({
+          date,
+          amount,
+          isToday: offset === 0
+        });
+
+      }
+
+      const maxAmount =
+        Math.max(dailyEarning, 1);
+
+      days.forEach(day => {
+
+        const col =
+          document.createElement("div");
+
+        col.className = "bar-col";
+
+        const bar =
+          document.createElement("div");
+
+        const heightPct =
+          Math.max(
+            6,
+            Math.round((day.amount / maxAmount) * 100)
+          );
+
+        bar.className =
+          "bar" +
+          (day.amount > 0 ? " earned" : "") +
+          (day.isToday ? " active" : "");
+
+        bar.style.height =
+          (day.amount > 0 ? heightPct : 6) + "%";
+
+        const value =
+          document.createElement("div");
+
+        value.className = "bar-value";
+
+        value.textContent =
+          formatNaira(day.amount, false);
+
+        bar.appendChild(value);
+        col.appendChild(bar);
+        chart.appendChild(col);
+
+        const label =
+          document.createElement("span");
+
+        label.textContent =
+          WEEKDAY_LABELS[day.date.getDay()];
+
+        if (day.isToday) {
+          label.classList.add("today");
+        }
+
+        labelsRow.appendChild(label);
+
+      });
+
+      subLabel.textContent =
+        earnedDaysInWindow +
+        " of the last 7 days earned · " +
+        formatNaira(dailyEarning, false) +
+        "/day";
 
     }
 
@@ -1846,7 +2853,19 @@
             apiUser.daysRemaining,
 
           progress:
-            apiUser.progress
+            apiUser.progress,
+
+          durationDays:
+            apiUser.durationDays,
+
+          startedAt:
+            apiUser.startedAt,
+
+          planAmount:
+            apiUser.planAmount,
+
+          planTotalReturn:
+            apiUser.planTotalReturn
 
         });
 
@@ -1866,22 +2885,687 @@
     loadDashboard();
 
 
-    /* ================= NOTIFICATION ================= */
+    /* ================= NOTIFICATIONS ================= */
 
-    function showNotification() {
+    /*
+      Notifications come from the admin typing a
+      message into the Telegram bot (see
+      handleTelegramAdminMessage in server.js).
+      They're the same feed for every user.
 
-      alert(
-        "You have no new notifications."
+      To keep egress low we do NOT poll on a
+      timer. Instead:
+
+      1. One normal fetch to /api/notifications
+         on page load, to catch up on anything
+         sent since the last visit (usually an
+         empty response - a few bytes).
+      2. One long-lived connection to
+         /api/notifications/stream (Server-Sent
+         Events) that the server only writes to
+         the instant the admin actually sends a
+         message, plus a tiny keep-alive comment
+         every 45s so the connection doesn't get
+         dropped for being idle.
+
+      Local state kept in localStorage on this
+      browser:
+
+      - netnaira_notif_last_fetched: highest id
+        we've ever received, so step 1 only asks
+        the server for what's new.
+      - netnaira_notif_last_read: highest id the
+        user has actually opened the bell to see,
+        used to decide whether the dot shows.
+    */
+
+    const NOTIF_FETCHED_KEY =
+      "netnaira_notif_last_fetched";
+
+    const NOTIF_READ_KEY =
+      "netnaira_notif_last_read";
+
+    const MAX_NOTIFICATIONS_SHOWN =
+      20;
+
+    let notifications = [];
+
+    const notificationPanel =
+      document.getElementById(
+        "notificationPanel"
+      );
+
+    const notificationList =
+      document.getElementById(
+        "notificationList"
+      );
+
+    const notificationDot =
+      document.getElementById(
+        "notificationDot"
+      );
+
+    const notificationModalOverlay =
+      document.getElementById(
+        "notificationModalOverlay"
+      );
+
+    const notificationModalMessage =
+      document.getElementById(
+        "notificationModalMessage"
+      );
+
+    let popupQueue = [];
+
+    let isPopupShowing = false;
+
+    function getStoredId(key) {
+
+      return (
+        Number(
+          localStorage.getItem(key)
+        ) || 0
       );
 
     }
+
+    function formatNotificationTime(isoString) {
+
+      try {
+
+        return new Date(
+          isoString
+        ).toLocaleString(
+          "en-NG",
+          {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        );
+
+      } catch (error) {
+
+        return "";
+
+      }
+
+    }
+
+    function renderNotifications() {
+
+      if (!notifications.length) {
+
+        notificationList.innerHTML =
+          '<div class="notification-empty">You have no notifications yet.</div>';
+
+        return;
+
+      }
+
+      notificationList.innerHTML =
+        notifications
+          .map(item => `
+            <div class="notification-item">
+              ${escapeHtml(item.message)}
+              <span class="notification-item-time">
+                ${formatNotificationTime(item.created_at)}
+              </span>
+            </div>
+          `)
+          .join("");
+
+    }
+
+    function escapeHtml(text) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent = text;
+
+      return div.innerHTML;
+
+    }
+
+    function updateNotificationDot() {
+
+      const lastRead =
+        getStoredId(NOTIF_READ_KEY);
+
+      const hasUnread =
+        notifications.some(
+          item => item.id > lastRead
+        );
+
+      notificationDot.classList.toggle(
+        "show",
+        hasUnread
+      );
+
+    }
+
+    /*
+      A broadcast pops up front-and-center as soon
+      as it arrives (or is caught up on) - the user
+      doesn't need to tap the bell to see it. If
+      several are unread at once they're shown one
+      at a time; closing one reveals the next.
+    */
+
+    function showNextPopup() {
+
+      if (!popupQueue.length) {
+
+        isPopupShowing = false;
+
+        notificationModalOverlay.classList.remove(
+          "show"
+        );
+
+        return;
+
+      }
+
+      isPopupShowing = true;
+
+      notificationModalMessage.textContent =
+        popupQueue[0].message;
+
+      notificationModalOverlay.classList.add(
+        "show"
+      );
+
+    }
+
+    function enqueuePopups(items) {
+
+      if (!items || !items.length) {
+        return;
+      }
+
+      popupQueue =
+        popupQueue.concat(items);
+
+      if (!isPopupShowing) {
+        showNextPopup();
+      }
+
+    }
+
+    function closeNotificationPopup() {
+
+      const item =
+        popupQueue.shift();
+
+      if (item) {
+
+        const lastRead =
+          getStoredId(NOTIF_READ_KEY);
+
+        if (item.id > lastRead) {
+
+          localStorage.setItem(
+            NOTIF_READ_KEY,
+            String(item.id)
+          );
+
+        }
+
+        updateNotificationDot();
+
+      }
+
+      showNextPopup();
+
+    }
+
+    notificationModalOverlay.addEventListener(
+      "click",
+      function(event) {
+
+        if (event.target === notificationModalOverlay) {
+          closeNotificationPopup();
+        }
+
+      }
+    );
+
+    function toggleNotificationPanel() {
+
+      const isOpening =
+        !notificationPanel.classList.contains(
+          "show"
+        );
+
+      notificationPanel.classList.toggle(
+        "show"
+      );
+
+      if (isOpening) {
+
+        const highestId =
+          notifications.length
+            ? notifications[0].id
+            : getStoredId(NOTIF_FETCHED_KEY);
+
+        localStorage.setItem(
+          NOTIF_READ_KEY,
+          String(highestId)
+        );
+
+        updateNotificationDot();
+
+      }
+
+    }
+
+    document.addEventListener(
+      "click",
+      function(event) {
+
+        if (
+          notificationPanel.classList.contains("show") &&
+          !notificationPanel.contains(event.target) &&
+          !event.target.closest(".notification")
+        ) {
+
+          notificationPanel.classList.remove(
+            "show"
+          );
+
+        }
+
+      }
+    );
+
+    function addIncomingNotifications(
+      incoming
+    ) {
+
+      if (!incoming || !incoming.length) {
+        return;
+      }
+
+      /*
+        Anything the user hasn't already marked as
+        read (by closing its popup, or by opening
+        the bell) gets queued to pop up - whether
+        it arrived just now over the live stream,
+        or was sent while this browser was away and
+        we're only just catching up on page load.
+      */
+
+      const lastRead =
+        getStoredId(NOTIF_READ_KEY);
+
+      const unread =
+        incoming.filter(
+          item => item.id > lastRead
+        );
+
+      /*
+        Newest first in our in-memory list so
+        renderNotifications() doesn't need to
+        re-sort.
+      */
+
+      notifications =
+        [...incoming].reverse().concat(notifications)
+          .slice(0, MAX_NOTIFICATIONS_SHOWN);
+
+      const highestId =
+        Math.max(
+          getStoredId(NOTIF_FETCHED_KEY),
+          ...incoming.map(item => item.id)
+        );
+
+      localStorage.setItem(
+        NOTIF_FETCHED_KEY,
+        String(highestId)
+      );
+
+      renderNotifications();
+      updateNotificationDot();
+
+      enqueuePopups(unread);
+
+    }
+
+    /*
+      Runs once per page load: picks up anything
+      sent while this browser wasn't connected
+      (tab closed, laptop asleep, etc). Usually
+      returns an empty array, which is a tiny
+      response.
+    */
+
+    async function fetchMissedNotifications() {
+
+      try {
+
+        const afterId =
+          getStoredId(
+            NOTIF_FETCHED_KEY
+          );
+
+        const response =
+          await fetch(
+            `/api/notifications?after_id=${afterId}`,
+            {
+              method: "GET",
+              credentials: "same-origin"
+            }
+          );
+
+        if (response.status === 401) {
+          return;
+        }
+
+        const result =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (
+          !response.ok ||
+          !result ||
+          !result.success
+        ) {
+          return;
+        }
+
+        addIncomingNotifications(
+          result.notifications
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Notification catch-up fetch failed:",
+          error
+        );
+
+      }
+
+    }
+
+    /*
+      Stays open for as long as the dashboard tab
+      is open. The server only writes to it the
+      moment the admin sends a message (plus a
+      tiny keep-alive comment now and then), so an
+      idle connection costs almost nothing - unlike
+      polling on a timer, which pays for a full
+      request/response even when there's nothing
+      new.
+    */
+
+    function connectNotificationStream() {
+
+      const stream =
+        new EventSource(
+          "/api/notifications/stream"
+        );
+
+      stream.addEventListener(
+        "notification",
+        event => {
+
+          let notification;
+
+          try {
+
+            notification =
+              JSON.parse(event.data);
+
+          } catch (error) {
+            return;
+          }
+
+          addIncomingNotifications(
+            [notification]
+          );
+
+        }
+      );
+
+      stream.onerror = () => {
+
+        /*
+          Browsers auto-reconnect EventSource on a
+          dropped connection, but not after an auth
+          failure (wrong content-type/status), which
+          is what we want if the session has
+          expired - no point retrying forever.
+        */
+
+        console.warn(
+          "Notification stream disconnected."
+        );
+
+      };
+
+    }
+
+    fetchMissedNotifications().then(
+      connectNotificationStream
+    );
+
+    /*
+      ================= PUSH NOTIFICATIONS =================
+
+      Covers the case the stream above can't: the user
+      isn't on the site at all (tab closed, phone locked).
+
+      One-time per browser: register the service worker,
+      ask the OS for permission, then hand the resulting
+      subscription to the server. After that, broadcasts
+      reach this device with no open connection and no
+      polling — the browser's own push service wakes the
+      service worker only when something is actually sent.
+
+      Silently does nothing if the browser doesn't support
+      push (e.g. very old browsers) or the user declines
+      the permission prompt — the in-app bell/SSE above
+      still works either way.
+    */
+
+    function urlBase64ToUint8Array(base64String) {
+
+      const padding =
+        "=".repeat((4 - (base64String.length % 4)) % 4);
+
+      const base64 =
+        (base64String + padding)
+          .replace(/-/g, "+")
+          .replace(/_/g, "/");
+
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; i++) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+
+      return outputArray;
+
+    }
+
+    async function setupPushNotifications() {
+
+      if (
+        !("serviceWorker" in navigator) ||
+        !("PushManager" in window)
+      ) {
+        return;
+      }
+
+      try {
+
+        const keyResponse =
+          await fetch("/api/push/vapid-public-key");
+
+        const keyResult =
+          await keyResponse.json().catch(() => null);
+
+        if (!keyResponse.ok || !keyResult?.success) {
+          return;
+        }
+
+        const registration =
+          await navigator.serviceWorker.register("/sw.js");
+
+        let permission = Notification.permission;
+
+        if (permission === "default") {
+          permission = await Notification.requestPermission();
+        }
+
+        if (permission !== "granted") {
+          return;
+        }
+
+        let subscription =
+          await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+
+          subscription =
+            await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey:
+                urlBase64ToUint8Array(keyResult.publicKey)
+            });
+
+        }
+
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription })
+        });
+
+      } catch (error) {
+
+        console.warn(
+          "Push notification setup skipped:",
+          error
+        );
+
+      }
+
+    }
+
+    setupPushNotifications();
+
+
+    /* ================= PAGE TRANSITION LOADER ================= */
+
+    /*
+      When the user taps a link that goes to another
+      page on this site, show a short full-screen
+      loading animation before the browser actually
+      navigates.
+
+      Because this triggers a real navigation
+      (window.location.href), the destination page
+      always loads fresh from the server rather than
+      showing a stale cached view.
+    */
+
+    const pageLoader =
+      document.getElementById("pageLoader");
+
+    function showPageLoader() {
+      pageLoader.classList.add("show");
+    }
+
+    function hidePageLoader() {
+      pageLoader.classList.remove("show");
+    }
+
+    function isSameOriginLink(link) {
+
+      try {
+
+        const url =
+          new URL(link.href, window.location.href);
+
+        return url.origin === window.location.origin;
+
+      } catch (error) {
+
+        return false;
+
+      }
+
+    }
+
+    document
+      .querySelectorAll("a[href]")
+      .forEach(link => {
+
+        const rawHref =
+          link.getAttribute("href");
+
+        if (
+          !rawHref ||
+          rawHref.startsWith("#") ||
+          rawHref.startsWith("mailto:") ||
+          rawHref.startsWith("tel:") ||
+          link.target === "_blank" ||
+          !isSameOriginLink(link)
+        ) {
+          return;
+        }
+
+        link.addEventListener("click", function(event) {
+
+          if (
+            event.defaultPrevented ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.button === 1
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+
+          const destination =
+            link.href;
+
+          showPageLoader();
+
+          setTimeout(() => {
+            window.location.href = destination;
+          }, 280);
+
+        });
+
+      });
+
+    /*
+      If the browser restores this page from the
+      back/forward cache (e.g. the user tapped
+      "back" mid-transition), make sure the loader
+      isn't left stuck on screen.
+    */
+
+    window.addEventListener("pageshow", function() {
+      hidePageLoader();
+    });
 
 
     /* ================= TOUCH EFFECT ================= */
 
     document
       .querySelectorAll(
-        ".quick-action, .balance-btn, .nav-item, .notification"
+        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .notification-modal-close"
       )
       .forEach(element => {
 

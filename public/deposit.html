@@ -56,7 +56,7 @@ body{
         Arial,
         sans-serif;
 
-    padding-bottom:90px;
+    padding-bottom:40px;
 }
 
 button,
@@ -154,8 +154,48 @@ button{
     margin:auto;
 }
 
+/* BACK BUTTON */
+
+.back-btn{
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    margin-top:18px;
+
+    color:var(--text);
+
+    text-decoration:none;
+
+    font-size:14px;
+
+    font-weight:900;
+
+    letter-spacing:-.2px;
+
+    padding:9px 14px 9px 10px;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.back-btn:active{
+    transform:scale(.97);
+}
+
+.back-btn .arrow{
+    font-size:17px;
+
+    line-height:1;
+}
+
 .hero{
-    padding:30px 0 18px;
+    padding:20px 0 18px;
 }
 
 .badge{
@@ -215,6 +255,12 @@ h1{
 
 /* PAYMENT */
 
+.payment-card{
+    border:1px solid rgba(22,199,132,.22);
+
+    box-shadow:0 16px 44px rgba(22,199,132,.08);
+}
+
 .payment-top{
     display:flex;
 
@@ -234,23 +280,25 @@ h1{
 }
 
 .payment-icon{
-    width:43px;
-    height:43px;
+    width:46px;
+    height:46px;
 
-    border-radius:13px;
+    border-radius:14px;
 
     display:flex;
 
     align-items:center;
     justify-content:center;
 
-    background:rgba(22,199,132,.1);
+    background:rgba(22,199,132,.12);
 
-    font-size:21px;
+    border:1px solid rgba(22,199,132,.2);
+
+    font-size:22px;
 }
 
 .payment-title h2{
-    font-size:16px;
+    font-size:17px;
 
     margin-bottom:3px;
 }
@@ -262,31 +310,64 @@ h1{
 }
 
 .verified{
+    display:flex;
+
+    align-items:center;
+
+    gap:5px;
+
     color:var(--green-light);
 
     font-size:9px;
 
-    font-weight:800;
+    font-weight:900;
+
+    padding:6px 9px;
+
+    border-radius:999px;
+
+    background:rgba(22,199,132,.1);
+
+    border:1px solid rgba(22,199,132,.18);
 }
 
 .recipient{
-    background:rgba(0,0,0,.18);
+    background:
+        linear-gradient(
+            160deg,
+            rgba(22,199,132,.1),
+            rgba(22,199,132,.03)
+        );
 
-    border:1px solid rgba(255,255,255,.06);
+    border:1.5px solid rgba(22,199,132,.32);
 
-    border-radius:15px;
+    border-radius:17px;
 
-    padding:14px;
+    padding:17px;
 
-    margin-bottom:15px;
+    margin-bottom:18px;
+
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
 }
 
 .recipient-label{
-    color:var(--muted);
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    color:var(--green-light);
 
     font-size:10px;
 
-    margin-bottom:6px;
+    font-weight:800;
+
+    letter-spacing:.3px;
+
+    text-transform:uppercase;
+
+    margin-bottom:10px;
 }
 
 .recipient-row{
@@ -300,83 +381,113 @@ h1{
 }
 
 .recipient-id{
-    font-size:22px;
+    font-size:27px;
 
     font-weight:900;
 
-    letter-spacing:1px;
+    letter-spacing:1.5px;
+
+    font-variant-numeric:tabular-nums;
 }
 
 .copy-btn{
     border:0;
 
-    background:rgba(22,199,132,.1);
+    background:var(--green);
 
-    color:var(--green-light);
+    color:#04110a;
 
-    border-radius:10px;
+    border-radius:11px;
 
-    min-width:65px;
+    min-width:72px;
 
-    height:35px;
+    height:40px;
 
-    font-size:10px;
+    font-size:11px;
 
-    font-weight:800;
+    font-weight:900;
 
     cursor:pointer;
+
+    flex-shrink:0;
+}
+
+.copy-btn:active{
+    transform:scale(.96);
+}
+
+.copy-btn.copied{
+    background:var(--green-light);
 }
 
 /* INSTRUCTIONS */
 
 .instructions-title{
-    font-size:13px;
+    font-size:14px;
 
-    font-weight:850;
+    font-weight:900;
 
-    margin:16px 0 8px;
+    margin:4px 0 12px;
+}
+
+.steps{
+    display:grid;
+
+    gap:10px;
+
+    margin-bottom:16px;
 }
 
 .step{
     display:flex;
 
-    gap:11px;
+    align-items:flex-start;
 
-    padding:10px 0;
+    gap:12px;
 
-    border-bottom:1px solid rgba(255,255,255,.045);
-}
+    padding:13px;
 
-.step:last-child{
-    border-bottom:0;
+    border-radius:15px;
+
+    background:rgba(0,0,0,.16);
+
+    border:1px solid rgba(255,255,255,.05);
 }
 
 .step-number{
-    width:25px;
-    height:25px;
+    width:30px;
+    height:30px;
 
     flex-shrink:0;
 
-    border-radius:50%;
+    border-radius:10px;
 
     display:flex;
 
     align-items:center;
     justify-content:center;
 
-    background:rgba(22,199,132,.1);
+    background:rgba(22,199,132,.14);
+
+    border:1px solid rgba(22,199,132,.25);
 
     color:var(--green-light);
 
-    font-size:10px;
+    font-size:14px;
 
     font-weight:900;
+}
+
+.step-body{
+    padding-top:2px;
 }
 
 .step strong{
     display:block;
 
-    font-size:12px;
+    font-size:13px;
+
+    font-weight:800;
 
     margin-bottom:3px;
 }
@@ -384,9 +495,107 @@ h1{
 .step p{
     color:var(--muted);
 
-    font-size:10px;
+    font-size:11px;
 
     line-height:1.5;
+}
+
+.step-id{
+    display:inline-block;
+
+    margin-top:6px;
+
+    padding:5px 10px;
+
+    border-radius:8px;
+
+    background:rgba(22,199,132,.12);
+
+    border:1px solid rgba(22,199,132,.22);
+
+    color:var(--green-light);
+
+    font-size:12px;
+
+    font-weight:900;
+
+    letter-spacing:.5px;
+}
+
+.step-path{
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    margin-top:6px;
+
+    flex-wrap:wrap;
+}
+
+.path-chip{
+    padding:5px 10px;
+
+    border-radius:8px;
+
+    background:rgba(255,255,255,.06);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    color:var(--text);
+
+    font-size:11px;
+
+    font-weight:800;
+}
+
+.path-arrow{
+    color:var(--green-light);
+
+    font-weight:900;
+
+    font-size:12px;
+}
+
+/* SCROLL CTA */
+
+.scroll-cta{
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    min-height:52px;
+
+    border:0;
+
+    border-radius:15px;
+
+    background:var(--green);
+
+    color:#04110a;
+
+    font-size:13px;
+
+    font-weight:900;
+
+    cursor:pointer;
+
+    margin-bottom:16px;
+}
+
+.scroll-cta:active{
+    transform:scale(.98);
+}
+
+.scroll-cta .bell{
+    font-size:15px;
 }
 
 /* INFO BOX */
@@ -398,15 +607,15 @@ h1{
 
     border-radius:14px;
 
-    background:rgba(22,199,132,.045);
+    background:rgba(22,199,132,.06);
 
-    border:1px solid rgba(22,199,132,.10);
+    border:1px solid rgba(22,199,132,.15);
 
-    font-size:10px;
+    font-size:11px;
 
     line-height:1.55;
 
-    color:#a9bdb3;
+    color:#bfd2c8;
 }
 
 .info-box strong{
@@ -422,13 +631,13 @@ h1{
 
     border-radius:14px;
 
-    background:rgba(255,193,7,.045);
+    background:rgba(255,193,7,.06);
 
-    border:1px solid rgba(255,193,7,.10);
+    border:1px solid rgba(255,193,7,.16);
 
-    color:#cfc6a6;
+    color:#dcd2a8;
 
-    font-size:10px;
+    font-size:11px;
 
     line-height:1.55;
 }
@@ -895,65 +1104,6 @@ input[type="file"]{
     cursor:pointer;
 }
 
-/* NAV */
-
-.bottom-nav{
-    position:fixed;
-
-    left:0;
-    right:0;
-    bottom:0;
-
-    z-index:200;
-
-    height:70px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:space-around;
-
-    background:rgba(7,17,12,.97);
-
-    border-top:1px solid var(--border);
-
-    backdrop-filter:blur(14px);
-}
-
-.nav-item{
-    flex:1;
-
-    max-width:100px;
-
-    height:55px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    flex-direction:column;
-
-    gap:3px;
-
-    color:var(--muted);
-
-    text-decoration:none;
-
-    font-size:9px;
-
-    font-weight:700;
-}
-
-.nav-icon{
-    font-size:19px;
-}
-
-.nav-item.active{
-    color:var(--green-light);
-}
-
 /* TOAST */
 
 .toast{
@@ -961,7 +1111,7 @@ input[type="file"]{
 
     left:50%;
 
-    bottom:86px;
+    bottom:26px;
 
     z-index:800;
 
@@ -1003,22 +1153,7 @@ input[type="file"]{
     }
 
     .hero{
-        padding-top:45px;
-    }
-
-    .bottom-nav{
-        width:650px;
-
-        left:50%;
-        right:auto;
-
-        transform:translateX(-50%);
-
-        bottom:15px;
-
-        border:1px solid var(--border);
-
-        border-radius:18px;
+        padding-top:28px;
     }
 
 }
@@ -1068,6 +1203,10 @@ input[type="file"]{
 
 <main class="container">
 
+<a href="/dashboard.html" class="back-btn">
+    <span class="arrow">←</span>
+    <span>Back</span>
+</a>
 
 <section class="hero">
 
@@ -1089,7 +1228,7 @@ input[type="file"]{
 
 <!-- PAYMENT DETAILS -->
 
-<section class="card">
+<section class="card payment-card">
 
     <div class="payment-top">
 
@@ -1124,7 +1263,7 @@ input[type="file"]{
     <div class="recipient">
 
         <div class="recipient-label">
-            SportyBet User ID
+            🔒 SportyBet User ID
         </div>
 
         <div class="recipient-row">
@@ -1140,6 +1279,7 @@ input[type="file"]{
             <button
                 type="button"
                 class="copy-btn"
+                id="copyBtn"
                 onclick="copySportyId()"
             >
                 Copy
@@ -1151,118 +1291,123 @@ input[type="file"]{
 
 
     <div class="instructions-title">
-        How to deposit
+        How to deposit with SportyBet
     </div>
 
 
-    <div class="step">
+    <div class="steps">
 
-        <div class="step-number">
-            1
+
+        <div class="step">
+
+            <div class="step-number">
+                1
+            </div>
+
+            <div class="step-body">
+
+                <strong>
+                    Open your banking app
+                </strong>
+
+                <p>
+                    Launch the mobile banking app you normally
+                    use to send money.
+                </p>
+
+            </div>
+
         </div>
 
-        <div>
 
-            <strong>
-                Copy the SportyBet ID
-            </strong>
+        <div class="step">
 
-            <p>
-                Copy the destination ID shown above before
-                opening your payment app.
-            </p>
+            <div class="step-number">
+                2
+            </div>
+
+            <div class="step-body">
+
+                <strong>
+                    Select Betting ➜ SportyBet
+                </strong>
+
+                <p>
+                    Choose the "Betting" or "Bills Payment"
+                    option, then pick SportyBet.
+                </p>
+
+                <div class="step-path">
+                    <span class="path-chip">Betting</span>
+                    <span class="path-arrow">➜</span>
+                    <span class="path-chip">SportyBet</span>
+                </div>
+
+            </div>
 
         </div>
+
+
+        <div class="step">
+
+            <div class="step-number">
+                3
+            </div>
+
+            <div class="step-body">
+
+                <strong>
+                    Send your recharge to the User ID
+                </strong>
+
+                <p>
+                    Enter the SportyBet User ID below as the
+                    recipient and send your desired amount.
+                </p>
+
+                <span class="step-id">
+                    8050976449
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="step">
+
+            <div class="step-number">
+                4
+            </div>
+
+            <div class="step-body">
+
+                <strong>
+                    Complete the process below
+                </strong>
+
+                <p>
+                    After the deposit goes through, scroll
+                    down and submit your amount and screenshot
+                    to complete verification.
+                </p>
+
+            </div>
+
+        </div>
+
 
     </div>
 
 
-    <div class="step">
-
-        <div class="step-number">
-            2
-        </div>
-
-        <div>
-
-            <strong>
-                Complete your payment
-            </strong>
-
-            <p>
-                Use the supported payment method available
-                to you and complete the payment.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <div class="step">
-
-        <div class="step-number">
-            3
-        </div>
-
-        <div>
-
-            <strong>
-                Confirm the payment succeeded
-            </strong>
-
-            <p>
-                Do not submit a screenshot of an unfinished,
-                failed or cancelled transaction.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <div class="step">
-
-        <div class="step-number">
-            4
-        </div>
-
-        <div>
-
-            <strong>
-                Take a clear screenshot
-            </strong>
-
-            <p>
-                Your screenshot should clearly show the
-                successful transaction and amount.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <div class="step">
-
-        <div class="step-number">
-            5
-        </div>
-
-        <div>
-
-            <strong>
-                Submit your verification
-            </strong>
-
-            <p>
-                Enter the exact amount and upload your
-                payment screenshot below.
-            </p>
-
-        </div>
-
-    </div>
+    <button
+        type="button"
+        class="scroll-cta"
+        onclick="scrollToForm()"
+    >
+        <span class="bell">🔔</span>
+        I've made my deposit — Continue
+    </button>
 
 
     <div class="info-box">
@@ -1291,7 +1436,7 @@ input[type="file"]{
 
 <!-- FORM -->
 
-<section class="card">
+<section class="card" id="verifyForm">
 
     <div class="form-title">
         Verify your deposit
@@ -1494,57 +1639,6 @@ input[type="file"]{
 </div>
 
 
-<!-- NAV -->
-
-<nav class="bottom-nav">
-
-    <a
-        href="/dashboard.html"
-        class="nav-item"
-    >
-        <span class="nav-icon">⌂</span>
-        <span>Home</span>
-    </a>
-
-
-    <a
-        href="/plans.html"
-        class="nav-item"
-    >
-        <span class="nav-icon">▣</span>
-        <span>Plans</span>
-    </a>
-
-
-    <a
-        href="/earn.html"
-        class="nav-item"
-    >
-        <span class="nav-icon">◈</span>
-        <span>Earn</span>
-    </a>
-
-
-    <a
-        href="/refer.html"
-        class="nav-item"
-    >
-        <span class="nav-icon">♧</span>
-        <span>Refer</span>
-    </a>
-
-
-    <a
-        href="/profile.html"
-        class="nav-item"
-    >
-        <span class="nav-icon">●</span>
-        <span>Profile</span>
-    </a>
-
-</nav>
-
-
 <div
     class="toast"
     id="toast"
@@ -1594,6 +1688,69 @@ function formatNaira(amount){
 
 
 /* ================================
+   FETCH WITH RETRY
+================================
+
+Render's free tier spins the server down
+after a period of no traffic. The first
+request after that has to wait for it to
+wake back up - a small GET can survive that
+wait, but a bigger multipart upload (like
+this form's screenshot) is more likely to
+have its connection drop mid-wake, which
+shows up here as "Failed to fetch".
+
+Retrying once after a short pause covers
+that case without the user having to leave
+the page and come back.
+================================ */
+
+async function fetchWithRetry(url, options, retries = 1){
+
+    try{
+
+        return await fetch(url, options);
+
+    }catch(error){
+
+        if(retries > 0){
+
+            await new Promise(
+                resolve => setTimeout(resolve, 2000)
+            );
+
+            return fetchWithRetry(
+                url,
+                options,
+                retries - 1
+            );
+
+        }
+
+        throw error;
+
+    }
+
+}
+
+
+/* ================================
+   SCROLL TO FORM
+================================ */
+
+function scrollToForm(){
+
+    document
+        .getElementById("verifyForm")
+        .scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+        });
+
+}
+
+
+/* ================================
    LOAD PAGE DATA
 ================================ */
 
@@ -1602,7 +1759,7 @@ async function loadPageData(){
     try{
 
         const response =
-            await fetch(
+            await fetchWithRetry(
                 "/api/deposit-page",
                 {
                     credentials:"include",
@@ -1796,14 +1953,25 @@ async function copySportyId(){
             .textContent
             .trim();
 
+    const btn =
+        document.getElementById("copyBtn");
+
 
     try{
 
         await navigator.clipboard.writeText(id);
 
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+
         showToast(
             "SportyBet ID copied."
         );
+
+        setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+        }, 1800);
 
     }catch{
 
@@ -1992,7 +2160,7 @@ form.addEventListener(
 
 
             const response =
-                await fetch(
+                await fetchWithRetry(
                     "/api/deposits/verify",
                     {
                         method:"POST",
@@ -2118,3 +2286,4 @@ loadPageData();
 </body>
 
 </html>
+

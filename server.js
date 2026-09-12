@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
+const webpush = require("web-push");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -50,6 +51,68 @@ const TELEGRAM_WEBHOOK_URL =
 
 const TELEGRAM_WEBHOOK_SECRET =
     process.env.TELEGRAM_WEBHOOK_SECRET;
+
+
+/*
+========================================
+WEB PUSH (VAPID)
+========================================
+
+Lets us push a notification to a user's
+device even when they don't have the site
+open — no third-party service, no cost,
+and no persistent connection to pay egress
+on. The browser's own push service (Chrome
+uses Google's, Firefox uses Mozilla's, etc)
+delivers the message; our server only makes
+one small outbound request per subscriber,
+and only at the moment the admin actually
+broadcasts something.
+
+Generate a keypair once with:
+    npx web-push generate-vapid-keys
+and put the values in your .env / Render
+environment variables. Never expose the
+private key to the browser.
+========================================
+*/
+
+const VAPID_PUBLIC_KEY =
+    process.env.VAPID_PUBLIC_KEY;
+
+const VAPID_PRIVATE_KEY =
+    process.env.VAPID_PRIVATE_KEY;
+
+const VAPID_SUBJECT =
+    process.env.VAPID_SUBJECT ||
+    "mailto:admin@netnaira.onrender.com";
+
+const pushEnabled =
+    Boolean(
+        VAPID_PUBLIC_KEY &&
+        VAPID_PRIVATE_KEY
+    );
+
+if (pushEnabled) {
+
+    webpush.setVapidDetails(
+        VAPID_SUBJECT,
+        VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY
+    );
+
+} else {
+
+    console.warn("");
+    console.warn(
+        "WARNING: Push notifications are not configured."
+    );
+    console.warn(
+        "Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to .env"
+    );
+    console.warn("");
+
+}
 
 
 /*
@@ -212,6 +275,123 @@ const EARNING_PLANS = {
     }
 
 };
+
+
+/*
+========================================
+REFERRALS
+========================================
+
+A user's own USERNAME doubles as their
+referral code, so there's nothing extra
+to generate or look up — the link is
+just:
+
+    APP_BASE_URL/signup.html?ref=<username>
+
+Whoever signs up with a valid ?ref= gets
+tied to that referrer, and the referrer
+is credited REFERRAL_BONUS once, at the
+moment the new account is created.
+========================================
+*/
+
+const APP_BASE_URL =
+    process.env.APP_BASE_URL ||
+    "https://netnaira.onrender.com";
+
+const REFERRAL_BONUS = 500;
+
+/*
+Referral earnings land in referral_balance, not the
+main balance. A user must move it across manually,
+subject to both rules below (also enforced inside the
+withdraw_referral_balance() Postgres function, which is
+the actual source of truth — these are just used for
+early, friendly validation before we hit the DB).
+*/
+
+const MIN_REFERRAL_WITHDRAWAL = 2000;
+
+/*
+========================================
+BANK WITHDRAWALS
+========================================
+
+Normal balance withdrawals are handled as
+requests first. The user's balance is only
+deducted when an authorized Telegram admin
+approves the request through the button.
+
+This prevents accidental balance loss when
+a request is rejected.
+========================================
+*/
+
+const MIN_WITHDRAWAL = 2500;
+const MIN_WITHDRAWAL_REFERRALS = 5;
+
+const NIGERIAN_BANKS = [
+    "Access Bank",
+    "Citibank Nigeria",
+    "Ecobank Nigeria",
+    "Fidelity Bank",
+    "First Bank of Nigeria",
+    "First City Monument Bank (FCMB)",
+    "Globus Bank",
+    "Guaranty Trust Bank (GTBank)",
+    "Heritage Bank",
+    "Keystone Bank",
+    "Polaris Bank",
+    "Providus Bank",
+    "Stanbic IBTC Bank",
+    "Standard Chartered Bank",
+    "Sterling Bank",
+    "SunTrust Bank",
+    "Titan Trust Bank",
+    "Union Bank of Nigeria",
+    "United Bank for Africa (UBA)",
+    "Unity Bank",
+    "Wema Bank",
+    "Zenith Bank",
+    "Jaiz Bank",
+    "TAJ Bank",
+    "Lotus Bank",
+    "Parallex Bank",
+    "Premium Trust Bank",
+    "Signature Bank",
+    "Optimus Bank",
+    "PalmPay",
+    "Opay (Paycom)",
+    "Kuda Bank",
+    "Moniepoint MFB",
+    "VFD Microfinance Bank",
+    "Sparkle Microfinance Bank",
+    "Rubies Microfinance Bank",
+    "Mint Finex MFB",
+    "Carbon (One Finance)",
+    "FairMoney Microfinance Bank",
+    "Eyowo",
+    "9Payment Service Bank (9PSB)",
+    "Rand Merchant Bank",
+    "FSDH Merchant Bank",
+    "Nova Merchant Bank",
+    "Coronation Merchant Bank",
+    "Greenwich Merchant Bank",
+    "Ekondo Microfinance Bank",
+    "Sahel Sahara Bank",
+    "NPF Microfinance Bank",
+    "AB Microfinance Bank",
+    "Baobab Microfinance Bank",
+    "Hasal Microfinance Bank",
+    "Corestep MFB",
+    "Petra Microfinance Bank",
+    "Bowen Microfinance Bank",
+    "Fina Trust Microfinance Bank",
+    "Mutual Trust Microfinance Bank"
+];
+
+
 
 
 /*
@@ -586,6 +766,809 @@ ${statusText}`;
 }
 
 
+
+/*
+========================================
+TELEGRAM WITHDRAWAL MESSAGE UPDATE
+========================================
+*/
+
+async function updateTelegramWithdrawalMessage(
+    callbackQuery,
+    statusText
+) {
+
+    try {
+
+        const message =
+            callbackQuery.message;
+
+        if (!message) {
+            return;
+        }
+
+        const originalText =
+            message.text ||
+            "Withdrawal request";
+
+        const separator =
+            "\n━━━━━━━━━━━━━━━━━━\n\n";
+
+        let baseText =
+            originalText;
+
+        const separatorIndex =
+            baseText.indexOf(separator);
+
+        if (separatorIndex !== -1) {
+            baseText =
+                baseText.substring(
+                    0,
+                    separatorIndex
+                );
+        }
+
+        await telegramApi(
+            "editMessageText",
+            {
+                chat_id:
+                    message.chat.id,
+
+                message_id:
+                    message.message_id,
+
+                text:
+                    `${baseText}${separator}${statusText}`.slice(
+                        0,
+                        4096
+                    ),
+
+                reply_markup: {
+                    inline_keyboard: []
+                }
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Withdrawal Telegram message update error:",
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+========================================
+TELEGRAM WITHDRAWAL CALLBACK
+========================================
+*/
+
+async function handleTelegramWithdrawalCallback(
+    callbackQuery
+) {
+
+    const callbackData =
+        callbackQuery?.data || "";
+
+    const match =
+        callbackData.match(
+            /^withdrawal:(approve|reject):([0-9a-f-]{36})$/i
+        );
+
+    if (!match) {
+        return false;
+    }
+
+    const action =
+        match[1].toLowerCase();
+
+    const withdrawalId =
+        match[2];
+
+    const adminUserId =
+        String(
+            callbackQuery.from?.id || ""
+        );
+
+    const adminChatId =
+        String(
+            callbackQuery.message?.chat?.id || ""
+        );
+
+    if (
+        !TELEGRAM_ADMIN_USER_ID ||
+        adminUserId !==
+            String(TELEGRAM_ADMIN_USER_ID)
+    ) {
+
+        await telegramApi(
+            "answerCallbackQuery",
+            {
+                callback_query_id:
+                    callbackQuery.id,
+
+                text:
+                    "⛔ You are not authorized to manage withdrawals.",
+
+                show_alert:
+                    true
+            }
+        ).catch(() => {});
+
+        return true;
+    }
+
+    if (
+        adminChatId !==
+        String(TELEGRAM_ADMIN_CHAT_ID)
+    ) {
+
+        await telegramApi(
+            "answerCallbackQuery",
+            {
+                callback_query_id:
+                    callbackQuery.id,
+
+                text:
+                    "⛔ Unauthorized chat.",
+
+                show_alert:
+                    true
+            }
+        ).catch(() => {});
+
+        return true;
+    }
+
+    try {
+
+        const rpcName =
+            action === "approve"
+                ? "approve_withdrawal"
+                : "reject_withdrawal";
+
+        const {
+            data,
+            error
+        } = await supabase
+            .rpc(
+                rpcName,
+                {
+                    p_withdrawal_id:
+                        withdrawalId,
+
+                    p_reviewer:
+                        adminUserId
+                }
+            );
+
+        if (error) {
+
+            console.error(
+                `${rpcName} RPC error:`,
+                error
+            );
+
+            await telegramApi(
+                "answerCallbackQuery",
+                {
+                    callback_query_id:
+                        callbackQuery.id,
+
+                    text:
+                        "⚠️ Action failed. Check server logs.",
+
+                    show_alert:
+                        true
+                }
+            ).catch(() => {});
+
+            return true;
+        }
+
+        if (
+            !data ||
+            data.success !== true
+        ) {
+
+            await telegramApi(
+                "answerCallbackQuery",
+                {
+                    callback_query_id:
+                        callbackQuery.id,
+
+                    text:
+                        data?.message ||
+                        "This withdrawal has already been processed.",
+
+                    show_alert:
+                        true
+                }
+            ).catch(() => {});
+
+            if (
+                data?.message ===
+                    "This withdrawal has already been processed."
+            ) {
+
+                await updateTelegramWithdrawalMessage(
+                    callbackQuery,
+                    `⚠️ ALREADY PROCESSED
+
+Current status: ${data.status || "unknown"}`
+                );
+
+            }
+
+            return true;
+        }
+
+        const amount =
+            Number(data.amount || 0);
+
+        if (action === "approve") {
+
+            const newBalance =
+                Number(data.new_balance || 0);
+
+            await telegramApi(
+                "answerCallbackQuery",
+                {
+                    callback_query_id:
+                        callbackQuery.id,
+
+                    text:
+                        "✅ Withdrawal approved."
+                }
+            ).catch(() => {});
+
+            await updateTelegramWithdrawalMessage(
+                callbackQuery,
+                `✅ APPROVED BY ADMIN
+
+💸 Paid:
+₦${amount.toLocaleString(
+    "en-NG",
+    {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }
+)}
+
+💳 User balance:
+₦${newBalance.toLocaleString(
+    "en-NG",
+    {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }
+)}`
+            );
+
+            console.log(
+                `Withdrawal approved: ${withdrawalId} | ₦${amount}`
+            );
+
+        } else {
+
+            await telegramApi(
+                "answerCallbackQuery",
+                {
+                    callback_query_id:
+                        callbackQuery.id,
+
+                    text:
+                        "❌ Withdrawal rejected."
+                }
+            ).catch(() => {});
+
+            await updateTelegramWithdrawalMessage(
+                callbackQuery,
+                `❌ REJECTED BY ADMIN
+
+💸 Amount:
+₦${amount.toLocaleString(
+    "en-NG",
+    {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }
+)}
+
+💳 User balance was not changed.`
+            );
+
+            console.log(
+                `Withdrawal rejected: ${withdrawalId}`
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Withdrawal callback error:",
+            error
+        );
+
+        await telegramApi(
+            "answerCallbackQuery",
+            {
+                callback_query_id:
+                    callbackQuery.id,
+
+                text:
+                    "⚠️ Unable to process this withdrawal.",
+
+                show_alert:
+                    true
+            }
+        ).catch(() => {});
+
+    }
+
+    return true;
+}
+
+
+/*
+========================================
+NOTIFICATION STREAM (SSE)
+========================================
+
+Rather than have every dashboard poll
+/api/notifications on a timer (which burns
+egress on empty "nothing new" responses even
+when the admin hasn't sent anything), each
+logged-in browser keeps ONE long-lived
+connection open here. We only write to it
+- broadcastNotification() below - the instant
+the admin actually sends something, plus a
+small keep-alive comment every so often so
+hosts/proxies don't time out the idle
+connection.
+
+net effect: idle users cost a few bytes every
+KEEP_ALIVE_MS instead of a full request/response
+every polling interval.
+========================================
+*/
+
+const sseClients =
+    new Set();
+
+const SSE_KEEP_ALIVE_MS =
+    45000;
+
+function broadcastNotification(
+    notification
+) {
+
+    const payload =
+        `event: notification\ndata: ${JSON.stringify(notification)}\n\n`;
+
+    for (
+        const client
+        of sseClients
+    ) {
+
+        client.write(
+            payload
+        );
+
+    }
+
+}
+
+setInterval(
+    () => {
+
+        for (
+            const client
+            of sseClients
+        ) {
+
+            client.write(
+                ": keep-alive\n\n"
+            );
+
+        }
+
+    },
+    SSE_KEEP_ALIVE_MS
+);
+
+
+/*
+========================================
+PUSH NOTIFICATIONS (WEB PUSH)
+========================================
+
+Covers the case broadcastNotification() can't:
+a user who isn't currently on the site at all
+(tab closed, browser closed on desktop, phone
+screen off). Every browser that has opted in
+has a row in "push_subscriptions" - we send
+each one a tiny encrypted payload through its
+own browser vendor's push service.
+
+This costs us nothing beyond the outbound
+payload itself (a few hundred bytes per
+subscriber, once, only when a broadcast
+happens) - there's no connection to hold
+open and no polling.
+
+A subscription becomes invalid when the user
+uninstalls, clears site data, or the OS
+revokes it. The push service tells us this
+with a 404/410 response, and we delete that
+row so we stop wasting a request on it next
+time.
+========================================
+*/
+
+async function sendPushToAll(
+    notification
+) {
+
+    if (!pushEnabled) {
+        return;
+    }
+
+    const {
+        data: subscriptions,
+        error
+    } = await supabase
+        .from("push_subscriptions")
+        .select(
+            "id, endpoint, p256dh, auth"
+        );
+
+    if (error) {
+
+        console.error(
+            "Push subscriptions fetch error:",
+            error
+        );
+
+        return;
+
+    }
+
+    if (!subscriptions || !subscriptions.length) {
+        return;
+    }
+
+    const payload =
+        JSON.stringify({
+            title: "NetNaira",
+            body: notification.message,
+            id: notification.id
+        });
+
+    const staleIds = [];
+
+    await Promise.all(
+        subscriptions.map(
+            async (sub) => {
+
+                try {
+
+                    await webpush.sendNotification(
+                        {
+                            endpoint: sub.endpoint,
+                            keys: {
+                                p256dh: sub.p256dh,
+                                auth: sub.auth
+                            }
+                        },
+                        payload
+                    );
+
+                } catch (pushError) {
+
+                    if (
+                        pushError.statusCode === 404 ||
+                        pushError.statusCode === 410
+                    ) {
+
+                        staleIds.push(sub.id);
+
+                    } else {
+
+                        console.error(
+                            "Push send error:",
+                            pushError.statusCode,
+                            pushError.body
+                        );
+
+                    }
+
+                }
+
+            }
+        )
+    );
+
+    if (staleIds.length) {
+
+        await supabase
+            .from("push_subscriptions")
+            .delete()
+            .in("id", staleIds);
+
+    }
+
+}
+
+
+/*
+========================================
+TELEGRAM ADMIN BROADCAST MESSAGE
+========================================
+
+Lets the admin send a notification to every
+user on the website from directly inside the
+Telegram bot chat, triggered with /broadcast.
+
+Two ways to use it:
+1. Inline:  "/broadcast Maintenance at 12am"
+   -> sent immediately.
+2. Two-step: send "/broadcast" on its own, the
+   bot asks for the message, then whatever you
+   send next (as long as it's not itself a
+   command) is what gets broadcast.
+
+Security: only the authorized admin user/chat
+- the same ones the deposit/withdrawal approval
+buttons already trust - can trigger this.
+Everyone else is silently ignored.
+
+A broadcast is stored in the
+"admin_notifications" table (so a fresh page
+load can still catch up on anything it missed)
+and pushed immediately to any dashboard that's
+currently connected via broadcastNotification().
+========================================
+*/
+
+let awaitingBroadcastMessage =
+    false;
+
+async function sendBroadcastMessage(
+    text,
+    chatId
+) {
+
+    try {
+
+        const {
+            data: notification,
+            error
+        } = await supabase
+            .from("admin_notifications")
+            .insert({
+                message: text
+            })
+            .select(
+                "id, message, created_at"
+            )
+            .single();
+
+        if (error || !notification) {
+
+            console.error(
+                "Admin notification insert error:",
+                error
+            );
+
+            await telegramApi(
+                "sendMessage",
+                {
+                    chat_id:
+                        chatId,
+
+                    text:
+                        "⚠️ Could not send that notification. Please try again."
+                }
+            ).catch(() => {});
+
+            return;
+
+        }
+
+        broadcastNotification(
+            notification
+        );
+
+        sendPushToAll(
+            notification
+        ).catch(
+            (pushError) => {
+
+                console.error(
+                    "Push broadcast error:",
+                    pushError
+                );
+
+            }
+        );
+
+        await telegramApi(
+            "sendMessage",
+            {
+                chat_id:
+                    chatId,
+
+                text:
+                    "✅ Notification sent to all users."
+            }
+        ).catch(() => {});
+
+    } catch (error) {
+
+        console.error(
+            "Admin broadcast error:",
+            error
+        );
+
+    }
+
+}
+
+async function handleTelegramAdminMessage(
+    message
+) {
+
+    if (!message) {
+        return;
+    }
+
+    const senderUserId =
+        String(
+            message.from?.id || ""
+        );
+
+    const senderChatId =
+        String(
+            message.chat?.id || ""
+        );
+
+    if (
+        !TELEGRAM_ADMIN_USER_ID ||
+        senderUserId !==
+            String(
+                TELEGRAM_ADMIN_USER_ID
+            ) ||
+        senderChatId !==
+            String(
+                TELEGRAM_ADMIN_CHAT_ID
+            )
+    ) {
+
+        /*
+        Silently ignore. This chat also
+        receives deposit/withdrawal button
+        messages, so unrelated senders are
+        expected here and shouldn't get a
+        reply.
+        */
+
+        return;
+
+    }
+
+    const text =
+        (message.text || "").trim();
+
+    if (!text) {
+        return;
+    }
+
+    /*
+    ========================================
+    "/broadcast <message>" - INLINE
+    ========================================
+    */
+
+    if (
+        /^\/broadcast(@\S+)?(\s+|$)/i.test(
+            text
+        )
+    ) {
+
+        const inlineMessage =
+            text
+                .replace(
+                    /^\/broadcast(@\S+)?\s*/i,
+                    ""
+                )
+                .trim();
+
+        if (inlineMessage) {
+
+            awaitingBroadcastMessage =
+                false;
+
+            await sendBroadcastMessage(
+                inlineMessage,
+                senderChatId
+            );
+
+            return;
+
+        }
+
+        /*
+        "/broadcast" with nothing after it -
+        switch to two-step mode and wait for
+        the next message.
+        */
+
+        awaitingBroadcastMessage =
+            true;
+
+        await telegramApi(
+            "sendMessage",
+            {
+                chat_id:
+                    senderChatId,
+
+                text:
+                    "📝 Send the message you want to broadcast to all users."
+            }
+        ).catch(() => {});
+
+        return;
+
+    }
+
+    /*
+    ========================================
+    ANY OTHER SLASH COMMAND
+    ========================================
+    */
+
+    if (text.startsWith("/")) {
+
+        awaitingBroadcastMessage =
+            false;
+
+        return;
+
+    }
+
+    /*
+    ========================================
+    "/broadcast" - STEP 2 (the message itself)
+    ========================================
+    */
+
+    if (awaitingBroadcastMessage) {
+
+        awaitingBroadcastMessage =
+            false;
+
+        await sendBroadcastMessage(
+            text,
+            senderChatId
+        );
+
+    }
+
+    /*
+    A plain message sent without first typing
+    /broadcast is not treated as a notification
+    - it's just ignored.
+    */
+
+}
+
+
 /*
 ========================================
 TELEGRAM CALLBACK HANDLER
@@ -603,6 +1586,14 @@ async function handleTelegramCallback(
     const callbackData =
         callbackQuery.data ||
         "";
+
+    if (
+        await handleTelegramWithdrawalCallback(
+            callbackQuery
+        )
+    ) {
+        return;
+    }
 
     const match =
         callbackData.match(
@@ -1205,6 +2196,17 @@ app.post(
 
             }
 
+            if (
+                req.body &&
+                req.body.message
+            ) {
+
+                await handleTelegramAdminMessage(
+                    req.body.message
+                );
+
+            }
+
         } catch (error) {
 
             console.error(
@@ -1286,7 +2288,8 @@ async function startTelegramPolling() {
             params.set(
                 "allowed_updates",
                 JSON.stringify([
-                    "callback_query"
+                    "callback_query",
+                    "message"
                 ])
             );
 
@@ -1390,6 +2393,16 @@ async function startTelegramPolling() {
 
                 }
 
+                if (
+                    update.message
+                ) {
+
+                    await handleTelegramAdminMessage(
+                        update.message
+                    );
+
+                }
+
             }
 
         } catch (error) {
@@ -1469,7 +2482,8 @@ async function setupTelegramUpdates() {
                         TELEGRAM_WEBHOOK_SECRET,
 
                     allowed_updates: [
-                        "callback_query"
+                        "callback_query",
+                        "message"
                     ],
 
                     drop_pending_updates:
@@ -1544,7 +2558,8 @@ app.post(
                 fullName,
                 username,
                 email,
-                password
+                password,
+                ref
             } = req.body;
 
 
@@ -1576,6 +2591,18 @@ app.post(
                 email
                     .trim()
                     .toLowerCase();
+
+            /*
+            Referral code is just the referrer's
+            username, lowercased the same way
+            usernames are stored. Empty/missing
+            is fine — it just means no referrer.
+            */
+
+            const cleanRef =
+                typeof ref === "string"
+                    ? ref.trim().toLowerCase()
+                    : "";
 
 
             if (
@@ -1721,6 +2748,53 @@ app.post(
 
 
             /*
+            ========================================
+            REFERRER LOOKUP
+            ========================================
+
+            A missing or invalid ?ref= just means
+            "no referrer" — it never blocks signup.
+            You can't refer yourself since this
+            account doesn't exist yet, and a
+            username can't match its own future
+            username anyway.
+            */
+
+            let referrer = null;
+
+            if (cleanRef) {
+
+                const {
+                    data: referrerRow,
+                    error: referrerError
+                } = await supabase
+                    .from("users")
+                    .select("id, username")
+                    .eq(
+                        "username",
+                        cleanRef
+                    )
+                    .maybeSingle();
+
+
+                if (referrerError) {
+
+                    console.error(
+                        "Referrer lookup error:",
+                        referrerError
+                    );
+
+                } else {
+
+                    referrer =
+                        referrerRow;
+
+                }
+
+            }
+
+
+            /*
             Create account
             */
 
@@ -1746,7 +2820,12 @@ app.post(
                         0,
 
                     total_earned:
-                        0
+                        0,
+
+                    referred_by:
+                        referrer
+                            ? referrer.id
+                            : null
                 })
                 .select(
                     "id, full_name, username, email"
@@ -1766,6 +2845,79 @@ app.post(
                     message:
                         "Unable to create your account."
                 });
+
+            }
+
+
+            /*
+            ========================================
+            CREDIT REFERRAL BONUS
+            ========================================
+
+            Best-effort: if this fails, the new
+            account is still created normally — we
+            just log it. The unique index in
+            credit_referral_bonus() means this can
+            never double-pay a referrer even if
+            retried.
+            */
+
+            if (referrer) {
+
+                try {
+
+                    const {
+                        data: referralResult,
+                        error: referralError
+                    } = await supabase
+                        .rpc(
+                            "credit_referral_bonus",
+                            {
+                                p_referrer_id:
+                                    referrer.id,
+
+                                p_referred_user_id:
+                                    user.id,
+
+                                p_amount:
+                                    REFERRAL_BONUS
+                            }
+                        );
+
+
+                    if (referralError) {
+
+                        console.error(
+                            "Referral bonus RPC error:",
+                            referralError
+                        );
+
+                    } else if (
+                        !referralResult ||
+                        referralResult.success !== true
+                    ) {
+
+                        console.warn(
+                            "Referral bonus not credited:",
+                            referralResult?.message
+                        );
+
+                    } else {
+
+                        console.log(
+                            `Referral bonus: ₦${REFERRAL_BONUS} credited to @${referrer.username} for referring @${cleanUsername}`
+                        );
+
+                    }
+
+                } catch (referralCatchError) {
+
+                    console.error(
+                        "Referral bonus error:",
+                        referralCatchError
+                    );
+
+                }
 
             }
 
@@ -2103,6 +3255,169 @@ app.get(
 
 /*
 ========================================
+CHANGE PASSWORD
+========================================
+*/
+
+app.post(
+    "/api/auth/change-password",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                currentPassword,
+                newPassword
+            } = req.body;
+
+
+            if (
+                !currentPassword ||
+                !newPassword
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please fill in both password fields."
+                });
+
+            }
+
+
+            if (
+                newPassword.length < 8
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "New password must contain at least 8 characters."
+                });
+
+            }
+
+
+            const {
+                data: user,
+                error: userError
+            } = await supabase
+                .from("users")
+                .select(
+                    "id, password_hash"
+                )
+                .eq(
+                    "id",
+                    req.userId
+                )
+                .single();
+
+
+            if (
+                userError ||
+                !user
+            ) {
+
+                console.error(
+                    "Change password user lookup error:",
+                    userError
+                );
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+
+            const currentPasswordCorrect =
+                await bcrypt.compare(
+                    currentPassword,
+                    user.password_hash
+                );
+
+
+            if (!currentPasswordCorrect) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Your current password is incorrect."
+                });
+
+            }
+
+
+            const newPasswordHash =
+                await bcrypt.hash(
+                    newPassword,
+                    12
+                );
+
+
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    password_hash:
+                        newPasswordHash
+                })
+                .eq(
+                    "id",
+                    req.userId
+                );
+
+
+            if (updateError) {
+
+                console.error(
+                    "Change password update error:",
+                    updateError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to update your password."
+                });
+
+            }
+
+
+            return res.json({
+                success:
+                    true,
+
+                message:
+                    "Password updated successfully."
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Change password error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Something went wrong."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
 GET DEPOSIT HISTORY
 ========================================
 
@@ -2284,6 +3599,331 @@ app.get(
 
 /*
 ========================================
+PUSH SUBSCRIPTION
+========================================
+
+Lets a logged-in browser opt in to receiving
+notifications even when it isn't on the site.
+The public key is not secret (it's designed
+to be handed to the browser), so it doesn't
+need auth. Subscribing/unsubscribing does,
+since we tie the subscription to a user_id.
+========================================
+*/
+
+app.get(
+    "/api/push/vapid-public-key",
+    (req, res) => {
+
+        if (!pushEnabled) {
+
+            return res.status(503).json({
+                success: false,
+                message:
+                    "Push notifications are not configured."
+            });
+
+        }
+
+        return res.json({
+            success: true,
+            publicKey: VAPID_PUBLIC_KEY
+        });
+
+    }
+);
+
+app.post(
+    "/api/push/subscribe",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const subscription =
+                req.body?.subscription;
+
+            if (
+                !subscription ||
+                !subscription.endpoint ||
+                !subscription.keys?.p256dh ||
+                !subscription.keys?.auth
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid subscription."
+                });
+
+            }
+
+            /*
+            One row per endpoint. If this browser
+            already subscribed before (e.g. re-
+            registering after clearing site data),
+            upsert on the endpoint just refreshes
+            it instead of creating a duplicate.
+            */
+
+            const { error } =
+                await supabase
+                    .from("push_subscriptions")
+                    .upsert(
+                        {
+                            user_id: req.userId,
+                            endpoint: subscription.endpoint,
+                            p256dh: subscription.keys.p256dh,
+                            auth: subscription.keys.auth
+                        },
+                        {
+                            onConflict: "endpoint"
+                        }
+                    );
+
+            if (error) {
+
+                console.error(
+                    "Push subscribe error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to save subscription."
+                });
+
+            }
+
+            return res.json({
+                success: true
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Push subscribe error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to save subscription."
+            });
+
+        }
+
+    }
+);
+
+app.post(
+    "/api/push/unsubscribe",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const endpoint =
+                req.body?.endpoint;
+
+            if (!endpoint) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Missing endpoint."
+                });
+
+            }
+
+            await supabase
+                .from("push_subscriptions")
+                .delete()
+                .eq("endpoint", endpoint);
+
+            return res.json({
+                success: true
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Push unsubscribe error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to remove subscription."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+NOTIFICATIONS
+========================================
+
+Returns broadcast notifications sent by the
+admin through the Telegram bot (see
+handleTelegramAdminMessage above).
+
+Any logged-in user can read these — there is
+nothing user-specific about them, they are the
+same feed for everyone. The client keeps track
+of which ones it has already seen/read on its
+own (localStorage) and passes "after_id" so we
+only send back what's new.
+========================================
+*/
+
+app.get(
+    "/api/notifications",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const afterId =
+                Number(
+                    req.query.after_id
+                ) || 0;
+
+            const {
+                data: notifications,
+                error
+            } = await supabase
+                .from("admin_notifications")
+                .select(
+                    "id, message, created_at"
+                )
+                .gt(
+                    "id",
+                    afterId
+                )
+                .order(
+                    "id",
+                    { ascending: true }
+                )
+                .limit(50);
+
+            if (error) {
+
+                console.error(
+                    "Notifications fetch error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to load notifications."
+                });
+
+            }
+
+            return res.json({
+                success: true,
+                notifications:
+                    notifications || []
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Notifications error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load notifications."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+NOTIFICATION STREAM (SSE)
+========================================
+
+The dashboard opens exactly one of these per
+page load instead of polling. We hold the
+connection open and only write to it via
+broadcastNotification() when the admin actually
+sends something - see NOTIFICATION STREAM (SSE)
+section further up for the client set + keep-
+alive ping.
+========================================
+*/
+
+app.get(
+    "/api/notifications/stream",
+    authenticate,
+    (req, res) => {
+
+        res.writeHead(
+            200,
+            {
+                "Content-Type":
+                    "text/event-stream",
+
+                "Cache-Control":
+                    "no-cache",
+
+                "Connection":
+                    "keep-alive",
+
+                /*
+                Tells nginx-style proxies (some
+                hosts sit behind one) not to
+                buffer this response, or the
+                "instant" push would get stuck
+                until the buffer fills.
+                */
+                "X-Accel-Buffering":
+                    "no"
+            }
+        );
+
+        res.write(
+            ": connected\n\n"
+        );
+
+        sseClients.add(
+            res
+        );
+
+        req.on(
+            "close",
+            () => {
+
+                sseClients.delete(
+                    res
+                );
+
+            }
+        );
+
+    }
+);
+
+
+
+/*
+========================================
 DASHBOARD DATA
 ========================================
 */
@@ -2423,6 +4063,10 @@ app.get(
             let daysRemaining = 0;
             let progress = 0;
             let todayEarned = 0;
+            let durationDays = 0;
+            let startedAt = null;
+            let planAmount = 0;
+            let planTotalReturn = 0;
 
             if (activePlanRow) {
 
@@ -2436,6 +4080,34 @@ app.get(
 
                 daysCompleted =
                     activePlanRow.days_paid || 0;
+
+                durationDays =
+                    activePlanRow.duration_days || 0;
+
+                startedAt =
+                    activePlanRow.started_at || null;
+
+                /*
+                Look up the invested amount and
+                total expected return from the
+                server-side plan catalog (source
+                of truth), matched by plan name.
+                This is display-only — never used
+                for crediting logic.
+                */
+
+                const catalogPlan =
+                    EARNING_PLANS[activePlan];
+
+                if (catalogPlan) {
+
+                    planAmount =
+                        catalogPlan.amount;
+
+                    planTotalReturn =
+                        catalogPlan.total;
+
+                }
 
                 daysRemaining =
                     Math.max(
@@ -2520,6 +4192,18 @@ app.get(
                     progress:
                         progress,
 
+                    durationDays:
+                        durationDays,
+
+                    startedAt:
+                        startedAt,
+
+                    planAmount:
+                        planAmount,
+
+                    planTotalReturn:
+                        planTotalReturn,
+
                     recentDeposits:
                         recentDeposits ||
                         []
@@ -2540,6 +4224,402 @@ app.get(
                 success: false,
                 message:
                     "Unable to load dashboard."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+REFERRALS DATA
+========================================
+
+Used by refer.html to show the user's
+referral link, how much they've earned
+from referrals, and recent referral
+activity.
+========================================
+*/
+
+app.get(
+    "/api/referrals",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                data: user,
+                error: userError
+            } = await supabase
+                .from("users")
+                .select(
+                    "username, balance, referral_balance"
+                )
+                .eq(
+                    "id",
+                    req.userId
+                )
+                .single();
+
+
+            if (
+                userError ||
+                !user
+            ) {
+
+                console.error(
+                    "Referrals user error:",
+                    userError
+                );
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+
+            const {
+                data: earnings,
+                error: earningsError
+            } = await supabase
+                .from("referral_earnings")
+                .select(
+                    "referred_user_id, amount, created_at"
+                )
+                .eq(
+                    "referrer_id",
+                    req.userId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false
+                    }
+                );
+
+
+            if (earningsError) {
+
+                console.error(
+                    "Referral earnings error:",
+                    earningsError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to load referral data."
+                });
+
+            }
+
+
+            const referralRows =
+                earnings || [];
+
+
+            const totalReferrals =
+                referralRows.length;
+
+
+            const totalEarned =
+                referralRows.reduce(
+                    (sum, row) =>
+                        sum + Number(row.amount || 0),
+                    0
+                );
+
+
+            /*
+            Look up usernames for the most recent
+            referrals so the history list can show
+            "@username joined" instead of just an
+            amount and a date.
+            */
+
+            const recentRows =
+                referralRows.slice(0, 10);
+
+            const referredIds =
+                recentRows.map(
+                    row => row.referred_user_id
+                );
+
+            let referredUsersById = {};
+
+            if (referredIds.length > 0) {
+
+                const {
+                    data: referredUsers,
+                    error: referredUsersError
+                } = await supabase
+                    .from("users")
+                    .select(
+                        "id, username"
+                    )
+                    .in(
+                        "id",
+                        referredIds
+                    );
+
+
+                if (referredUsersError) {
+
+                    console.error(
+                        "Referred users lookup error:",
+                        referredUsersError
+                    );
+
+                } else {
+
+                    referredUsersById =
+                        Object.fromEntries(
+                            (referredUsers || []).map(
+                                row => [row.id, row.username]
+                            )
+                        );
+
+                }
+
+            }
+
+
+            const history =
+                recentRows.map(
+                    row => ({
+
+                        username:
+                            referredUsersById[
+                                row.referred_user_id
+                            ] || "a new member",
+
+                        amount:
+                            Number(row.amount || 0),
+
+                        createdAt:
+                            row.created_at
+
+                    })
+                );
+
+
+            /*
+            Whether the user currently has an active
+            plan — the referral balance can only be
+            withdrawn to the main balance while a plan
+            is running. Mirrors the check enforced
+            server-side in withdraw_referral_balance().
+            */
+
+            const {
+                data: activePlanRow,
+                error: activePlanError
+            } = await supabase
+                .from("user_plans")
+                .select("id")
+                .eq("user_id", req.userId)
+                .eq("status", "active")
+                .limit(1)
+                .maybeSingle();
+
+
+            if (activePlanError) {
+
+                console.error(
+                    "Referral active-plan check error:",
+                    activePlanError
+                );
+
+            }
+
+
+            const hasActivePlan =
+                Boolean(activePlanRow);
+
+
+            return res.json({
+
+                success:
+                    true,
+
+                referralCode:
+                    user.username,
+
+                referralLink:
+                    `${APP_BASE_URL}/signup.html?ref=${user.username}`,
+
+                bonusPerReferral:
+                    REFERRAL_BONUS,
+
+                totalReferrals:
+                    totalReferrals,
+
+                totalEarned:
+                    totalEarned,
+
+                referralBalance:
+                    Number(user.referral_balance || 0),
+
+                mainBalance:
+                    Number(user.balance || 0),
+
+                minWithdrawal:
+                    MIN_REFERRAL_WITHDRAWAL,
+
+                hasActivePlan:
+                    hasActivePlan,
+
+                history:
+                    history
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Referrals error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load referral data."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+WITHDRAW REFERRAL BALANCE TO MAIN BALANCE
+========================================
+
+Moves money from referral_balance into the
+user's main, spendable balance.
+
+Both rules are enforced again inside the
+withdraw_referral_balance() Postgres function
+(the real source of truth, run under a row
+lock) — the checks here are just so the user
+gets an immediate, friendly error without a
+round trip to a function that will reject
+them anyway:
+
+  - minimum ₦2,000 per withdrawal
+  - an active earning plan is required
+========================================
+*/
+
+app.post(
+    "/api/referrals/withdraw",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const amount =
+                Number(req.body?.amount);
+
+
+            if (
+                !Number.isFinite(amount) ||
+                amount < MIN_REFERRAL_WITHDRAWAL
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        `Minimum withdrawal is ₦${MIN_REFERRAL_WITHDRAWAL.toLocaleString("en-NG")}.`
+                });
+
+            }
+
+
+            const {
+                data: result,
+                error
+            } = await supabase
+                .rpc(
+                    "withdraw_referral_balance",
+                    {
+                        p_user_id:
+                            req.userId,
+
+                        p_amount:
+                            amount
+                    }
+                );
+
+
+            if (error) {
+
+                console.error(
+                    "Referral withdrawal RPC error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to process withdrawal."
+                });
+
+            }
+
+
+            if (
+                !result ||
+                result.success !== true
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        result?.message ||
+                        "Unable to process withdrawal."
+                });
+
+            }
+
+
+            return res.json({
+
+                success:
+                    true,
+
+                message:
+                    `₦${amount.toLocaleString("en-NG")} moved to your main balance.`,
+
+                amount:
+                    amount
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Referral withdrawal error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to process withdrawal."
             });
 
         }
@@ -3562,6 +5642,702 @@ app.use(
 );
 
 
+
+/*
+========================================
+WITHDRAWAL ACCOUNT + WITHDRAWAL API
+========================================
+*/
+
+app.get(
+    "/api/withdrawal",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                data: user,
+                error: userError
+            } = await supabase
+                .from("users")
+                .select(
+                    "id, full_name, username, balance"
+                )
+                .eq(
+                    "id",
+                    req.userId
+                )
+                .single();
+
+            if (userError || !user) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+            const {
+                data: bankAccount,
+                error: bankError
+            } = await supabase
+                .from("user_bank_accounts")
+                .select(
+                    "bank_name, account_number, account_name"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .maybeSingle();
+
+            if (
+                bankError &&
+                bankError.code !== "PGRST116"
+            ) {
+
+                console.error(
+                    "Withdrawal bank lookup error:",
+                    bankError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to load withdrawal account."
+                });
+
+            }
+
+            /*
+            ========================================
+            RECENT WITHDRAWAL HISTORY
+            ========================================
+
+            Last 2 requests only, newest first, so
+            the withdraw page can show the user
+            what happened to their recent payouts.
+            ========================================
+            */
+
+            const {
+                data: recentWithdrawals,
+                error: historyError
+            } = await supabase
+                .from("withdrawal_requests")
+                .select(
+                    "amount, status, created_at"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false
+                    }
+                )
+                .limit(2);
+
+            if (historyError) {
+
+                console.error(
+                    "Withdrawal history error:",
+                    historyError
+                );
+
+            }
+
+            const history =
+                (recentWithdrawals || []).map(
+                    row => ({
+
+                        amount:
+                            Number(row.amount || 0),
+
+                        status:
+                            row.status,
+
+                        createdAt:
+                            row.created_at
+
+                    })
+                );
+
+            return res.json({
+                success: true,
+
+                user: {
+                    fullName:
+                        user.full_name,
+
+                    username:
+                        user.username,
+
+                    balance:
+                        Number(user.balance || 0)
+                },
+
+                bankAccount:
+                    bankAccount || null,
+
+                minWithdrawal:
+                    MIN_WITHDRAWAL,
+
+                banks:
+                    NIGERIAN_BANKS,
+
+                history:
+                    history
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Withdrawal data error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load withdrawal data."
+            });
+
+        }
+
+    }
+);
+
+
+app.post(
+    "/api/withdrawal/bank-account",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const bankName =
+                typeof req.body?.bankName === "string"
+                    ? req.body.bankName.trim()
+                    : "";
+
+            const accountNumber =
+                typeof req.body?.accountNumber === "string"
+                    ? req.body.accountNumber.replace(/\D/g, "")
+                    : "";
+
+            const accountName =
+                typeof req.body?.accountName === "string"
+                    ? req.body.accountName.trim()
+                    : "";
+
+            if (
+                !NIGERIAN_BANKS.includes(
+                    bankName
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please select a valid bank."
+                });
+
+            }
+
+            if (
+                !/^\d{10}$/.test(
+                    accountNumber
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Account number must contain 10 digits."
+                });
+
+            }
+
+            if (
+                accountName.length < 3 ||
+                accountName.length > 120
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Enter the full account name."
+                });
+
+            }
+
+            const {
+                error
+            } = await supabase
+                .from("user_bank_accounts")
+                .upsert(
+                    {
+                        user_id:
+                            req.userId,
+
+                        bank_name:
+                            bankName,
+
+                        account_number:
+                            accountNumber,
+
+                        account_name:
+                            accountName,
+
+                        updated_at:
+                            new Date().toISOString()
+                    },
+                    {
+                        onConflict:
+                            "user_id"
+                    }
+                );
+
+            if (error) {
+
+                console.error(
+                    "Save bank account error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to save your bank account."
+                });
+
+            }
+
+            return res.json({
+                success: true,
+                message:
+                    "Bank account saved successfully."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Bank account error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to save bank account."
+            });
+
+        }
+
+    }
+);
+
+
+app.post(
+    "/api/withdrawal/request",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const amount =
+                Number(req.body?.amount);
+
+            if (
+                !Number.isFinite(amount) ||
+                amount < MIN_WITHDRAWAL
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        `Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString("en-NG")}.`
+                });
+
+            }
+
+            if (
+                !Number.isInteger(amount)
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Withdrawal amount must be a whole naira amount."
+                });
+
+            }
+
+            /*
+            Count referrals from the existing
+            referral_earnings table. No client
+            value is trusted for this rule.
+            */
+
+            const {
+                count: referralCount,
+                error: referralError
+            } = await supabase
+                .from("referral_earnings")
+                .select(
+                    "referred_user_id",
+                    {
+                        count: "exact",
+                        head: true
+                    }
+                )
+                .eq(
+                    "referrer_id",
+                    req.userId
+                );
+
+            if (referralError) {
+
+                console.error(
+                    "Withdrawal referral count error:",
+                    referralError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to verify your account."
+                });
+
+            }
+
+            if (
+                Number(referralCount || 0) <
+                    MIN_WITHDRAWAL_REFERRALS
+            ) {
+
+                return res.status(403).json({
+                    success: false,
+                    code:
+                        "REFERRAL_REQUIREMENT",
+
+                    message:
+                        "You need 5 referrals in order to withdraw."
+                });
+
+            }
+
+            const {
+                data: user,
+                error: userError
+            } = await supabase
+                .from("users")
+                .select(
+                    "full_name, username, balance"
+                )
+                .eq(
+                    "id",
+                    req.userId
+                )
+                .single();
+
+            if (userError || !user) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+            const balance =
+                Number(user.balance || 0);
+
+            if (
+                amount > balance
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Insufficient balance."
+                });
+
+            }
+
+            const {
+                data: bankAccount,
+                error: bankError
+            } = await supabase
+                .from("user_bank_accounts")
+                .select(
+                    "bank_name, account_number, account_name"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .maybeSingle();
+
+            if (bankError) {
+
+                console.error(
+                    "Withdrawal bank account error:",
+                    bankError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to verify your bank account."
+                });
+
+            }
+
+            if (!bankAccount) {
+
+                return res.status(400).json({
+                    success: false,
+                    code:
+                        "BANK_ACCOUNT_REQUIRED",
+
+                    message:
+                        "Please add your bank account first."
+                });
+
+            }
+
+            /*
+            Keep only one unresolved withdrawal
+            per user. This also prevents repeated
+            Telegram requests.
+            */
+
+            const {
+                data: pendingWithdrawal,
+                error: pendingError
+            } = await supabase
+                .from("withdrawal_requests")
+                .select("id")
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .eq(
+                    "status",
+                    "pending"
+                )
+                .limit(1)
+                .maybeSingle();
+
+            if (pendingError) {
+
+                console.error(
+                    "Pending withdrawal lookup error:",
+                    pendingError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to submit withdrawal."
+                });
+
+            }
+
+            if (pendingWithdrawal) {
+
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        "You already have a withdrawal request awaiting review."
+                });
+
+            }
+
+            const {
+                data: withdrawal,
+                error: insertError
+            } = await supabase
+                .from("withdrawal_requests")
+                .insert({
+                    user_id:
+                        req.userId,
+
+                    amount:
+                        amount,
+
+                    bank_name:
+                        bankAccount.bank_name,
+
+                    account_number:
+                        bankAccount.account_number,
+
+                    account_name:
+                        bankAccount.account_name,
+
+                    status:
+                        "pending"
+                })
+                .select(
+                    "id, amount, bank_name, account_number, account_name, created_at"
+                )
+                .single();
+
+            if (insertError || !withdrawal) {
+
+                console.error(
+                    "Withdrawal insert error:",
+                    insertError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to submit withdrawal."
+                });
+
+            }
+
+            /*
+            Respond to the user only after the
+            request is safely stored. Telegram is
+            best-effort and does not make the
+            browser wait for admin delivery.
+            */
+
+            res.json({
+                success: true,
+                message:
+                    "Withdrawal request submitted successfully."
+            });
+
+            if (!telegramEnabled) {
+
+                console.warn(
+                    "Withdrawal created but Telegram is not configured:",
+                    withdrawal.id
+                );
+
+                return;
+
+            }
+
+            try {
+
+                await telegramApi(
+                    "sendMessage",
+                    {
+                        chat_id:
+                            TELEGRAM_ADMIN_CHAT_ID,
+
+                        text:
+`💸 NEW WITHDRAWAL REQUEST
+
+💰 Amount:
+₦${Number(withdrawal.amount).toLocaleString(
+    "en-NG",
+    {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }
+)}
+
+👤 User:
+${user.full_name || "Unknown"}
+
+🔹 Username:
+@${user.username || "unknown"}
+
+🏦 Bank:
+${withdrawal.bank_name}
+
+🔢 Account Number:
+${withdrawal.account_number}
+
+👤 Account Name:
+${withdrawal.account_name}
+
+🆔 User ID:
+${req.userId}
+
+🕐 Requested:
+${new Date(withdrawal.created_at).toLocaleString("en-NG")}
+
+━━━━━━━━━━━━━━━━━━
+
+Review this request carefully before approving.`,
+
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text:
+                                            "✅ ACCEPT",
+
+                                        callback_data:
+                                            `withdrawal:approve:${withdrawal.id}`
+                                    },
+                                    {
+                                        text:
+                                            "❌ REJECT",
+
+                                        callback_data:
+                                            `withdrawal:reject:${withdrawal.id}`
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                );
+
+            } catch (telegramError) {
+
+                /*
+                The withdrawal row is already stored.
+                Do not tell the user the request failed
+                just because Telegram had a temporary
+                problem. Log it for recovery.
+                */
+
+                console.error(
+                    "Withdrawal Telegram send error:",
+                    telegramError
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Withdrawal request error:",
+                error
+            );
+
+            if (!res.headersSent) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to submit withdrawal."
+                });
+
+            }
+
+        }
+
+    }
+);
+
+
 /*
 ========================================
 LOGOUT
@@ -3604,6 +6380,28 @@ app.get(
                 __dirname,
                 "public",
                 "dashboard.html"
+            )
+        );
+
+    }
+);
+
+/*
+========================================
+PROTECTED WITHDRAWAL PAGE
+========================================
+*/
+
+app.get(
+    "/withdraw.html",
+    authenticate,
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "public",
+                "withdraw.html"
             )
         );
 
@@ -3717,4 +6515,6 @@ app.listen(
 
     }
 );
+
+
 
