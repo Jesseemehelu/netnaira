@@ -722,6 +722,15 @@ input::placeholder{color:#5e6c64}
   });
 
   loadWithdrawal();
+
+  // If the user leaves this page and comes back via the back button,
+  // the browser may restore it from cache (bfcache) instead of reloading it.
+  // This forces a fresh fetch of balance/history/bank account in that case.
+  window.addEventListener("pageshow", function(e){
+    if(e.persisted){
+      loadWithdrawal();
+    }
+  });
 })();
 </script>
 </body>

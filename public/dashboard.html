@@ -10,6 +10,12 @@
 
   <meta name="theme-color" content="#07110c">
 
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Netnaira">
+
   <title>Netnaira — Dashboard</title>
 
   <style>
@@ -2073,6 +2079,44 @@
   </div>
 
 
+  <!-- ================= ADD TO HOME SCREEN PROMPT (iOS only) ================= -->
+
+  <div
+    class="push-permission-overlay"
+    id="a2hsPromptOverlay"
+  >
+
+    <div class="push-permission-modal">
+
+      <div class="push-permission-icon">
+        📲
+      </div>
+
+      <h3>Get notified on iPhone</h3>
+
+      <p>
+        To receive notifications on iPhone, add Netnaira to your
+        Home Screen: tap the Share icon in Safari, then choose
+        "Add to Home Screen." Open Netnaira from that icon and
+        you'll be able to turn on notifications.
+      </p>
+
+      <div class="push-permission-actions">
+
+        <button
+          class="push-permission-allow"
+          id="a2hsPromptClose"
+        >
+          Got it
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
   <!-- ================= HEADER ================= -->
 
   <header>
@@ -3902,8 +3946,46 @@
     const PUSH_PROMPT_DISMISS_KEY =
       "netnaira_push_prompt_dismissed_at";
 
+    const A2HS_PROMPT_DISMISS_KEY =
+      "netnaira_a2hs_prompt_dismissed_at";
+
     const PUSH_PROMPT_COOLDOWN_MS =
       3 * 24 * 60 * 60 * 1000; // 3 days
+
+    /*
+      iOS Safari refuses to grant push permission from a
+      plain browser tab at all - the site must first be
+      added to the Home Screen, then reopened from that
+      icon (running in "standalone" display mode). This is
+      a WebKit restriction that applies to every browser on
+      iOS (Chrome/Firefox on iOS are WebKit under the hood
+      too), not just Safari. There's no way to trigger the
+      "Add to Home Screen" step programmatically, so on iOS
+      outside of standalone mode we show instructions
+      instead of the native prompt.
+    */
+
+    function isIos() {
+
+      return /iphone|ipad|ipod/i.test(
+        navigator.userAgent
+      );
+
+    }
+
+    function isInStandaloneMode() {
+
+      return Boolean(
+        (
+          "standalone" in window.navigator &&
+          window.navigator.standalone
+        ) ||
+        window.matchMedia(
+          "(display-mode: standalone)"
+        ).matches
+      );
+
+    }
 
     function pushIsSupported() {
 
@@ -4020,15 +4102,81 @@
     }
 
     /*
+      "Add to Home Screen" instructional modal, shown
+      instead of the native-push modal on iOS when the
+      site isn't running in standalone mode yet. Same
+      cooldown pattern, tracked under its own key.
+    */
+
+    const a2hsPromptOverlay =
+      document.getElementById("a2hsPromptOverlay");
+
+    function showA2hsPrompt() {
+
+      if (a2hsPromptOverlay) {
+        a2hsPromptOverlay.classList.add("show");
+      }
+
+    }
+
+    function hideA2hsPrompt() {
+
+      if (a2hsPromptOverlay) {
+        a2hsPromptOverlay.classList.remove("show");
+      }
+
+    }
+
+    function markA2hsPromptDismissed() {
+
+      localStorage.setItem(
+        A2HS_PROMPT_DISMISS_KEY,
+        String(Date.now())
+      );
+
+    }
+
+    function a2hsPromptOnCooldown() {
+
+      const dismissedAt =
+        Number(
+          localStorage.getItem(A2HS_PROMPT_DISMISS_KEY) || 0
+        );
+
+      return Boolean(
+        dismissedAt &&
+        (Date.now() - dismissedAt) < PUSH_PROMPT_COOLDOWN_MS
+      );
+
+    }
+
+    /*
       Decides, on page load, whether to show our own
       "Stay in the loop" card at all — never the native
       browser dialog directly.
+
+      - iOS, not installed to Home Screen yet -> show the
+        "Add to Home Screen" instructions instead (can't
+        request native permission from a browser tab).
+      - iOS, already running from Home Screen -> falls
+        through to the normal flow below, same as
+        Android/desktop.
     */
 
     function initPushPermissionPrompt() {
 
       if (!pushIsSupported()) {
         return;
+      }
+
+      if (isIos() && !isInStandaloneMode()) {
+
+        if (!a2hsPromptOnCooldown()) {
+          showA2hsPrompt();
+        }
+
+        return;
+
       }
 
       if (Notification.permission === "granted") {
@@ -4107,6 +4255,21 @@
         markPushPromptDismissed();
 
       });
+
+    if (
+      document.getElementById("a2hsPromptClose")
+    ) {
+
+      document
+        .getElementById("a2hsPromptClose")
+        .addEventListener("click", () => {
+
+          hideA2hsPrompt();
+          markA2hsPromptDismissed();
+
+        });
+
+    }
 
     // Small delay so the prompt doesn't compete with the
     // rest of the dashboard rendering in.
@@ -4262,5 +4425,6 @@
 
 </body>
 </html>
+
 
 
