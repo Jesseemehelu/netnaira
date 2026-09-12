@@ -2825,22 +2825,37 @@
 
     /* ================= DATE ================= */
 
+    /*
+      Wrapped in a function (instead of running once at
+      script load) so it can be re-run every time the user
+      "enters" the dashboard again - see updateCurrentDate()
+      calls alongside loadDashboard() further down. Without
+      this, someone who leaves the tab open past midnight
+      and comes back would still see yesterday's date.
+    */
+
     const dateElement =
       document.getElementById("currentDate");
 
-    const today =
-      new Date();
+    function updateCurrentDate() {
 
-    dateElement.textContent =
-      today.toLocaleDateString(
-        "en-NG",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      );
+      const today =
+        new Date();
+
+      dateElement.textContent =
+        today.toLocaleDateString(
+          "en-NG",
+          {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          }
+        );
+
+    }
+
+    updateCurrentDate();
 
 
     /* ================= HELPERS ================= */
@@ -3234,6 +3249,8 @@
       }
 
       isLoadingDashboard = true;
+
+      updateCurrentDate();
 
       try {
 

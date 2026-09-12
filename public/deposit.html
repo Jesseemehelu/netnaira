@@ -234,6 +234,30 @@ h1{
     line-height:1.6;
 }
 
+.hero-min{
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    margin-top:11px;
+
+    padding:8px 12px;
+
+    border-radius:11px;
+
+    background:rgba(240,207,107,.08);
+
+    border:1px solid rgba(240,207,107,.2);
+
+    color:var(--warning);
+
+    font-size:11px;
+
+    font-weight:800;
+}
+
 /* CARDS */
 
 .card{
@@ -295,6 +319,17 @@ h1{
     border:1px solid rgba(22,199,132,.2);
 
     font-size:22px;
+
+    overflow:hidden;
+}
+
+.payment-icon img{
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    display:block;
 }
 
 .payment-title h2{
@@ -680,6 +715,18 @@ h1{
     font-weight:700;
 
     margin-bottom:7px;
+}
+
+.field-hint{
+    display:block;
+
+    margin-top:7px;
+
+    color:var(--warning);
+
+    font-size:10.5px;
+
+    font-weight:700;
 }
 
 .input-wrap{
@@ -1223,6 +1270,10 @@ input[type="file"]{
         transaction details below for manual verification.
     </p>
 
+    <div class="hero-min">
+        ⚠️ Minimum deposit amount: ₦100
+    </div>
+
 </section>
 
 
@@ -1235,7 +1286,7 @@ input[type="file"]{
         <div class="payment-title">
 
             <div class="payment-icon">
-                ⚽
+                <img src="data:image/webp;base64,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" alt="SportyBet">
             </div>
 
             <div>
@@ -1362,7 +1413,8 @@ input[type="file"]{
 
                 <p>
                     Enter the SportyBet User ID below as the
-                    recipient and send your desired amount.
+                    recipient and send your desired amount
+                    (minimum ₦100).
                 </p>
 
                 <span class="step-id">
@@ -1427,7 +1479,8 @@ input[type="file"]{
 
         Never submit a fake, edited or reused payment
         screenshot. Only submit a transaction that you
-        have actually completed.
+        have actually completed. The minimum deposit
+        amount accepted is ₦100.
 
     </div>
 
@@ -1445,6 +1498,7 @@ input[type="file"]{
     <div class="form-subtitle">
         Enter the exact amount from your successful
         transaction and upload the payment screenshot.
+        Minimum deposit: ₦100.
     </div>
 
 
@@ -1473,11 +1527,15 @@ input[type="file"]{
                     min="100"
                     max="10000000"
                     step="0.01"
-                    placeholder="Enter amount"
+                    placeholder="Enter amount (min ₦100)"
                     required
                 >
 
             </div>
+
+            <span class="field-hint">
+                ⚠️ Minimum deposit amount is ₦100.
+            </span>
 
         </div>
 
@@ -1702,6 +1760,36 @@ window.addEventListener(
 
 
 /* ================================
+   REFRESH ON RE-ENTRY
+================================
+
+The pageshow/persisted reload above only covers
+the back-forward cache case. It doesn't cover
+the far more common case of a user switching to
+another tab/app and coming back to this one -
+that doesn't touch the bfcache at all, so the
+balance and history shown could be stale (e.g.
+a deposit approved while they were away).
+
+This re-fetches the page data (without a full
+reload) any time the tab becomes visible again,
+so the balance and history are always current
+the moment the user re-enters this page.
+================================ */
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(document.visibilityState === "visible"){
+            loadPageData();
+        }
+
+    }
+);
+
+
+/* ================================
    MONEY
 ================================ */
 
@@ -1786,7 +1874,15 @@ function scrollToForm(){
    LOAD PAGE DATA
 ================================ */
 
+let isLoadingPageData = false;
+
 async function loadPageData(){
+
+    if(isLoadingPageData){
+        return;
+    }
+
+    isLoadingPageData = true;
 
     try{
 
@@ -1851,6 +1947,10 @@ async function loadPageData(){
                 Deposit history could not be loaded.
             </div>
         `;
+
+    }finally{
+
+        isLoadingPageData = false;
 
     }
 
