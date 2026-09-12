@@ -489,7 +489,7 @@
 
       display: none;
 
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
 
       padding: 16px;
@@ -1875,7 +1875,16 @@
       width: max-content;
       gap: 12px;
       will-change: transform;
-      animation: activity-scroll-ltr 240s linear infinite;
+      /*
+        No CSS @keyframes animation here anymore — some
+        Samsung Internet / Android WebView builds silently
+        fail to run long-duration CSS keyframe animations
+        (they render the first frame and never advance).
+        The scroll is instead driven frame-by-frame from
+        JavaScript further down, which is reliable across
+        every browser and still respects the visitor's
+        reduced-motion preference.
+      */
     }
 
     .activity-item {
@@ -1967,17 +1976,6 @@
         box-shadow:
           0 0 30px rgba(245,196,81,.55),
           inset 0 0 24px rgba(245,196,81,.12);
-      }
-    }
-
-    @keyframes activity-scroll-ltr {
-      from { transform: translate3d(-50%,0,0); }
-      to   { transform: translate3d(0,0,0); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .activity-track {
-        animation: none;
       }
     }
 
@@ -2865,6 +2863,84 @@
     }
 
     renderPayoutTicker();
+
+    /*
+      Moves the ticker with requestAnimationFrame instead
+      of a CSS @keyframes animation. Some Samsung Internet /
+      Android WebView builds render the ticker's first frame
+      and then just stop advancing a CSS animation that runs
+      this long (240s) - it isn't a reduced-motion setting,
+      the animation itself simply never progresses on those
+      browsers. Driving the same transform from JS on every
+      frame works identically everywhere, and still respects
+      a visitor's actual reduced-motion preference.
+    */
+
+    function startTickerAnimation() {
+
+      const track =
+        document.getElementById("activityTrack");
+
+      if (!track) {
+        return;
+      }
+
+      const prefersReducedMotion =
+        window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+      if (prefersReducedMotion) {
+        return;
+      }
+
+      const DURATION_SECONDS = 240;
+
+      // The track's content is duplicated once (see
+      // renderPayoutTicker), so scrolling exactly half its
+      // total width loops seamlessly back to the start.
+      let halfWidth =
+        track.scrollWidth / 2;
+
+      if (!halfWidth) {
+        return;
+      }
+
+      let speed =
+        halfWidth / DURATION_SECONDS; // pixels per second
+
+      let distance = 0;
+      let lastTimestamp = null;
+
+      function step(timestamp) {
+
+        if (lastTimestamp === null) {
+          lastTimestamp = timestamp;
+        }
+
+        const deltaSeconds =
+          (timestamp - lastTimestamp) / 1000;
+
+        lastTimestamp = timestamp;
+
+        distance =
+          (distance + speed * deltaSeconds) % halfWidth;
+
+        const x =
+          -halfWidth + distance;
+
+        track.style.transform =
+          `translate3d(${x}px, 0, 0)`;
+
+        requestAnimationFrame(step);
+
+      }
+
+      requestAnimationFrame(step);
+
+    }
+
+    startTickerAnimation();
 
 
     /* ================= DATE ================= */
