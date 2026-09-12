@@ -3859,12 +3859,14 @@ Returns broadcast notifications sent by the
 admin through the Telegram bot (see
 handleTelegramAdminMessage above).
 
-Any logged-in user can read these — there is
-nothing user-specific about them, they are the
-same feed for everyone. The client keeps track
-of which ones it has already seen/read on its
-own (localStorage) and passes "after_id" so we
-only send back what's new.
+These are the same feed for everyone, but a
+user should only ever see broadcasts sent
+after THEY joined — not the full history that
+piled up before their account existed. So in
+addition to "after_id" (which the client uses
+to only ask for what's new since its last
+fetch), we also floor the query at the user's
+own created_at.
 ========================================
 */
 
@@ -3881,6 +3883,33 @@ app.get(
                 ) || 0;
 
             const {
+                data: currentUser,
+                error: currentUserError
+            } = await supabase
+                .from("users")
+                .select("created_at")
+                .eq("id", req.userId)
+                .single();
+
+            if (
+                currentUserError ||
+                !currentUser
+            ) {
+
+                console.error(
+                    "Notifications user lookup error:",
+                    currentUserError
+                );
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "User account not found."
+                });
+
+            }
+
+            const {
                 data: notifications,
                 error
             } = await supabase
@@ -3891,6 +3920,10 @@ app.get(
                 .gt(
                     "id",
                     afterId
+                )
+                .gte(
+                    "created_at",
+                    currentUser.created_at
                 )
                 .order(
                     "id",
@@ -6599,4 +6632,5 @@ app.listen(
 
     }
 );
+
 
