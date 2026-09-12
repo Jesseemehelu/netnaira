@@ -23,6 +23,7 @@
       --text: #f4fff8;
       --muted: #84958b;
       --danger: #ff6874;
+      --yellow: #f5c451;
     }
 
     body {
@@ -34,6 +35,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      overflow-x: hidden;
     }
 
     body::before {
@@ -270,6 +272,133 @@
       text-align: center;
       margin-top: 17px;
     }
+
+    /* ================= RECENT PAYOUTS TICKER ================= */
+    /* Scrolls LEFT → RIGHT (opposite of the dashboard ticker) */
+
+    .activity-ticker {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      margin: 0 0 18px;
+      padding: 7px 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(14,28,20,.32);
+      border-radius: 10px;
+      isolation: isolate;
+    }
+
+    .activity-track {
+      display: flex;
+      width: max-content;
+      gap: 12px;
+      will-change: transform;
+      animation: activity-scroll-ltr 240s linear infinite;
+    }
+
+    .activity-item {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 29px;
+      padding: 5px 10px;
+      border: 1px solid rgba(255,255,255,.065);
+      border-radius: 999px;
+      background: rgba(255,255,255,.025);
+      color: #b9c8bf;
+      font-size: 9.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 5px 18px rgba(0,0,0,.10);
+    }
+
+    .activity-dot {
+      width: 6px;
+      height: 6px;
+      flex: 0 0 6px;
+      border-radius: 50%;
+      background: var(--green-light);
+      box-shadow: 0 0 9px rgba(39,229,154,.55);
+    }
+
+    .activity-label {
+      color: #7f9087;
+      font-weight: 700;
+    }
+
+    .activity-amount {
+      color: #e9fff3;
+      font-weight: 900;
+    }
+
+    .activity-item.premium {
+      border-color: rgba(245,196,81,.28);
+      background: linear-gradient(90deg, rgba(245,196,81,.055), rgba(255,255,255,.025));
+      box-shadow:
+        0 0 18px rgba(245,196,81,.12),
+        inset 0 0 18px rgba(245,196,81,.025);
+    }
+
+    .activity-item.premium .activity-dot {
+      background: var(--yellow);
+      box-shadow: 0 0 12px rgba(245,196,81,.85);
+    }
+
+    .activity-item.premium .activity-amount {
+      color: #ffe49a;
+      text-shadow: 0 0 9px rgba(245,196,81,.45);
+    }
+
+    /* Rare jackpot tier: ₦600,000 – ₦1,500,000 */
+
+    .activity-item.jackpot {
+      border-color: rgba(245,196,81,.55);
+      background: linear-gradient(90deg, rgba(245,196,81,.14), rgba(255,225,140,.05));
+      box-shadow:
+        0 0 22px rgba(245,196,81,.30),
+        inset 0 0 20px rgba(245,196,81,.06);
+      animation: jackpot-pulse 1.8s ease-in-out infinite;
+    }
+
+    .activity-item.jackpot .activity-dot {
+      background: var(--yellow);
+      box-shadow: 0 0 16px rgba(245,196,81,1);
+    }
+
+    .activity-item.jackpot .activity-label {
+      color: #e8c988;
+    }
+
+    .activity-item.jackpot .activity-amount {
+      color: #fff2c9;
+      text-shadow: 0 0 12px rgba(245,196,81,.75);
+    }
+
+    @keyframes jackpot-pulse {
+      0%, 100% {
+        box-shadow:
+          0 0 16px rgba(245,196,81,.25),
+          inset 0 0 16px rgba(245,196,81,.05);
+      }
+      50% {
+        box-shadow:
+          0 0 30px rgba(245,196,81,.55),
+          inset 0 0 24px rgba(245,196,81,.12);
+      }
+    }
+
+    @keyframes activity-scroll-ltr {
+      from { transform: translate3d(-50%,0,0); }
+      to   { transform: translate3d(0,0,0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .activity-track {
+        animation: none;
+      }
+    }
   </style>
 </head>
 
@@ -282,6 +411,11 @@
   <div class="logo">
     <div class="logo-icon">₦</div>
     <h1>Net<span>naira</span></h1>
+  </div>
+
+  <!-- ================= RECENT PAYOUTS TICKER ================= -->
+  <div class="activity-ticker" aria-label="Recent payout examples">
+    <div class="activity-track" id="activityTrack"></div>
   </div>
 
   <div class="card">
@@ -412,6 +546,142 @@
 
 
 <script>
+
+  /*
+  ================================
+  RANDOM PAYOUT TICKER
+  ================================
+
+  Generates a fresh, effectively endless set of
+  name + action + amount combinations on every
+  page load. Amounts are pulled from weighted
+  tiers so small payouts show up constantly,
+  mid-range payouts show up less often, larger
+  payouts are rarer still, and the top tier
+  (₦600,000–₦1,500,000) is a rare "jackpot" that
+  renders gold and glowing.
+  */
+
+  const TICKER_FIRST_NAMES = [
+    "Chidinma", "Tunde", "Blessing", "Ibrahim", "Amaka", "Segun",
+    "Grace", "Emeka", "Ngozi", "Yusuf", "Funmilayo", "Chukwuemeka",
+    "Aisha", "Femi", "Adaeze", "Musa", "Oluwaseun", "Kemi",
+    "Chinedu", "Hauwa", "Damilola", "Kelechi", "Zainab", "Bolanle",
+    "Uche", "Abdullahi", "Precious", "Olamide", "Nkechi", "Suleiman",
+    "Tolu", "Chiamaka", "Faruk", "Ifeoma", "Wale", "Halima",
+    "Obinna", "Ronke", "Sadiq", "Ebube", "Yetunde", "Chukwudi",
+    "Fatima", "Kayode", "Adaobi", "Bashir", "Temitope", "Nneka",
+    "Rasheed", "Omolara"
+  ];
+
+  const TICKER_LAST_INITIALS =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+  const TICKER_ACTIONS = ["received", "withdrew"];
+
+  /*
+  Amount tiers, each with a relative weight
+  controlling how often it's picked:
+
+    ₦2,500     – ₦50,000      → common
+    ₦60,000    – ₦100,000     → less common
+    ₦100,000   – ₦500,000     → rarer still
+    ₦600,000   – ₦1,500,000   → very rare, gold "jackpot"
+  */
+
+  const TICKER_TIERS = [
+    { min: 2500,   max: 50000,   weight: 58, jackpot: false },
+    { min: 60000,  max: 100000,  weight: 22, jackpot: false },
+    { min: 100000, max: 500000,  weight: 15, jackpot: false },
+    { min: 600000, max: 1500000, weight: 3,  jackpot: true  }
+  ];
+
+  const TICKER_TOTAL_WEIGHT =
+    TICKER_TIERS.reduce((sum, tier) => sum + tier.weight, 0);
+
+  function pickTicker(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function pickTickerTier() {
+    let roll = Math.random() * TICKER_TOTAL_WEIGHT;
+
+    for (const tier of TICKER_TIERS) {
+      if (roll < tier.weight) {
+        return tier;
+      }
+      roll -= tier.weight;
+    }
+
+    return TICKER_TIERS[0];
+  }
+
+  function randomTickerAmount(tier) {
+    const raw =
+      tier.min + Math.random() * (tier.max - tier.min);
+
+    // round to a clean-looking figure
+    const step = tier.max >= 100000 ? 500 : 50;
+
+    return Math.round(raw / step) * step;
+  }
+
+  function formatNaira(amount) {
+    return "₦" + amount.toLocaleString("en-NG");
+  }
+
+  function buildTickerItem() {
+    const firstName = pickTicker(TICKER_FIRST_NAMES);
+    const lastInitial = pickTicker(TICKER_LAST_INITIALS);
+    const action = pickTicker(TICKER_ACTIONS);
+    const tier = pickTickerTier();
+    const amount = randomTickerAmount(tier);
+
+    const item = document.createElement("div");
+    item.className =
+      "activity-item" + (tier.jackpot ? " jackpot" : "");
+
+    item.innerHTML =
+      '<span class="activity-dot"></span>' +
+      '<span class="activity-label">' +
+        firstName + " " + lastInitial + ". " + action +
+      '</span>' +
+      '<span class="activity-amount">' +
+        formatNaira(amount) +
+      '</span>';
+
+    return item;
+  }
+
+  function renderPayoutTicker() {
+    const track = document.getElementById("activityTrack");
+
+    if (!track) {
+      return;
+    }
+
+    const ITEM_COUNT = 26;
+    const fragment = document.createDocumentFragment();
+    const items = [];
+
+    for (let i = 0; i < ITEM_COUNT; i++) {
+      items.push(buildTickerItem());
+    }
+
+    // duplicate the set so the scroll loop is seamless
+    items.forEach(item => fragment.appendChild(item));
+
+    items.forEach(item => {
+      const clone = item.cloneNode(true);
+      clone.setAttribute("aria-hidden", "true");
+      fragment.appendChild(clone);
+    });
+
+    track.appendChild(fragment);
+  }
+
+  renderPayoutTicker();
+
 
   /*
   ================================
