@@ -2828,7 +2828,7 @@ app.post(
                             : null
                 })
                 .select(
-                    "id, full_name, username, email"
+                    "id, full_name, username, email, created_at"
                 )
                 .single();
 
@@ -2966,13 +2966,97 @@ app.post(
             );
 
 
-            return res.status(201).json({
+            /*
+            ========================================
+            RESPOND TO CLIENT IMMEDIATELY
+            ========================================
+
+            The account already exists at this
+            point. Notifying Telegram below can
+            take a moment (network round trip to
+            the Bot API), and there's no reason to
+            make the new user's browser wait on it
+            — same pattern used for deposits and
+            withdrawals elsewhere in this file.
+            */
+
+            res.status(201).json({
                 success:
                     true,
 
                 message:
                     "Account created successfully."
             });
+
+
+            /*
+            ========================================
+            NOTIFY ADMIN (TELEGRAM) — BACKGROUND
+            ========================================
+
+            Best-effort. If this fails (Telegram
+            down, bad token, etc.) the signup itself
+            is unaffected — we've already responded
+            to the user — so we only log the error.
+            */
+
+            if (telegramEnabled) {
+
+                const signupTime =
+                    new Date(
+                        user.created_at || Date.now()
+                    ).toLocaleString(
+                        "en-NG",
+                        {
+                            timeZone:
+                                "Africa/Lagos"
+                        }
+                    );
+
+                telegramApi(
+                    "sendMessage",
+                    {
+                        chat_id:
+                            TELEGRAM_ADMIN_CHAT_ID,
+
+                        text:
+`🆕 NEW USER SIGNUP
+
+━━━━━━━━━━━━━━━━━━
+
+👤 Name:
+${cleanFullName}
+
+🔗 Username:
+@${cleanUsername}
+
+📧 Email:
+${cleanEmail}
+
+🆔 User ID:
+${user.id}
+
+👥 Referred by:
+${referrer ? "@" + referrer.username : "None"}
+
+🕐 Signed up:
+${signupTime}`
+                    }
+                ).catch(
+                    (telegramError) => {
+
+                        console.error(
+                            "Signup Telegram notify error:",
+                            telegramError.message
+                        );
+
+                    }
+                );
+
+            }
+
+
+            return;
 
 
         } catch (error) {
@@ -6515,6 +6599,4 @@ app.listen(
 
     }
 );
-
-
 

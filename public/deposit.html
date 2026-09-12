@@ -1670,6 +1670,38 @@ const submitBtn =
 
 
 /* ================================
+   RELOAD ON BACK/FORWARD RESTORE
+================================
+
+Mobile browsers often restore this page from
+their back-forward cache instead of loading it
+fresh - e.g. after tapping "Back" from the
+dashboard, or the OS/browser suspending the
+tab in the background. A restored page shows
+exactly whatever it looked like when you left
+(a stuck "Submitting..." button, a stale
+balance, an old success modal) without
+re-running anything below.
+
+Forcing a reload in that one case guarantees
+this page is always freshly loaded - and only
+that case, so a normal first-time visit still
+loads once as usual.
+================================ */
+
+window.addEventListener(
+    "pageshow",
+    function(event){
+
+        if(event.persisted){
+            window.location.reload();
+        }
+
+    }
+);
+
+
+/* ================================
    MONEY
 ================================ */
 

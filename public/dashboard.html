@@ -473,6 +473,125 @@
       transform: scale(.98);
     }
 
+    /* ================= PUSH PERMISSION PROMPT ================= */
+
+    .push-permission-overlay {
+      position: fixed;
+      inset: 0;
+
+      z-index: 95;
+
+      display: none;
+
+      align-items: flex-end;
+      justify-content: center;
+
+      padding: 16px;
+
+      background: rgba(3,8,5,.72);
+
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .push-permission-overlay.show {
+      display: flex;
+    }
+
+    .push-permission-modal {
+      width: min(420px, 100%);
+
+      border-radius: 20px;
+
+      padding: 26px 22px 22px;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+
+      box-shadow: 0 -10px 50px rgba(0,0,0,.5);
+
+      text-align: center;
+
+      animation: push-modal-rise .28s ease both;
+    }
+
+    @keyframes push-modal-rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .push-permission-icon {
+      width: 52px;
+      height: 52px;
+
+      margin: 0 auto 14px;
+
+      border-radius: 16px;
+
+      background: rgba(22,199,132,.12);
+      border: 1px solid rgba(22,199,132,.25);
+
+      display: grid;
+      place-items: center;
+
+      font-size: 24px;
+    }
+
+    .push-permission-modal h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .push-permission-modal p {
+      color: #9aac9f;
+
+      font-size: 12.5px;
+      line-height: 1.55;
+
+      margin-bottom: 20px;
+    }
+
+    .push-permission-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .push-permission-allow {
+      width: 100%;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      background: var(--green);
+
+      color: #03150d;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .push-permission-later {
+      width: 100%;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      background: transparent;
+
+      color: var(--muted);
+
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .push-permission-allow:active,
+    .push-permission-later:active {
+      transform: scale(.98);
+    }
+
     .avatar {
       width: 39px;
       height: 39px;
@@ -1638,6 +1757,14 @@
 
     }
 
+    @media (max-width: 400px) {
+
+      .header-right {
+        gap: 6px;
+      }
+
+    }
+
     @media (max-width: 360px) {
 
       .brand {
@@ -1651,8 +1778,10 @@
 
       .notification,
       .avatar {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
+
+        font-size: 15px;
       }
 
       .welcome h1 {
@@ -1775,6 +1904,49 @@
   </div>
 
 
+  <!-- ================= PUSH PERMISSION PROMPT (custom, cross-browser) ================= -->
+
+  <div
+    class="push-permission-overlay"
+    id="pushPermissionOverlay"
+  >
+
+    <div class="push-permission-modal">
+
+      <div class="push-permission-icon">
+        🔔
+      </div>
+
+      <h3>Stay in the loop</h3>
+
+      <p>
+        Turn on notifications to get instant alerts on your deposits,
+        withdrawals and important updates — even when Netnaira isn't open.
+      </p>
+
+      <div class="push-permission-actions">
+
+        <button
+          class="push-permission-allow"
+          id="pushPermissionAllow"
+        >
+          Allow notifications
+        </button>
+
+        <button
+          class="push-permission-later"
+          id="pushPermissionLater"
+        >
+          Maybe later
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
   <!-- ================= HEADER ================= -->
 
   <header>
@@ -1801,6 +1973,26 @@
 
 
         <div class="header-right">
+
+          <a
+            class="notification"
+            href="https://t.me/netnaira"
+            target="_blank"
+            rel="noopener"
+            aria-label="Support on Telegram"
+          >
+            💬
+          </a>
+
+          <a
+            class="notification"
+            href="https://t.me/netnairaupdates"
+            target="_blank"
+            rel="noopener"
+            aria-label="Updates channel on Telegram"
+          >
+            📢
+          </a>
 
           <button
             class="notification"
@@ -2756,15 +2948,25 @@
     /* ================= LOAD REAL DASHBOARD DATA ================= */
 
     /*
-      Single request on page load.
+      Fetches fresh dashboard data from the server.
 
-      No polling / intervals here on purpose,
-      to keep egress to a minimum. The page
-      is refetched only when the user reloads
-      or navigates back to it.
+      Called on initial page load, AND every time the
+      user "enters" the dashboard again without a full
+      page reload — coming back from another tab, waking
+      the phone screen, or returning via the browser's
+      back/forward cache — see the visibilitychange /
+      pageshow listeners further down.
     */
 
+    let isLoadingDashboard = false;
+
     async function loadDashboard() {
+
+      if (isLoadingDashboard) {
+        return;
+      }
+
+      isLoadingDashboard = true;
 
       try {
 
@@ -2877,12 +3079,48 @@
           error
         );
 
+      } finally {
+
+        isLoadingDashboard = false;
+
       }
 
     }
 
 
     loadDashboard();
+
+
+    /*
+      ================= REFRESH ON RE-ENTRY =================
+
+      A plain link click already does a real navigation
+      (see the page-transition-loader section further down),
+      which reloads this whole page and re-runs loadDashboard()
+      above automatically.
+
+      This covers the other ways a user "enters" the dashboard
+      without a full reload:
+
+      - switching back to this tab / bringing the app back to
+        the foreground on mobile (visibilitychange)
+      - returning via the browser's back/forward cache, where
+        the page is restored from memory instead of re-fetched
+        (pageshow with event.persisted)
+    */
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+
+        if (document.visibilityState === "visible") {
+
+          loadDashboard();
+
+        }
+
+      }
+    );
 
 
     /* ================= NOTIFICATIONS ================= */
@@ -3359,18 +3597,39 @@
       Covers the case the stream above can't: the user
       isn't on the site at all (tab closed, phone locked).
 
-      One-time per browser: register the service worker,
-      ask the OS for permission, then hand the resulting
-      subscription to the server. After that, broadcasts
-      reach this device with no open connection and no
-      polling — the browser's own push service wakes the
-      service worker only when something is actually sent.
+      This browser's own custom-designed prompt (the
+      "Stay in the loop" card above) is shown first, on
+      EVERY browser, regardless of whether it ends up
+      supporting web push. Only once the user taps
+      "Allow notifications" — a real, direct click, which
+      satisfies the user-gesture requirement every browser
+      (including Safari) enforces — do we actually call the
+      native Notification.requestPermission()/subscribe()
+      flow. This is what makes the prompt reliably appear
+      everywhere, instead of the native browser permission
+      dialog which several browsers silently refuse to show
+      when it isn't triggered directly by a click.
 
-      Silently does nothing if the browser doesn't support
-      push (e.g. very old browsers) or the user declines
-      the permission prompt — the in-app bell/SSE above
-      still works either way.
+      If a browser has no Notification/PushManager support
+      at all, we skip straight past all of this — there's
+      nothing to request.
     */
+
+    const PUSH_PROMPT_DISMISS_KEY =
+      "netnaira_push_prompt_dismissed_at";
+
+    const PUSH_PROMPT_COOLDOWN_MS =
+      3 * 24 * 60 * 60 * 1000; // 3 days
+
+    function pushIsSupported() {
+
+      return (
+        "Notification" in window &&
+        "serviceWorker" in navigator &&
+        "PushManager" in window
+      );
+
+    }
 
     function urlBase64ToUint8Array(base64String) {
 
@@ -3393,12 +3652,15 @@
 
     }
 
-    async function setupPushNotifications() {
+    /*
+      Actually registers the service worker and creates
+      the push subscription. Only ever called once we
+      already know permission is (or was just) "granted".
+    */
 
-      if (
-        !("serviceWorker" in navigator) ||
-        !("PushManager" in window)
-      ) {
+    async function setupPushSubscription() {
+
+      if (!pushIsSupported()) {
         return;
       }
 
@@ -3416,16 +3678,6 @@
 
         const registration =
           await navigator.serviceWorker.register("/sw.js");
-
-        let permission = Notification.permission;
-
-        if (permission === "default") {
-          permission = await Notification.requestPermission();
-        }
-
-        if (permission !== "granted") {
-          return;
-        }
 
         let subscription =
           await registration.pushManager.getSubscription();
@@ -3459,7 +3711,122 @@
 
     }
 
-    setupPushNotifications();
+    const pushPermissionOverlay =
+      document.getElementById("pushPermissionOverlay");
+
+    function showPushPermissionPrompt() {
+
+      pushPermissionOverlay.classList.add("show");
+
+    }
+
+    function hidePushPermissionPrompt() {
+
+      pushPermissionOverlay.classList.remove("show");
+
+    }
+
+    function markPushPromptDismissed() {
+
+      localStorage.setItem(
+        PUSH_PROMPT_DISMISS_KEY,
+        String(Date.now())
+      );
+
+    }
+
+    /*
+      Decides, on page load, whether to show our own
+      "Stay in the loop" card at all — never the native
+      browser dialog directly.
+    */
+
+    function initPushPermissionPrompt() {
+
+      if (!pushIsSupported()) {
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+
+        // Already allowed on a previous visit — make sure
+        // the subscription is still registered, no prompt.
+        setupPushSubscription();
+
+        return;
+
+      }
+
+      if (Notification.permission === "denied") {
+
+        // The user (or browser) already said no — respect
+        // that, don't ask again.
+        return;
+
+      }
+
+      const dismissedAt =
+        Number(
+          localStorage.getItem(PUSH_PROMPT_DISMISS_KEY) || 0
+        );
+
+      if (
+        dismissedAt &&
+        (Date.now() - dismissedAt) < PUSH_PROMPT_COOLDOWN_MS
+      ) {
+
+        return;
+
+      }
+
+      showPushPermissionPrompt();
+
+    }
+
+    document
+      .getElementById("pushPermissionAllow")
+      .addEventListener("click", async () => {
+
+        hidePushPermissionPrompt();
+
+        try {
+
+          const permission =
+            await Notification.requestPermission();
+
+          if (permission === "granted") {
+
+            await setupPushSubscription();
+
+          } else {
+
+            markPushPromptDismissed();
+
+          }
+
+        } catch (error) {
+
+          console.warn(
+            "Notification permission request failed:",
+            error
+          );
+
+        }
+
+      });
+
+    document
+      .getElementById("pushPermissionLater")
+      .addEventListener("click", () => {
+
+        hidePushPermissionPrompt();
+        markPushPromptDismissed();
+
+      });
+
+    // Small delay so the prompt doesn't compete with the
+    // rest of the dashboard rendering in.
+    setTimeout(initPushPermissionPrompt, 1200);
 
 
     /* ================= PAGE TRANSITION LOADER ================= */
@@ -3552,12 +3919,21 @@
     /*
       If the browser restores this page from the
       back/forward cache (e.g. the user tapped
-      "back" mid-transition), make sure the loader
-      isn't left stuck on screen.
+      "back" mid-transition, or switched apps and
+      came back), make sure the loader isn't left
+      stuck on screen, and refresh the dashboard
+      data since a bfcache restore skips the normal
+      page load / script re-run.
     */
 
-    window.addEventListener("pageshow", function() {
+    window.addEventListener("pageshow", function(event) {
+
       hidePageLoader();
+
+      if (event.persisted) {
+        loadDashboard();
+      }
+
     });
 
 
@@ -3565,7 +3941,7 @@
 
     document
       .querySelectorAll(
-        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .notification-modal-close"
+        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .notification-modal-close, .push-permission-allow, .push-permission-later"
       )
       .forEach(element => {
 
