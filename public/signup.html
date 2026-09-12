@@ -303,7 +303,15 @@
       width: max-content;
       gap: 12px;
       will-change: transform;
-      animation: activity-scroll-ltr 240s linear infinite;
+      /*
+        No CSS @keyframes animation here anymore — some
+        Samsung Internet / Android WebView builds silently
+        fail to run long-duration CSS keyframe animations
+        (they render the first frame and never advance).
+        The scroll is instead driven frame-by-frame from
+        JavaScript further down, which is reliable across
+        every browser.
+      */
     }
 
     .activity-item {
@@ -398,16 +406,6 @@
       }
     }
 
-    @keyframes activity-scroll-ltr {
-      from { transform: translate3d(-50%,0,0); }
-      to   { transform: translate3d(0,0,0); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .activity-track {
-        animation: none;
-      }
-    }
   </style>
 </head>
 
@@ -736,6 +734,81 @@
   }
 
   renderPayoutTicker();
+
+  /*
+    Moves the ticker with requestAnimationFrame instead
+    of a CSS @keyframes animation. Some Samsung Internet /
+    Android WebView builds render the ticker's first frame
+    and then just stop advancing a CSS animation that runs
+    this long (240s) - it isn't a reduced-motion setting,
+    the animation itself simply never progresses on those
+    browsers. Driving the same transform from JS on every
+    frame works identically everywhere.
+  */
+
+  function startTickerAnimation() {
+
+    const track =
+      document.getElementById("activityTrack");
+
+    if (!track) {
+      return;
+    }
+
+    const DURATION_SECONDS = 240;
+
+    // The track's content is duplicated once (see
+    // renderPayoutTicker), so scrolling exactly half its
+    // total width loops seamlessly back to the start.
+    let halfWidth =
+      track.scrollWidth / 2;
+
+    if (!halfWidth) {
+
+      // Layout may not have settled yet on a slower
+      // device — try again shortly instead of giving up
+      // on the ticker permanently.
+      setTimeout(startTickerAnimation, 200);
+
+      return;
+
+    }
+
+    let speed =
+      halfWidth / DURATION_SECONDS; // pixels per second
+
+    let distance = 0;
+    let lastTimestamp = null;
+
+    function step(timestamp) {
+
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+      }
+
+      const deltaSeconds =
+        (timestamp - lastTimestamp) / 1000;
+
+      lastTimestamp = timestamp;
+
+      distance =
+        (distance + speed * deltaSeconds) % halfWidth;
+
+      const x =
+        -halfWidth + distance;
+
+      track.style.transform =
+        `translate3d(${x}px, 0, 0)`;
+
+      requestAnimationFrame(step);
+
+    }
+
+    requestAnimationFrame(step);
+
+  }
+
+  startTickerAnimation();
 
 
   /*
