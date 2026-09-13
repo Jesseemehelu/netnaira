@@ -1825,32 +1825,29 @@ that case without the user having to leave
 the page and come back.
 ================================ */
 
-async function fetchWithRetry(url, options, retries = 1){
+async function fetchWithRetry(url, options = {}, retries = 2){
 
-    try{
+    let lastError;
 
-        return await fetch(url, options);
-
-    }catch(error){
-
-        if(retries > 0){
-
-            await new Promise(
-                resolve => setTimeout(resolve, 2000)
-            );
-
-            return fetchWithRetry(
-                url,
-                options,
-                retries - 1
-            );
-
+    for(let attempt = 0; attempt <= retries; attempt++){
+        try{
+            return await fetch(url, {
+                ...options,
+                headers: {
+                    ...(options.headers || {}),
+                    "Cache-Control": "no-cache",
+                    "Accept": "application/json"
+                }
+            });
+        }catch(error){
+            lastError = error;
+            if(attempt < retries){
+                await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
+            }
         }
-
-        throw error;
-
     }
 
+    throw lastError;
 }
 
 
@@ -2223,11 +2220,19 @@ function removeImage(){
    SUBMIT
 ================================ */
 
+let isSubmittingDeposit = false;
+
 form.addEventListener(
     "submit",
     async function(event){
 
         event.preventDefault();
+
+        if(isSubmittingDeposit){
+            return;
+        }
+
+        isSubmittingDeposit = true;
 
 
         const amount =
@@ -2418,4 +2423,5 @@ loadPageData();
 </body>
 
 </html>
+
 
