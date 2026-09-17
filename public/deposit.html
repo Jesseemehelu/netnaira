@@ -1536,8 +1536,11 @@ input[type="file"]{
 }
 
 .deposit-guide-modal{
+    display:flex;
+    flex-direction:column;
     width:min(440px,100%);
     max-height:calc(100vh - 28px);
+    max-height:calc(100dvh - 28px);
     overflow:hidden;
     padding:16px;
     border:1px solid rgba(22,199,132,.25);
@@ -1569,6 +1572,7 @@ input[type="file"]{
     align-items:flex-start;
     justify-content:space-between;
     gap:12px;
+    flex:0 0 auto;
     margin-bottom:10px;
 }
 
@@ -1607,6 +1611,7 @@ input[type="file"]{
     color:#b9ccc2;
     font-size:12px;
     line-height:1.55;
+    flex:0 0 auto;
     margin-bottom:12px;
 }
 
@@ -1614,7 +1619,17 @@ input[type="file"]{
     display:flex;
     align-items:center;
     gap:5px;
+    flex:0 0 auto;
     margin-bottom:10px;
+}
+
+.deposit-guide-scroll{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    flex:1 1 auto;
+    min-height:0;
+    margin:0 -4px;
+    padding:0 4px;
 }
 
 .deposit-guide-dot{
@@ -1647,8 +1662,8 @@ input[type="file"]{
 
 .deposit-guide-image-wrap{
     width:100%;
-    height:min(49vh,430px);
-    min-height:170px;
+    height:min(36vh,320px);
+    min-height:150px;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -1752,6 +1767,8 @@ input[type="file"]{
     display:grid;
     grid-template-columns:110px 1fr;
     gap:8px;
+    flex:0 0 auto;
+    margin-top:12px;
 }
 
 .deposit-guide-skip,
@@ -1793,8 +1810,8 @@ input[type="file"]{
     }
 
     .deposit-guide-image-wrap{
-        height:43vh;
-        min-height:150px;
+        height:30vh;
+        min-height:130px;
     }
 
     .deposit-guide-actions{
@@ -2411,65 +2428,69 @@ input[type="file"]{
         </div>
 
 
-        <div
-            class="deposit-guide-step-label"
-            id="depositGuideStepLabel"
-        >
-            STEP 1 OF 4
-        </div>
-
-
-        <div class="deposit-guide-image-wrap">
-            <img
-                class="deposit-guide-image"
-                id="depositGuideImage"
-                alt=""
-                decoding="async"
-            >
+        <div class="deposit-guide-scroll">
 
             <div
-                class="deposit-guide-image-fallback"
-                id="depositGuideImageFallback"
+                class="deposit-guide-step-label"
+                id="depositGuideStepLabel"
             >
-                Step image could not be loaded.
+                STEP 1 OF 4
             </div>
-        </div>
 
 
-        <div class="deposit-guide-copy">
-            <div class="deposit-guide-copy-head">
-                <span
-                    class="deposit-guide-step-num"
-                    id="depositGuideStepNum"
+            <div class="deposit-guide-image-wrap">
+                <img
+                    class="deposit-guide-image"
+                    id="depositGuideImage"
+                    alt=""
+                    decoding="async"
                 >
-                    1
-                </span>
 
-                <h4 id="depositGuideHeading">
-                    Open your bank app
-                </h4>
+                <div
+                    class="deposit-guide-image-fallback"
+                    id="depositGuideImageFallback"
+                >
+                    Step image could not be loaded.
+                </div>
             </div>
 
-            <p id="depositGuideText">
-                Open your bank's app and tap on
-                <strong>Betting</strong> from the home screen.
-            </p>
-        </div>
+
+            <div class="deposit-guide-copy">
+                <div class="deposit-guide-copy-head">
+                    <span
+                        class="deposit-guide-step-num"
+                        id="depositGuideStepNum"
+                    >
+                        1
+                    </span>
+
+                    <h4 id="depositGuideHeading">
+                        Open your bank app
+                    </h4>
+                </div>
+
+                <p id="depositGuideText">
+                    Open your bank's app and tap on
+                    <strong>Betting</strong> from the home screen.
+                </p>
+            </div>
 
 
-        <label
-            class="deposit-guide-checkbox"
-            for="dontShowDepositGuide"
-        >
-            <input
-                type="checkbox"
-                id="dontShowDepositGuide"
+            <label
+                class="deposit-guide-checkbox"
+                for="dontShowDepositGuide"
             >
+                <input
+                    type="checkbox"
+                    id="dontShowDepositGuide"
+                >
 
-            <span>
-                Don't show this again
-            </span>
-        </label>
+                <span>
+                    Don't show this again
+                </span>
+            </label>
+
+        </div>
 
 
         <div class="deposit-guide-actions">
