@@ -613,6 +613,43 @@ app.use(
 
 /*
 ========================================
+HEALTH / WAKE-UP PING
+========================================
+
+Two purposes:
+
+1. Pages that are about to do something
+   heavy (like the deposit screenshot
+   upload) hit this the moment they load,
+   as early as possible, to start waking
+   a sleeping Render free-tier instance
+   well before the user finishes filling
+   the form.
+
+2. An external uptime pinger (UptimeRobot,
+   cron-job.org, etc.) can hit this every
+   10-14 minutes to stop the instance from
+   spinning down at all during business
+   hours. No auth, no DB call, so it's
+   nearly instant even on a cold path.
+========================================
+*/
+
+app.get(
+    "/api/health",
+    (req, res) => {
+
+        res.json({
+            success: true,
+            status: "awake"
+        });
+
+    }
+);
+
+
+/*
+========================================
 AUTHENTICATION
 ========================================
 */
