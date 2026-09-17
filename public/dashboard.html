@@ -306,182 +306,9 @@
       position: relative;
     }
 
-    .notification-dot {
-      width: 7px;
-      height: 7px;
+    /* ================= DASHBOARD PROMPT (shared modal shell) ================= */
 
-      border-radius: 50%;
-
-      background: var(--green-light);
-
-      position: absolute;
-
-      top: 8px;
-      right: 8px;
-
-      display: none;
-    }
-
-    .notification-dot.show {
-      display: block;
-    }
-
-    .notification-panel {
-      position: absolute;
-
-      top: 56px;
-      right: 16px;
-
-      width: min(340px, calc(100vw - 32px));
-      max-height: 360px;
-
-      overflow-y: auto;
-
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-
-      box-shadow: 0 12px 32px rgba(0,0,0,.35);
-
-      z-index: 60;
-
-      display: none;
-    }
-
-    .notification-panel.show {
-      display: block;
-    }
-
-    .notification-panel-header {
-      padding: 14px 16px;
-
-      font-size: 14px;
-      font-weight: 600;
-
-      border-bottom: 1px solid var(--border);
-    }
-
-    .notification-item {
-      padding: 12px 16px;
-
-      border-bottom: 1px solid var(--border);
-
-      font-size: 13px;
-      line-height: 1.45;
-
-      color: var(--text);
-    }
-
-    .notification-item:last-child {
-      border-bottom: none;
-    }
-
-    .notification-item-time {
-      display: block;
-
-      margin-top: 4px;
-
-      font-size: 11px;
-      color: rgba(244,255,248,.5);
-    }
-
-    .notification-empty {
-      padding: 20px 16px;
-
-      font-size: 13px;
-      text-align: center;
-
-      color: rgba(244,255,248,.5);
-    }
-
-    .notification-modal-overlay {
-      position: fixed;
-      inset: 0;
-
-      z-index: 90;
-
-      display: none;
-
-      align-items: center;
-      justify-content: center;
-
-      padding: 20px;
-
-      background: rgba(3,8,5,.72);
-
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-    }
-
-    .notification-modal-overlay.show {
-      display: flex;
-    }
-
-    .notification-modal {
-      width: min(360px, 100%);
-
-      border-radius: 18px;
-
-      padding: 26px 22px 22px;
-
-      background: var(--card);
-      border: 1px solid var(--border);
-
-      box-shadow: 0 20px 60px rgba(0,0,0,.5);
-
-      text-align: center;
-    }
-
-    .notification-modal-icon {
-      width: 46px;
-      height: 46px;
-
-      margin: 0 auto 14px;
-
-      border-radius: 50%;
-
-      background: rgba(22,199,132,.12);
-      border: 1px solid rgba(22,199,132,.25);
-
-      display: grid;
-      place-items: center;
-
-      font-size: 20px;
-    }
-
-    .notification-modal-message {
-      font-size: 14px;
-      line-height: 1.55;
-
-      color: var(--text);
-
-      white-space: pre-wrap;
-
-      margin-bottom: 22px;
-    }
-
-    .notification-modal-close {
-      width: 100%;
-
-      padding: 13px;
-
-      border-radius: 11px;
-
-      background: var(--green);
-
-      color: #03150d;
-
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .notification-modal-close:active {
-      transform: scale(.98);
-    }
-
-    /* ================= PUSH PERMISSION PROMPT ================= */
-
-    .push-permission-overlay {
+    .dashboard-prompt-overlay {
       position: fixed;
       inset: 0;
 
@@ -500,11 +327,11 @@
       -webkit-backdrop-filter: blur(6px);
     }
 
-    .push-permission-overlay.show {
+    .dashboard-prompt-overlay.show {
       display: flex;
     }
 
-    .push-permission-modal {
+    .dashboard-prompt-modal {
       width: min(420px, 100%);
 
       border-radius: 20px;
@@ -526,7 +353,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .push-permission-icon {
+    .dashboard-prompt-icon {
       width: 52px;
       height: 52px;
 
@@ -543,12 +370,12 @@
       font-size: 24px;
     }
 
-    .push-permission-modal h3 {
+    .dashboard-prompt-modal h3 {
       font-size: 16px;
       margin-bottom: 8px;
     }
 
-    .push-permission-modal p {
+    .dashboard-prompt-modal p {
       color: #9aac9f;
 
       font-size: 12.5px;
@@ -557,13 +384,13 @@
       margin-bottom: 20px;
     }
 
-    .push-permission-actions {
+    .dashboard-prompt-actions {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .push-permission-allow {
+    .dashboard-prompt-allow {
       width: 100%;
 
       padding: 13px;
@@ -578,7 +405,7 @@
       font-weight: 800;
     }
 
-    .push-permission-later {
+    .dashboard-prompt-later {
       width: 100%;
 
       padding: 13px;
@@ -593,8 +420,31 @@
       font-weight: 700;
     }
 
-    .push-permission-allow:active,
-    .push-permission-later:active {
+    .dashboard-prompt-allow:active,
+    .dashboard-prompt-later:active {
+      transform: scale(.98);
+    }
+
+    /* ================= TELEGRAM ANNOUNCEMENTS PROMPT ================= */
+
+    .telegram-prompt-dont-show {
+      width: 100%;
+
+      padding: 11px;
+
+      border-radius: 11px;
+
+      background: transparent;
+
+      color: rgba(140,158,147,.7);
+
+      font-size: 11.5px;
+      font-weight: 700;
+
+      text-decoration: underline;
+    }
+
+    .telegram-prompt-dont-show:active {
       transform: scale(.98);
     }
 
@@ -2004,108 +1854,51 @@
 
   </div>
 
-  <!-- ================= NOTIFICATION POPUP ================= -->
+  <!-- ================= TELEGRAM ANNOUNCEMENTS PROMPT ================= -->
 
   <div
-    class="notification-modal-overlay"
-    id="notificationModalOverlay"
+    class="dashboard-prompt-overlay"
+    id="telegramPromptOverlay"
   >
 
-    <div class="notification-modal">
+    <div class="dashboard-prompt-modal">
 
-      <div class="notification-modal-icon">
-        🔔
+      <div class="dashboard-prompt-icon">
+        📣
       </div>
 
-      <div
-        class="notification-modal-message"
-        id="notificationModalMessage"
-      ></div>
-
-      <button
-        class="notification-modal-close"
-        onclick="closeNotificationPopup()"
-      >
-        Close
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <!-- ================= PUSH PERMISSION PROMPT (custom, cross-browser) ================= -->
-
-  <div
-    class="push-permission-overlay"
-    id="pushPermissionOverlay"
-  >
-
-    <div class="push-permission-modal">
-
-      <div class="push-permission-icon">
-        🔔
-      </div>
-
-      <h3>Stay in the loop</h3>
+      <h3>Join our announcements channel</h3>
 
       <p>
-        Turn on notifications to get instant alerts on your deposits,
-        withdrawals and important updates — even when Netnaira isn't open.
+        Get the latest updates, news and important announcements
+        straight from Netnaira by joining our Telegram channel.
       </p>
 
-      <div class="push-permission-actions">
+      <div class="dashboard-prompt-actions">
 
-        <button
-          class="push-permission-allow"
-          id="pushPermissionAllow"
+        <a
+          class="dashboard-prompt-allow"
+          href="https://t.me/netnairaupdates"
+          target="_blank"
+          rel="noopener"
+          id="telegramPromptJoin"
+          style="display:block; text-decoration:none; text-align:center;"
         >
-          Allow notifications
-        </button>
+          Join Telegram channel
+        </a>
 
         <button
-          class="push-permission-later"
-          id="pushPermissionLater"
+          class="dashboard-prompt-later"
+          id="telegramPromptLater"
         >
           Maybe later
         </button>
 
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ================= ADD TO HOME SCREEN PROMPT (iOS only) ================= -->
-
-  <div
-    class="push-permission-overlay"
-    id="a2hsPromptOverlay"
-  >
-
-    <div class="push-permission-modal">
-
-      <div class="push-permission-icon">
-        📲
-      </div>
-
-      <h3>Get notified on iPhone</h3>
-
-      <p>
-        To receive notifications on iPhone, add Netnaira to your
-        Home Screen: tap the Share icon in Safari, then choose
-        "Add to Home Screen." Open Netnaira from that icon and
-        you'll be able to turn on notifications.
-      </p>
-
-      <div class="push-permission-actions">
-
         <button
-          class="push-permission-allow"
-          id="a2hsPromptClose"
+          class="telegram-prompt-dont-show"
+          id="telegramPromptDontShow"
         >
-          Got it
+          Don't show this again
         </button>
 
       </div>
@@ -2161,40 +1954,6 @@
           >
             📢
           </a>
-
-          <button
-            class="notification"
-            onclick="toggleNotificationPanel()"
-            aria-label="Notifications"
-          >
-
-            🔔
-
-            <span
-              class="notification-dot"
-              id="notificationDot"
-            ></span>
-
-          </button>
-
-          <div
-            class="notification-panel"
-            id="notificationPanel"
-          >
-
-            <div class="notification-panel-header">
-              Notifications
-            </div>
-
-            <div id="notificationList">
-
-              <div class="notification-empty">
-                You have no notifications yet.
-              </div>
-
-            </div>
-
-          </div>
 
 
           <div
@@ -3525,829 +3284,110 @@
     );
 
 
-    /* ================= NOTIFICATIONS ================= */
-
     /*
-      Notifications come from the admin typing a
-      message into the Telegram bot (see
-      handleTelegramAdminMessage in server.js).
-      They're the same feed for every user.
-
-      To keep egress low we do NOT poll on a
-      timer. Instead:
-
-      1. One normal fetch to /api/notifications
-         on page load, to catch up on anything
-         sent since the last visit (usually an
-         empty response - a few bytes).
-      2. One long-lived connection to
-         /api/notifications/stream (Server-Sent
-         Events) that the server only writes to
-         the instant the admin actually sends a
-         message, plus a tiny keep-alive comment
-         every 45s so the connection doesn't get
-         dropped for being idle.
-
-      Local state kept in localStorage on this
-      browser:
-
-      - netnaira_notif_last_fetched: highest id
-        we've ever received, so step 1 only asks
-        the server for what's new.
-      - netnaira_notif_last_read: highest id the
-        user has actually opened the bell to see,
-        used to decide whether the dot shows.
+      "Join our announcements channel" prompt, shown every
+      time the user lands on the dashboard, unless they've
+      tapped "Don't show this again" within the last 2 days.
     */
 
-    const NOTIF_FETCHED_KEY =
-      "netnaira_notif_last_fetched";
+    const TELEGRAM_PROMPT_DISMISS_KEY =
+      "netnaira_telegram_prompt_dismissed_at";
 
-    const NOTIF_READ_KEY =
-      "netnaira_notif_last_read";
+    const TELEGRAM_PROMPT_COOLDOWN_MS =
+      2 * 24 * 60 * 60 * 1000; // 2 days
 
-    const MAX_NOTIFICATIONS_SHOWN =
-      20;
+    const telegramPromptOverlay =
+      document.getElementById("telegramPromptOverlay");
 
-    let notifications = [];
+    function showTelegramPrompt() {
 
-    const notificationPanel =
-      document.getElementById(
-        "notificationPanel"
-      );
-
-    const notificationList =
-      document.getElementById(
-        "notificationList"
-      );
-
-    const notificationDot =
-      document.getElementById(
-        "notificationDot"
-      );
-
-    const notificationModalOverlay =
-      document.getElementById(
-        "notificationModalOverlay"
-      );
-
-    const notificationModalMessage =
-      document.getElementById(
-        "notificationModalMessage"
-      );
-
-    let popupQueue = [];
-
-    let isPopupShowing = false;
-
-    function getStoredId(key) {
-
-      return (
-        Number(
-          localStorage.getItem(key)
-        ) || 0
-      );
+      telegramPromptOverlay.classList.add("show");
 
     }
 
-    function formatNotificationTime(isoString) {
+    function hideTelegramPrompt() {
 
-      try {
-
-        return new Date(
-          isoString
-        ).toLocaleString(
-          "en-NG",
-          {
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit"
-          }
-        );
-
-      } catch (error) {
-
-        return "";
-
-      }
+      telegramPromptOverlay.classList.remove("show");
 
     }
 
-    function renderNotifications() {
-
-      if (!notifications.length) {
-
-        notificationList.innerHTML =
-          '<div class="notification-empty">You have no notifications yet.</div>';
-
-        return;
-
-      }
-
-      notificationList.innerHTML =
-        notifications
-          .map(item => `
-            <div class="notification-item">
-              ${escapeHtml(item.message)}
-              <span class="notification-item-time">
-                ${formatNotificationTime(item.created_at)}
-              </span>
-            </div>
-          `)
-          .join("");
-
-    }
-
-    function escapeHtml(text) {
-
-      const div =
-        document.createElement("div");
-
-      div.textContent = text;
-
-      return div.innerHTML;
-
-    }
-
-    function updateNotificationDot() {
-
-      const lastRead =
-        getStoredId(NOTIF_READ_KEY);
-
-      const hasUnread =
-        notifications.some(
-          item => item.id > lastRead
-        );
-
-      notificationDot.classList.toggle(
-        "show",
-        hasUnread
-      );
-
-    }
-
-    /*
-      A broadcast pops up front-and-center as soon
-      as it arrives (or is caught up on) - the user
-      doesn't need to tap the bell to see it. If
-      several are unread at once they're shown one
-      at a time; closing one reveals the next.
-    */
-
-    function showNextPopup() {
-
-      if (!popupQueue.length) {
-
-        isPopupShowing = false;
-
-        notificationModalOverlay.classList.remove(
-          "show"
-        );
-
-        return;
-
-      }
-
-      isPopupShowing = true;
-
-      notificationModalMessage.textContent =
-        popupQueue[0].message;
-
-      notificationModalOverlay.classList.add(
-        "show"
-      );
-
-    }
-
-    function enqueuePopups(items) {
-
-      if (!items || !items.length) {
-        return;
-      }
-
-      popupQueue =
-        popupQueue.concat(items);
-
-      if (!isPopupShowing) {
-        showNextPopup();
-      }
-
-    }
-
-    function closeNotificationPopup() {
-
-      const item =
-        popupQueue.shift();
-
-      if (item) {
-
-        const lastRead =
-          getStoredId(NOTIF_READ_KEY);
-
-        if (item.id > lastRead) {
-
-          localStorage.setItem(
-            NOTIF_READ_KEY,
-            String(item.id)
-          );
-
-        }
-
-        updateNotificationDot();
-
-      }
-
-      showNextPopup();
-
-    }
-
-    notificationModalOverlay.addEventListener(
-      "click",
-      function(event) {
-
-        if (event.target === notificationModalOverlay) {
-          closeNotificationPopup();
-        }
-
-      }
-    );
-
-    function toggleNotificationPanel() {
-
-      const isOpening =
-        !notificationPanel.classList.contains(
-          "show"
-        );
-
-      notificationPanel.classList.toggle(
-        "show"
-      );
-
-      if (isOpening) {
-
-        const highestId =
-          notifications.length
-            ? notifications[0].id
-            : getStoredId(NOTIF_FETCHED_KEY);
-
-        localStorage.setItem(
-          NOTIF_READ_KEY,
-          String(highestId)
-        );
-
-        updateNotificationDot();
-
-      }
-
-    }
-
-    document.addEventListener(
-      "click",
-      function(event) {
-
-        if (
-          notificationPanel.classList.contains("show") &&
-          !notificationPanel.contains(event.target) &&
-          !event.target.closest(".notification")
-        ) {
-
-          notificationPanel.classList.remove(
-            "show"
-          );
-
-        }
-
-      }
-    );
-
-    function addIncomingNotifications(
-      incoming
-    ) {
-
-      if (!incoming || !incoming.length) {
-        return;
-      }
-
-      /*
-        Anything the user hasn't already marked as
-        read (by closing its popup, or by opening
-        the bell) gets queued to pop up - whether
-        it arrived just now over the live stream,
-        or was sent while this browser was away and
-        we're only just catching up on page load.
-      */
-
-      const lastRead =
-        getStoredId(NOTIF_READ_KEY);
-
-      const unread =
-        incoming.filter(
-          item => item.id > lastRead
-        );
-
-      /*
-        Newest first in our in-memory list so
-        renderNotifications() doesn't need to
-        re-sort.
-      */
-
-      notifications =
-        [...incoming].reverse().concat(notifications)
-          .slice(0, MAX_NOTIFICATIONS_SHOWN);
-
-      const highestId =
-        Math.max(
-          getStoredId(NOTIF_FETCHED_KEY),
-          ...incoming.map(item => item.id)
-        );
+    function markTelegramPromptDismissed() {
 
       localStorage.setItem(
-        NOTIF_FETCHED_KEY,
-        String(highestId)
-      );
-
-      renderNotifications();
-      updateNotificationDot();
-
-      enqueuePopups(unread);
-
-    }
-
-    /*
-      Runs once per page load: picks up anything
-      sent while this browser wasn't connected
-      (tab closed, laptop asleep, etc). Usually
-      returns an empty array, which is a tiny
-      response.
-    */
-
-    async function fetchMissedNotifications() {
-
-      try {
-
-        const afterId =
-          getStoredId(
-            NOTIF_FETCHED_KEY
-          );
-
-        const response =
-          await fetch(
-            `/api/notifications?after_id=${afterId}`,
-            {
-              method: "GET",
-              credentials: "same-origin"
-            }
-          );
-
-        if (response.status === 401) {
-          return;
-        }
-
-        const result =
-          await response
-            .json()
-            .catch(() => null);
-
-        if (
-          !response.ok ||
-          !result ||
-          !result.success
-        ) {
-          return;
-        }
-
-        addIncomingNotifications(
-          result.notifications
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Notification catch-up fetch failed:",
-          error
-        );
-
-      }
-
-    }
-
-    /*
-      Stays open for as long as the dashboard tab
-      is open. The server only writes to it the
-      moment the admin sends a message (plus a
-      tiny keep-alive comment now and then), so an
-      idle connection costs almost nothing - unlike
-      polling on a timer, which pays for a full
-      request/response even when there's nothing
-      new.
-    */
-
-    function connectNotificationStream() {
-
-      const stream =
-        new EventSource(
-          "/api/notifications/stream"
-        );
-
-      stream.addEventListener(
-        "notification",
-        event => {
-
-          let notification;
-
-          try {
-
-            notification =
-              JSON.parse(event.data);
-
-          } catch (error) {
-            return;
-          }
-
-          addIncomingNotifications(
-            [notification]
-          );
-
-        }
-      );
-
-      stream.onerror = () => {
-
-        /*
-          Browsers auto-reconnect EventSource on a
-          dropped connection, but not after an auth
-          failure (wrong content-type/status), which
-          is what we want if the session has
-          expired - no point retrying forever.
-        */
-
-        console.warn(
-          "Notification stream disconnected."
-        );
-
-      };
-
-    }
-
-    fetchMissedNotifications().then(
-      connectNotificationStream
-    );
-
-    /*
-      ================= PUSH NOTIFICATIONS =================
-
-      Covers the case the stream above can't: the user
-      isn't on the site at all (tab closed, phone locked).
-
-      This browser's own custom-designed prompt (the
-      "Stay in the loop" card above) is shown first, on
-      EVERY browser, regardless of whether it ends up
-      supporting web push. Only once the user taps
-      "Allow notifications" — a real, direct click, which
-      satisfies the user-gesture requirement every browser
-      (including Safari) enforces — do we actually call the
-      native Notification.requestPermission()/subscribe()
-      flow. This is what makes the prompt reliably appear
-      everywhere, instead of the native browser permission
-      dialog which several browsers silently refuse to show
-      when it isn't triggered directly by a click.
-
-      If a browser has no Notification/PushManager support
-      at all, we skip straight past all of this — there's
-      nothing to request.
-    */
-
-    const PUSH_PROMPT_DISMISS_KEY =
-      "netnaira_push_prompt_dismissed_at";
-
-    const A2HS_PROMPT_DISMISS_KEY =
-      "netnaira_a2hs_prompt_dismissed_at";
-
-    const PUSH_PROMPT_COOLDOWN_MS =
-      3 * 24 * 60 * 60 * 1000; // 3 days
-
-    /*
-      iOS Safari refuses to grant push permission from a
-      plain browser tab at all - the site must first be
-      added to the Home Screen, then reopened from that
-      icon (running in "standalone" display mode). This is
-      a WebKit restriction that applies to every browser on
-      iOS (Chrome/Firefox on iOS are WebKit under the hood
-      too), not just Safari. There's no way to trigger the
-      "Add to Home Screen" step programmatically, so on iOS
-      outside of standalone mode we show instructions
-      instead of the native prompt.
-    */
-
-    function isIos() {
-
-      return /iphone|ipad|ipod/i.test(
-        navigator.userAgent
-      );
-
-    }
-
-    function isInStandaloneMode() {
-
-      return Boolean(
-        (
-          "standalone" in window.navigator &&
-          window.navigator.standalone
-        ) ||
-        window.matchMedia(
-          "(display-mode: standalone)"
-        ).matches
-      );
-
-    }
-
-    function pushIsSupported() {
-
-      return (
-        "Notification" in window &&
-        "serviceWorker" in navigator &&
-        "PushManager" in window
-      );
-
-    }
-
-    function urlBase64ToUint8Array(base64String) {
-
-      const padding =
-        "=".repeat((4 - (base64String.length % 4)) % 4);
-
-      const base64 =
-        (base64String + padding)
-          .replace(/-/g, "+")
-          .replace(/_/g, "/");
-
-      const rawData = window.atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-
-      for (let i = 0; i < rawData.length; i++) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
-
-      return outputArray;
-
-    }
-
-    /*
-      Actually registers the service worker and creates
-      the push subscription. Only ever called once we
-      already know permission is (or was just) "granted".
-    */
-
-    async function setupPushSubscription() {
-
-      if (!pushIsSupported()) {
-        return;
-      }
-
-      try {
-
-        const keyResponse =
-          await fetch("/api/push/vapid-public-key");
-
-        const keyResult =
-          await keyResponse.json().catch(() => null);
-
-        if (!keyResponse.ok || !keyResult?.success) {
-          return;
-        }
-
-        const registration =
-          await navigator.serviceWorker.register("/sw.js");
-
-        let subscription =
-          await registration.pushManager.getSubscription();
-
-        if (!subscription) {
-
-          subscription =
-            await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey:
-                urlBase64ToUint8Array(keyResult.publicKey)
-            });
-
-        }
-
-        await fetch("/api/push/subscribe", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subscription })
-        });
-
-      } catch (error) {
-
-        console.warn(
-          "Push notification setup skipped:",
-          error
-        );
-
-      }
-
-    }
-
-    const pushPermissionOverlay =
-      document.getElementById("pushPermissionOverlay");
-
-    function showPushPermissionPrompt() {
-
-      pushPermissionOverlay.classList.add("show");
-
-    }
-
-    function hidePushPermissionPrompt() {
-
-      pushPermissionOverlay.classList.remove("show");
-
-    }
-
-    function markPushPromptDismissed() {
-
-      localStorage.setItem(
-        PUSH_PROMPT_DISMISS_KEY,
+        TELEGRAM_PROMPT_DISMISS_KEY,
         String(Date.now())
       );
 
     }
 
-    /*
-      "Add to Home Screen" instructional modal, shown
-      instead of the native-push modal on iOS when the
-      site isn't running in standalone mode yet. Same
-      cooldown pattern, tracked under its own key.
-    */
-
-    const a2hsPromptOverlay =
-      document.getElementById("a2hsPromptOverlay");
-
-    function showA2hsPrompt() {
-
-      if (a2hsPromptOverlay) {
-        a2hsPromptOverlay.classList.add("show");
-      }
-
-    }
-
-    function hideA2hsPrompt() {
-
-      if (a2hsPromptOverlay) {
-        a2hsPromptOverlay.classList.remove("show");
-      }
-
-    }
-
-    function markA2hsPromptDismissed() {
-
-      localStorage.setItem(
-        A2HS_PROMPT_DISMISS_KEY,
-        String(Date.now())
-      );
-
-    }
-
-    function a2hsPromptOnCooldown() {
+    function telegramPromptOnCooldown() {
 
       const dismissedAt =
         Number(
-          localStorage.getItem(A2HS_PROMPT_DISMISS_KEY) || 0
+          localStorage.getItem(TELEGRAM_PROMPT_DISMISS_KEY) || 0
         );
 
       return Boolean(
         dismissedAt &&
-        (Date.now() - dismissedAt) < PUSH_PROMPT_COOLDOWN_MS
+        (Date.now() - dismissedAt) < TELEGRAM_PROMPT_COOLDOWN_MS
       );
 
     }
 
-    /*
-      Decides, on page load, whether to show our own
-      "Stay in the loop" card at all — never the native
-      browser dialog directly.
+    function initTelegramPrompt() {
 
-      - iOS, not installed to Home Screen yet -> show the
-        "Add to Home Screen" instructions instead (can't
-        request native permission from a browser tab).
-      - iOS, already running from Home Screen -> falls
-        through to the normal flow below, same as
-        Android/desktop.
-    */
-
-    function initPushPermissionPrompt() {
-
-      if (!pushIsSupported()) {
+      if (!telegramPromptOverlay) {
         return;
       }
 
-      if (isIos() && !isInStandaloneMode()) {
-
-        if (!a2hsPromptOnCooldown()) {
-          showA2hsPrompt();
-        }
-
+      if (telegramPromptOnCooldown()) {
         return;
-
       }
 
-      if (Notification.permission === "granted") {
-
-        // Already allowed on a previous visit — make sure
-        // the subscription is still registered, no prompt.
-        setupPushSubscription();
-
-        return;
-
-      }
-
-      if (Notification.permission === "denied") {
-
-        // The user (or browser) already said no — respect
-        // that, don't ask again.
-        return;
-
-      }
-
-      const dismissedAt =
-        Number(
-          localStorage.getItem(PUSH_PROMPT_DISMISS_KEY) || 0
-        );
-
-      if (
-        dismissedAt &&
-        (Date.now() - dismissedAt) < PUSH_PROMPT_COOLDOWN_MS
-      ) {
-
-        return;
-
-      }
-
-      showPushPermissionPrompt();
+      showTelegramPrompt();
 
     }
 
-    document
-      .getElementById("pushPermissionAllow")
-      .addEventListener("click", async () => {
-
-        hidePushPermissionPrompt();
-
-        try {
-
-          const permission =
-            await Notification.requestPermission();
-
-          if (permission === "granted") {
-
-            await setupPushSubscription();
-
-          } else {
-
-            markPushPromptDismissed();
-
-          }
-
-        } catch (error) {
-
-          console.warn(
-            "Notification permission request failed:",
-            error
-          );
-
-        }
-
-      });
-
-    document
-      .getElementById("pushPermissionLater")
-      .addEventListener("click", () => {
-
-        hidePushPermissionPrompt();
-        markPushPromptDismissed();
-
-      });
-
-    if (
-      document.getElementById("a2hsPromptClose")
-    ) {
+    if (document.getElementById("telegramPromptJoin")) {
 
       document
-        .getElementById("a2hsPromptClose")
+        .getElementById("telegramPromptJoin")
         .addEventListener("click", () => {
 
-          hideA2hsPrompt();
-          markA2hsPromptDismissed();
+          hideTelegramPrompt();
 
         });
 
     }
 
-    // Small delay so the prompt doesn't compete with the
-    // rest of the dashboard rendering in.
-    setTimeout(initPushPermissionPrompt, 1200);
+    if (document.getElementById("telegramPromptLater")) {
+
+      document
+        .getElementById("telegramPromptLater")
+        .addEventListener("click", () => {
+
+          hideTelegramPrompt();
+
+        });
+
+    }
+
+    if (document.getElementById("telegramPromptDontShow")) {
+
+      document
+        .getElementById("telegramPromptDontShow")
+        .addEventListener("click", () => {
+
+          hideTelegramPrompt();
+          markTelegramPromptDismissed();
+
+        });
+
+    }
+
+    // Shown shortly after the dashboard renders.
+    setTimeout(initTelegramPrompt, 600);
+
 
 
     /* ================= PAGE TRANSITION LOADER ================= */
@@ -4462,7 +3502,7 @@
 
     document
       .querySelectorAll(
-        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .notification-modal-close, .push-permission-allow, .push-permission-later"
+        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .dashboard-prompt-allow, .dashboard-prompt-later, .telegram-prompt-dont-show"
       )
       .forEach(element => {
 
@@ -4499,6 +3539,7 @@
 
 </body>
 </html>
+
 
 
 

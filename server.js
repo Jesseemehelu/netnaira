@@ -6,7 +6,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
-const webpush = require("web-push");
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
@@ -69,68 +68,6 @@ const TELEGRAM_WEBHOOK_URL =
 
 const TELEGRAM_WEBHOOK_SECRET =
     process.env.TELEGRAM_WEBHOOK_SECRET;
-
-
-/*
-========================================
-WEB PUSH (VAPID)
-========================================
-
-Lets us push a notification to a user's
-device even when they don't have the site
-open — no third-party service, no cost,
-and no persistent connection to pay egress
-on. The browser's own push service (Chrome
-uses Google's, Firefox uses Mozilla's, etc)
-delivers the message; our server only makes
-one small outbound request per subscriber,
-and only at the moment the admin actually
-broadcasts something.
-
-Generate a keypair once with:
-    npx web-push generate-vapid-keys
-and put the values in your .env / Render
-environment variables. Never expose the
-private key to the browser.
-========================================
-*/
-
-const VAPID_PUBLIC_KEY =
-    process.env.VAPID_PUBLIC_KEY;
-
-const VAPID_PRIVATE_KEY =
-    process.env.VAPID_PRIVATE_KEY;
-
-const VAPID_SUBJECT =
-    process.env.VAPID_SUBJECT ||
-    "mailto:admin@netnaira.onrender.com";
-
-const pushEnabled =
-    Boolean(
-        VAPID_PUBLIC_KEY &&
-        VAPID_PRIVATE_KEY
-    );
-
-if (pushEnabled) {
-
-    webpush.setVapidDetails(
-        VAPID_SUBJECT,
-        VAPID_PUBLIC_KEY,
-        VAPID_PRIVATE_KEY
-    );
-
-} else {
-
-    console.warn("");
-    console.warn(
-        "WARNING: Push notifications are not configured."
-    );
-    console.warn(
-        "Add VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY to .env"
-    );
-    console.warn("");
-
-}
 
 
 /*
@@ -717,10 +654,15 @@ TELEGRAM API HELPER
 
 async function telegramApi(
     method,
-    body
+    body,
+    botToken
 ) {
 
-    if (!TELEGRAM_BOT_TOKEN) {
+    const token =
+        botToken ||
+        TELEGRAM_BOT_TOKEN;
+
+    if (!token) {
 
         throw new Error(
             "TELEGRAM_BOT_TOKEN is missing."
@@ -729,7 +671,7 @@ async function telegramApi(
     }
 
     const url =
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`;
+        `https://api.telegram.org/bot${token}/${method}`;
 
     const response =
         await fetch(
@@ -1214,203 +1156,12 @@ Current status: ${data.status || "unknown"}`
 
 /*
 ========================================
-NOTIFICATION STREAM (SSE)
-========================================
-
-Rather than have every dashboard poll
-/api/notifications on a timer (which burns
-egress on empty "nothing new" responses even
-when the admin hasn't sent anything), each
-logged-in browser keeps ONE long-lived
-connection open here. We only write to it
-- broadcastNotification() below - the instant
-the admin actually sends something, plus a
-small keep-alive comment every so often so
-hosts/proxies don't time out the idle
-connection.
-
-net effect: idle users cost a few bytes every
-KEEP_ALIVE_MS instead of a full request/response
-every polling interval.
-========================================
-*/
-
-const sseClients =
-    new Set();
-
-const SSE_KEEP_ALIVE_MS =
-    45000;
-
-function broadcastNotification(
-    notification
-) {
-
-    const payload =
-        `event: notification\ndata: ${JSON.stringify(notification)}\n\n`;
-
-    for (
-        const client
-        of sseClients
-    ) {
-
-        client.write(
-            payload
-        );
-
-    }
-
-}
-
-setInterval(
-    () => {
-
-        for (
-            const client
-            of sseClients
-        ) {
-
-            client.write(
-                ": keep-alive\n\n"
-            );
-
-        }
-
-    },
-    SSE_KEEP_ALIVE_MS
-);
-
-
-/*
-========================================
-PUSH NOTIFICATIONS (WEB PUSH)
-========================================
-
-Covers the case broadcastNotification() can't:
-a user who isn't currently on the site at all
-(tab closed, browser closed on desktop, phone
-screen off). Every browser that has opted in
-has a row in "push_subscriptions" - we send
-each one a tiny encrypted payload through its
-own browser vendor's push service.
-
-This costs us nothing beyond the outbound
-payload itself (a few hundred bytes per
-subscriber, once, only when a broadcast
-happens) - there's no connection to hold
-open and no polling.
-
-A subscription becomes invalid when the user
-uninstalls, clears site data, or the OS
-revokes it. The push service tells us this
-with a 404/410 response, and we delete that
-row so we stop wasting a request on it next
-time.
-========================================
-*/
-
-async function sendPushToAll(
-    notification
-) {
-
-    if (!pushEnabled) {
-        return;
-    }
-
-    const {
-        data: subscriptions,
-        error
-    } = await supabase
-        .from("push_subscriptions")
-        .select(
-            "id, endpoint, p256dh, auth"
-        );
-
-    if (error) {
-
-        console.error(
-            "Push subscriptions fetch error:",
-            error
-        );
-
-        return;
-
-    }
-
-    if (!subscriptions || !subscriptions.length) {
-        return;
-    }
-
-    const payload =
-        JSON.stringify({
-            title: "NetNaira",
-            body: notification.message,
-            id: notification.id
-        });
-
-    const staleIds = [];
-
-    await Promise.all(
-        subscriptions.map(
-            async (sub) => {
-
-                try {
-
-                    await webpush.sendNotification(
-                        {
-                            endpoint: sub.endpoint,
-                            keys: {
-                                p256dh: sub.p256dh,
-                                auth: sub.auth
-                            }
-                        },
-                        payload
-                    );
-
-                } catch (pushError) {
-
-                    if (
-                        pushError.statusCode === 404 ||
-                        pushError.statusCode === 410
-                    ) {
-
-                        staleIds.push(sub.id);
-
-                    } else {
-
-                        console.error(
-                            "Push send error:",
-                            pushError.statusCode,
-                            pushError.body
-                        );
-
-                    }
-
-                }
-
-            }
-        )
-    );
-
-    if (staleIds.length) {
-
-        await supabase
-            .from("push_subscriptions")
-            .delete()
-            .in("id", staleIds);
-
-    }
-
-}
-
-
-/*
-========================================
 TELEGRAM ADMIN BROADCAST MESSAGE
 ========================================
 
-Lets the admin send a notification to every
-user on the website from directly inside the
-Telegram bot chat, triggered with /broadcast.
+Lets the admin send a message to every user
+of the bot directly from inside the admin's
+Telegram chat, triggered with /broadcast.
 
 Two ways to use it:
 1. Inline:  "/broadcast Maintenance at 12am"
@@ -1425,16 +1176,38 @@ Security: only the authorized admin user/chat
 buttons already trust - can trigger this.
 Everyone else is silently ignored.
 
-A broadcast is stored in the
-"admin_notifications" table (so a fresh page
-load can still catch up on anything it missed)
-and pushed immediately to any dashboard that's
-currently connected via broadcastNotification().
+The message is sent as a real Telegram
+message from the MAIN bot (TELEGRAM_WEBAPP_BOT_TOKEN
+- whichever bot the user opened the Mini App
+from) to every user who has a telegram_id on
+file, one DM per user. This is not an in-app
+popup/notification - it lands directly in the
+user's chat with the bot, same as any other
+message from it.
+
+Users who have blocked the bot or never
+started a chat with it will fail silently
+(Telegram returns 403 for those) - we just
+skip them and keep going.
 ========================================
 */
 
 let awaitingBroadcastMessage =
     false;
+
+const BROADCAST_BATCH_SIZE =
+    25;
+
+const BROADCAST_BATCH_DELAY_MS =
+    1000;
+
+function sleep(ms) {
+
+    return new Promise(
+        (resolve) => setTimeout(resolve, ms)
+    );
+
+}
 
 async function sendBroadcastMessage(
     text,
@@ -1444,22 +1217,17 @@ async function sendBroadcastMessage(
     try {
 
         const {
-            data: notification,
+            data: users,
             error
         } = await supabase
-            .from("admin_notifications")
-            .insert({
-                message: text
-            })
-            .select(
-                "id, message, created_at"
-            )
-            .single();
+            .from("users")
+            .select("telegram_id")
+            .not("telegram_id", "is", null);
 
-        if (error || !notification) {
+        if (error) {
 
             console.error(
-                "Admin notification insert error:",
+                "Broadcast recipients fetch error:",
                 error
             );
 
@@ -1470,7 +1238,7 @@ async function sendBroadcastMessage(
                         chatId,
 
                     text:
-                        "⚠️ Could not send that notification. Please try again."
+                        "⚠️ Could not load the user list. Please try again."
                 }
             ).catch(() => {});
 
@@ -1478,22 +1246,75 @@ async function sendBroadcastMessage(
 
         }
 
-        broadcastNotification(
-            notification
-        );
+        const recipients =
+            (users || [])
+                .map((user) => user.telegram_id)
+                .filter(Boolean);
 
-        sendPushToAll(
-            notification
-        ).catch(
-            (pushError) => {
+        if (!recipients.length) {
 
-                console.error(
-                    "Push broadcast error:",
-                    pushError
+            await telegramApi(
+                "sendMessage",
+                {
+                    chat_id:
+                        chatId,
+
+                    text:
+                        "⚠️ No users to broadcast to."
+                }
+            ).catch(() => {});
+
+            return;
+
+        }
+
+        let sent = 0;
+        let failed = 0;
+
+        for (
+            let i = 0;
+            i < recipients.length;
+            i += BROADCAST_BATCH_SIZE
+        ) {
+
+            const batch =
+                recipients.slice(
+                    i,
+                    i + BROADCAST_BATCH_SIZE
                 );
 
+            const results =
+                await Promise.allSettled(
+                    batch.map(
+                        (telegramId) =>
+                            telegramApi(
+                                "sendMessage",
+                                {
+                                    chat_id:
+                                        telegramId,
+
+                                    text
+                                },
+                                TELEGRAM_WEBAPP_BOT_TOKEN
+                            )
+                    )
+                );
+
+            for (const result of results) {
+
+                if (result.status === "fulfilled") {
+                    sent += 1;
+                } else {
+                    failed += 1;
+                }
+
             }
-        );
+
+            if (i + BROADCAST_BATCH_SIZE < recipients.length) {
+                await sleep(BROADCAST_BATCH_DELAY_MS);
+            }
+
+        }
 
         await telegramApi(
             "sendMessage",
@@ -1502,7 +1323,8 @@ async function sendBroadcastMessage(
                     chatId,
 
                 text:
-                    "✅ Notification sent to all users."
+                    `✅ Broadcast sent to ${sent} user(s).` +
+                    (failed ? ` (${failed} could not be reached.)` : "")
             }
         ).catch(() => {});
 
@@ -1513,9 +1335,21 @@ async function sendBroadcastMessage(
             error
         );
 
+        await telegramApi(
+            "sendMessage",
+            {
+                chat_id:
+                    chatId,
+
+                text:
+                    "⚠️ Could not send that broadcast. Please try again."
+            }
+        ).catch(() => {});
+
     }
 
 }
+
 
 async function handleTelegramAdminMessage(
     message
@@ -4301,364 +4135,6 @@ app.get(
 
     }
 );
-
-
-/*
-========================================
-PUSH SUBSCRIPTION
-========================================
-
-Lets a logged-in browser opt in to receiving
-notifications even when it isn't on the site.
-The public key is not secret (it's designed
-to be handed to the browser), so it doesn't
-need auth. Subscribing/unsubscribing does,
-since we tie the subscription to a user_id.
-========================================
-*/
-
-app.get(
-    "/api/push/vapid-public-key",
-    (req, res) => {
-
-        if (!pushEnabled) {
-
-            return res.status(503).json({
-                success: false,
-                message:
-                    "Push notifications are not configured."
-            });
-
-        }
-
-        return res.json({
-            success: true,
-            publicKey: VAPID_PUBLIC_KEY
-        });
-
-    }
-);
-
-app.post(
-    "/api/push/subscribe",
-    authenticate,
-    async (req, res) => {
-
-        try {
-
-            const subscription =
-                req.body?.subscription;
-
-            if (
-                !subscription ||
-                !subscription.endpoint ||
-                !subscription.keys?.p256dh ||
-                !subscription.keys?.auth
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Invalid subscription."
-                });
-
-            }
-
-            /*
-            One row per endpoint. If this browser
-            already subscribed before (e.g. re-
-            registering after clearing site data),
-            upsert on the endpoint just refreshes
-            it instead of creating a duplicate.
-            */
-
-            const { error } =
-                await supabase
-                    .from("push_subscriptions")
-                    .upsert(
-                        {
-                            user_id: req.userId,
-                            endpoint: subscription.endpoint,
-                            p256dh: subscription.keys.p256dh,
-                            auth: subscription.keys.auth
-                        },
-                        {
-                            onConflict: "endpoint"
-                        }
-                    );
-
-            if (error) {
-
-                console.error(
-                    "Push subscribe error:",
-                    error
-                );
-
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Unable to save subscription."
-                });
-
-            }
-
-            return res.json({
-                success: true
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Push subscribe error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to save subscription."
-            });
-
-        }
-
-    }
-);
-
-app.post(
-    "/api/push/unsubscribe",
-    authenticate,
-    async (req, res) => {
-
-        try {
-
-            const endpoint =
-                req.body?.endpoint;
-
-            if (!endpoint) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Missing endpoint."
-                });
-
-            }
-
-            await supabase
-                .from("push_subscriptions")
-                .delete()
-                .eq("endpoint", endpoint);
-
-            return res.json({
-                success: true
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Push unsubscribe error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to remove subscription."
-            });
-
-        }
-
-    }
-);
-
-
-/*
-========================================
-NOTIFICATIONS
-========================================
-
-Returns broadcast notifications sent by the
-admin through the Telegram bot (see
-handleTelegramAdminMessage above).
-
-These are the same feed for everyone, but a
-user should only ever see broadcasts sent
-after THEY joined — not the full history that
-piled up before their account existed. So in
-addition to "after_id" (which the client uses
-to only ask for what's new since its last
-fetch), we also floor the query at the user's
-own created_at.
-========================================
-*/
-
-app.get(
-    "/api/notifications",
-    authenticate,
-    async (req, res) => {
-
-        try {
-
-            const afterId =
-                Number(
-                    req.query.after_id
-                ) || 0;
-
-            const {
-                data: currentUser,
-                error: currentUserError
-            } = await supabase
-                .from("users")
-                .select("created_at")
-                .eq("id", req.userId)
-                .single();
-
-            if (
-                currentUserError ||
-                !currentUser
-            ) {
-
-                console.error(
-                    "Notifications user lookup error:",
-                    currentUserError
-                );
-
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "User account not found."
-                });
-
-            }
-
-            const {
-                data: notifications,
-                error
-            } = await supabase
-                .from("admin_notifications")
-                .select(
-                    "id, message, created_at"
-                )
-                .gt(
-                    "id",
-                    afterId
-                )
-                .gte(
-                    "created_at",
-                    currentUser.created_at
-                )
-                .order(
-                    "id",
-                    { ascending: true }
-                )
-                .limit(50);
-
-            if (error) {
-
-                console.error(
-                    "Notifications fetch error:",
-                    error
-                );
-
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Unable to load notifications."
-                });
-
-            }
-
-            return res.json({
-                success: true,
-                notifications:
-                    notifications || []
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Notifications error:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Unable to load notifications."
-            });
-
-        }
-
-    }
-);
-
-
-/*
-========================================
-NOTIFICATION STREAM (SSE)
-========================================
-
-The dashboard opens exactly one of these per
-page load instead of polling. We hold the
-connection open and only write to it via
-broadcastNotification() when the admin actually
-sends something - see NOTIFICATION STREAM (SSE)
-section further up for the client set + keep-
-alive ping.
-========================================
-*/
-
-app.get(
-    "/api/notifications/stream",
-    authenticate,
-    (req, res) => {
-
-        res.writeHead(
-            200,
-            {
-                "Content-Type":
-                    "text/event-stream",
-
-                "Cache-Control":
-                    "no-cache",
-
-                "Connection":
-                    "keep-alive",
-
-                /*
-                Tells nginx-style proxies (some
-                hosts sit behind one) not to
-                buffer this response, or the
-                "instant" push would get stuck
-                until the buffer fills.
-                */
-                "X-Accel-Buffering":
-                    "no"
-            }
-        );
-
-        res.write(
-            ": connected\n\n"
-        );
-
-        sseClients.add(
-            res
-        );
-
-        req.on(
-            "close",
-            () => {
-
-                sseClients.delete(
-                    res
-                );
-
-            }
-        );
-
-    }
-);
-
 
 
 /*
