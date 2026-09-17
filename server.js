@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const webpush = require("web-push");
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -39,6 +40,23 @@ TELEGRAM
 
 const TELEGRAM_BOT_TOKEN =
     process.env.TELEGRAM_BOT_TOKEN;
+
+/*
+Separate bot used ONLY for the Mini App
+(auth.html). This can be a completely
+different bot from the one above — the
+one above sends admin notifications and
+deposit/withdrawal approvals; this one is
+whichever bot the user opens the Web App
+from. They are unrelated to each other;
+Telegram signs initData with whichever
+bot's token owns the Mini App button the
+user tapped.
+*/
+
+const TELEGRAM_WEBAPP_BOT_TOKEN =
+    process.env.TELEGRAM_WEBAPP_BOT_TOKEN ||
+    TELEGRAM_BOT_TOKEN;
 
 const TELEGRAM_ADMIN_CHAT_ID =
     process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -164,6 +182,23 @@ if (!telegramEnabled) {
     );
     console.warn(
         "Add TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_CHAT_ID to .env"
+    );
+    console.warn("");
+
+}
+
+if (!process.env.TELEGRAM_WEBAPP_BOT_TOKEN) {
+
+    console.warn("");
+    console.warn(
+        "WARNING: TELEGRAM_WEBAPP_BOT_TOKEN is not set."
+    );
+    console.warn(
+        "Falling back to TELEGRAM_BOT_TOKEN for Mini App login verification."
+    );
+    console.warn(
+        "If your Web App button lives on a DIFFERENT bot, set " +
+        "TELEGRAM_WEBAPP_BOT_TOKEN to that bot's token or every login will fail."
     );
     console.warn("");
 
@@ -2544,7 +2579,415 @@ async function setupTelegramUpdates() {
 
 /*
 ========================================
-SIGN UP
+TELEGRAM MINI APP AUTHENTICATION
+========================================
+
+Verifies the `initData` string that
+Telegram signs and hands to the Mini App
+on load (window.Telegram.WebApp.initData).
+
+This is a separate HMAC check from the
+webhook secret used for admin approvals.
+Reference:
+https://core.telegram.org/bots/webapps#validating-data-received-via-the-web-app
+
+If it verifies, we know for certain the
+request really came from that Telegram
+user, with no password needed.
+========================================
+*/
+
+function verifyTelegramInitData(
+    initData,
+    botToken
+) {
+
+    const params =
+        new URLSearchParams(initData);
+
+    const hash =
+        params.get("hash");
+
+    if (!hash) return null;
+
+    params.delete("hash");
+
+    /*
+    Data-check-string: all remaining fields,
+    sorted by key, joined with \n
+    */
+
+    const dataCheckArr = [];
+
+    for (const [key, value] of [...params.entries()].sort(
+        (a, b) => a[0].localeCompare(b[0])
+    )) {
+        dataCheckArr.push(`${key}=${value}`);
+    }
+
+    const dataCheckString =
+        dataCheckArr.join("\n");
+
+    // secret_key = HMAC_SHA256("WebAppData", bot_token)
+    const secretKey =
+        crypto
+            .createHmac("sha256", "WebAppData")
+            .update(botToken)
+            .digest();
+
+    const computedHash =
+        crypto
+            .createHmac("sha256", secretKey)
+            .update(dataCheckString)
+            .digest("hex");
+
+    if (computedHash !== hash) {
+        return null; // tampered or forged
+    }
+
+    /*
+    Reject stale initData (Telegram
+    recommends this — anything older than
+    24h should not be trusted).
+    */
+
+    const authDate =
+        Number(params.get("auth_date"));
+
+    const MAX_AGE_SECONDS =
+        24 * 60 * 60;
+
+    if (
+        !authDate ||
+        (Date.now() / 1000 - authDate) > MAX_AGE_SECONDS
+    ) {
+        return null;
+    }
+
+    const userJson =
+        params.get("user");
+
+    if (!userJson) return null;
+
+    return JSON.parse(userJson);
+    // { id, first_name, last_name, username, ... }
+
+}
+
+
+/*
+========================================
+TELEGRAM AUTO SIGNUP / LOGIN
+========================================
+
+Single endpoint that either creates the
+account (first time opening the Mini App)
+or just logs the existing user in
+(returning), then sets the same session
+cookie used everywhere else in this file.
+
+This is what auth.html calls automatically
+on load — the user never sees or fills a
+form.
+========================================
+*/
+
+app.post(
+    "/api/auth/telegram",
+    async (req, res) => {
+
+        try {
+
+            const {
+                initData,
+                ref
+            } = req.body;
+
+            if (!initData) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Missing Telegram data."
+                });
+
+            }
+
+            const tgUser =
+                verifyTelegramInitData(
+                    initData,
+                    TELEGRAM_WEBAPP_BOT_TOKEN
+                );
+
+            if (!tgUser) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Could not verify Telegram identity."
+                });
+
+            }
+
+            const telegramId =
+                String(tgUser.id);
+
+            const {
+                data: existingUser,
+                error: lookupError
+            } = await supabase
+                .from("users")
+                .select("id")
+                .eq(
+                    "telegram_id",
+                    telegramId
+                )
+                .maybeSingle();
+
+            if (lookupError) {
+
+                console.error(
+                    "Telegram user lookup error:",
+                    lookupError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to check account."
+                });
+
+            }
+
+            let userId;
+
+            if (existingUser) {
+
+                userId =
+                    existingUser.id;
+
+            } else {
+
+                /*
+                Auto-generate a unique username
+                from Telegram data. Falls back to
+                "user" if Telegram gives us nothing
+                usable, then appends a number until
+                it's free.
+                */
+
+                const base =
+                    (
+                        tgUser.username ||
+                        tgUser.first_name ||
+                        "user"
+                    )
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, "")
+                        .slice(0, 15) || "user";
+
+                let candidateUsername =
+                    base;
+
+                let suffix = 0;
+
+                while (true) {
+
+                    const { data: taken } =
+                        await supabase
+                            .from("users")
+                            .select("id")
+                            .eq(
+                                "username",
+                                candidateUsername
+                            )
+                            .maybeSingle();
+
+                    if (!taken) break;
+
+                    suffix += 1;
+
+                    candidateUsername =
+                        `${base}${suffix}`;
+
+                }
+
+                let referrer = null;
+
+                if (ref) {
+
+                    const { data: referrerRow } =
+                        await supabase
+                            .from("users")
+                            .select("id, username")
+                            .eq(
+                                "username",
+                                String(ref).toLowerCase()
+                            )
+                            .maybeSingle();
+
+                    referrer =
+                        referrerRow;
+
+                }
+
+                const {
+                    data: newUser,
+                    error: insertError
+                } = await supabase
+                    .from("users")
+                    .insert({
+                        full_name:
+                            [
+                                tgUser.first_name,
+                                tgUser.last_name
+                            ]
+                                .filter(Boolean)
+                                .join(" ") ||
+                            candidateUsername,
+
+                        username:
+                            candidateUsername,
+
+                        email:
+                            null,
+
+                        password_hash:
+                            null,
+
+                        telegram_id:
+                            telegramId,
+
+                        telegram_username:
+                            tgUser.username || null,
+
+                        balance:
+                            0,
+
+                        total_earned:
+                            0,
+
+                        referred_by:
+                            referrer
+                                ? referrer.id
+                                : null
+                    })
+                    .select("id")
+                    .single();
+
+                if (insertError) {
+
+                    console.error(
+                        "Telegram signup error:",
+                        insertError
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message:
+                            "Unable to create your account."
+                    });
+
+                }
+
+                userId =
+                    newUser.id;
+
+                if (referrer) {
+
+                    await supabase
+                        .rpc(
+                            "credit_referral_bonus",
+                            {
+                                p_referrer_id:
+                                    referrer.id,
+
+                                p_referred_user_id:
+                                    userId,
+
+                                p_amount:
+                                    REFERRAL_BONUS
+                            }
+                        )
+                        .catch(
+                            (e) => console.error(
+                                "Referral bonus error:",
+                                e
+                            )
+                        );
+
+                }
+
+            }
+
+            const token =
+                jwt.sign(
+                    {
+                        userId:
+                            userId
+                    },
+
+                    JWT_SECRET,
+
+                    {
+                        expiresIn:
+                            "7d"
+                    }
+                );
+
+            res.cookie(
+                "netnaira_session",
+                token,
+                {
+                    httpOnly:
+                        true,
+
+                    secure:
+                        process.env.NODE_ENV ===
+                        "production",
+
+                    sameSite:
+                        "lax",
+
+                    maxAge:
+                        7 *
+                        24 *
+                        60 *
+                        60 *
+                        1000
+                }
+            );
+
+            return res.json({
+                success:
+                    true
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Telegram auth error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Something went wrong."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+SIGN UP (legacy email/password — kept as
+a fallback; you can remove this block
+entirely once Telegram auth is your only
+entry point)
 ========================================
 */
 
@@ -6548,7 +6991,7 @@ SERVER START
 ========================================
 */
 
-app.listen(
+const server = app.listen(
     PORT,
     async () => {
 
@@ -6632,6 +7075,37 @@ app.listen(
 
     }
 );
+
+
+/*
+========================================
+KEEP-ALIVE TIMEOUTS
+========================================
+
+Node's defaults (keepAliveTimeout: 5s) are
+shorter than how long a browser (Chrome in
+particular) will hold an idle connection
+open and try to reuse it.
+
+If a user sits on a page for more than 5
+seconds before submitting, Node has already
+closed the socket server-side, but Chrome
+tries to reuse it anyway - the request dies
+instantly client-side as "Failed to fetch".
+Refreshing the page opens a fresh connection,
+which is why it "just works" the second time.
+
+Raising these well above any realistic idle
+time (and above any proxy/load balancer
+timeout in front of this server on Render)
+fixes it. headersTimeout must always be
+greater than keepAliveTimeout.
+========================================
+*/
+
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+
 
 
 
