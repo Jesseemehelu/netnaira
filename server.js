@@ -192,58 +192,58 @@ const EARNING_PLANS = {
 
     Starter: {
         amount: 3000,
-        daily: 200,
-        total: 6000,
-        durationDays: 30
+        daily: 500,
+        total: 7500,
+        durationDays: 15
     },
 
     Basic: {
         amount: 5000,
-        daily: 350,
-        total: 10500,
-        durationDays: 30
+        daily: 900,
+        total: 13500,
+        durationDays: 15
     },
 
     Growth: {
         amount: 10000,
-        daily: 750,
-        total: 22500,
-        durationDays: 30
+        daily: 2000,
+        total: 30000,
+        durationDays: 15
     },
 
     Pro: {
         amount: 25000,
-        daily: 2000,
-        total: 60000,
-        durationDays: 30
+        daily: 5500,
+        total: 82500,
+        durationDays: 15
     },
 
     Elite: {
         amount: 50000,
-        daily: 4500,
-        total: 135000,
-        durationDays: 30
+        daily: 12000,
+        total: 180000,
+        durationDays: 15
     },
 
     Premium: {
         amount: 100000,
-        daily: 10000,
-        total: 300000,
-        durationDays: 30
+        daily: 26000,
+        total: 390000,
+        durationDays: 15
     },
 
     VIP: {
         amount: 250000,
-        daily: 27500,
-        total: 825000,
-        durationDays: 30
+        daily: 70000,
+        total: 1050000,
+        durationDays: 15
     },
 
     Ultimate: {
         amount: 500000,
-        daily: 60000,
-        total: 1800000,
-        durationDays: 30
+        daily: 150000,
+        total: 2250000,
+        durationDays: 15
     }
 
 };
