@@ -56,7 +56,9 @@
           credentials: "same-origin",
           body: JSON.stringify({
             initData: tg.initData,
-            ref: new URLSearchParams(location.search).get("ref") || null
+            ref: tg.initDataUnsafe?.start_param
+              || new URLSearchParams(location.search).get("ref")
+              || null
           })
         });
 

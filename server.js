@@ -319,21 +319,46 @@ REFERRALS
 
 A user's own USERNAME doubles as their
 referral code, so there's nothing extra
-to generate or look up — the link is
-just:
+to generate or look up.
 
-    APP_BASE_URL/signup.html?ref=<username>
+The link now points at the Telegram Mini
+App itself (not the website), using
+Telegram's own deep-link parameter:
 
-Whoever signs up with a valid ?ref= gets
-tied to that referrer, and the referrer
-is credited REFERRAL_BONUS once, at the
-moment the new account is created.
+    https://t.me/<bot>/<shortname>?startapp=<username>
+
+Telegram passes whatever comes after
+startapp= straight through into
+initData as start_param, which
+auth.html reads and forwards as `ref`
+when it calls /api/auth/telegram.
+
+Whoever opens the app with a valid
+start_param gets tied to that referrer,
+and the referrer is credited
+REFERRAL_BONUS once, at the moment the
+new account is created.
 ========================================
 */
 
 const APP_BASE_URL =
     process.env.APP_BASE_URL ||
     "https://netnaira.onrender.com";
+
+/*
+The bot username and Mini App short name
+you set up in BotFather's /newapp flow —
+e.g. for https://t.me/netnairapaybot/Netnaira
+these are "netnairapaybot" and "Netnaira".
+*/
+
+const TELEGRAM_WEBAPP_BOT_USERNAME =
+    process.env.TELEGRAM_WEBAPP_BOT_USERNAME ||
+    "netnairapaybot";
+
+const TELEGRAM_WEBAPP_SHORT_NAME =
+    process.env.TELEGRAM_WEBAPP_SHORT_NAME ||
+    "Netnaira";
 
 const REFERRAL_BONUS = 500;
 
@@ -5014,7 +5039,7 @@ app.get(
                     user.username,
 
                 referralLink:
-                    `${APP_BASE_URL}/signup.html?ref=${user.username}`,
+                    `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}/${TELEGRAM_WEBAPP_SHORT_NAME}?startapp=${user.username}`,
 
                 bonusPerReferral:
                     REFERRAL_BONUS,
