@@ -2728,6 +2728,11 @@ app.post(
                 ref
             } = req.body;
 
+            console.log(
+                "POST /api/auth/telegram — request received. initData present:",
+                Boolean(initData)
+            );
+
             if (!initData) {
 
                 return res.status(400).json({
@@ -2746,6 +2751,11 @@ app.post(
 
             if (!tgUser) {
 
+                console.warn(
+                    "Telegram auth: initData failed verification. " +
+                    "Check TELEGRAM_WEBAPP_BOT_TOKEN matches the bot the Mini App was opened from."
+                );
+
                 return res.status(401).json({
                     success: false,
                     message:
@@ -2753,6 +2763,12 @@ app.post(
                 });
 
             }
+
+            console.log(
+                "Telegram auth: verified user",
+                tgUser.id,
+                tgUser.username || "(no username)"
+            );
 
             const telegramId =
                 String(tgUser.id);
@@ -2785,6 +2801,7 @@ app.post(
             }
 
             let userId;
+            let isNewUser = false;
 
             if (existingUser) {
 
@@ -2839,9 +2856,14 @@ app.post(
 
                 let referrer = null;
 
+                console.log(
+                    "Telegram signup: ref param received =",
+                    JSON.stringify(ref)
+                );
+
                 if (ref) {
 
-                    const { data: referrerRow } =
+                    const { data: referrerRow, error: referrerLookupError } =
                         await supabase
                             .from("users")
                             .select("id, username")
@@ -2850,6 +2872,20 @@ app.post(
                                 String(ref).toLowerCase()
                             )
                             .maybeSingle();
+
+                    if (referrerLookupError) {
+
+                        console.error(
+                            "Telegram signup: referrer lookup error:",
+                            referrerLookupError
+                        );
+
+                    }
+
+                    console.log(
+                        "Telegram signup: referrer lookup result =",
+                        referrerRow
+                    );
 
                     referrer =
                         referrerRow;
@@ -2897,7 +2933,7 @@ app.post(
                                 ? referrer.id
                                 : null
                     })
-                    .select("id")
+                    .select("id, created_at")
                     .single();
 
                 if (insertError) {
@@ -2918,9 +2954,14 @@ app.post(
                 userId =
                     newUser.id;
 
+                isNewUser = true;
+
                 if (referrer) {
 
-                    await supabase
+                    const {
+                        data: referralResult,
+                        error: referralError
+                    } = await supabase
                         .rpc(
                             "credit_referral_bonus",
                             {
@@ -2933,13 +2974,89 @@ app.post(
                                 p_amount:
                                     REFERRAL_BONUS
                             }
-                        )
-                        .catch(
-                            (e) => console.error(
-                                "Referral bonus error:",
-                                e
-                            )
                         );
+
+                    if (referralError) {
+
+                        console.error(
+                            "Referral bonus RPC error:",
+                            referralError
+                        );
+
+                    } else {
+
+                        console.log(
+                            "Referral bonus RPC result:",
+                            referralResult
+                        );
+
+                    }
+
+                }
+
+                /*
+                ========================================
+                NOTIFY ADMIN (TELEGRAM) — BACKGROUND
+                ========================================
+
+                Same pattern as the legacy email/password
+                signup endpoint: best-effort, does not
+                block the response to the new user.
+                ========================================
+                */
+
+                if (telegramEnabled) {
+
+                    const signupTime =
+                        new Date(
+                            newUser.created_at || Date.now()
+                        ).toLocaleString(
+                            "en-NG",
+                            {
+                                timeZone:
+                                    "Africa/Lagos"
+                            }
+                        );
+
+                    telegramApi(
+                        "sendMessage",
+                        {
+                            chat_id:
+                                TELEGRAM_ADMIN_CHAT_ID,
+
+                            text:
+`🆕 NEW USER SIGNUP (Telegram)
+
+━━━━━━━━━━━━━━━━━━
+
+👤 Name:
+${[tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || candidateUsername}
+
+🔗 Username:
+@${candidateUsername}
+
+📱 Telegram:
+${tgUser.username ? "@" + tgUser.username : "(no @username)"} (ID: ${telegramId})
+
+🆔 User ID:
+${userId}
+
+👥 Referred by:
+${referrer ? "@" + referrer.username : "None"}
+
+🕐 Signed up:
+${signupTime}`
+                        }
+                    ).catch(
+                        (telegramError) => {
+
+                            console.error(
+                                "Telegram signup notify error:",
+                                telegramError.message
+                            );
+
+                        }
+                    );
 
                 }
 
