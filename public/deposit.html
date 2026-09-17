@@ -1,31 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Deposit | Netnaira</title>
 
 <style>
-
 :root{
     --bg:#06100b;
-    --card:#0c1b13;
-    --card2:#102219;
+    --panel:#0c1b13;
+    --panel2:#102219;
     --green:#16c784;
-    --green-light:#27e59a;
+    --green2:#27e59a;
     --text:#f3faf6;
     --muted:#8ea69a;
-    --border:rgba(255,255,255,.07);
-    --danger:#ff6b6b;
-    --warning:#f0cf6b;
-    --blue:#70b7ff;
+    --border:rgba(255,255,255,.08);
+    --yellow:#f0cf6b;
+    --red:#ff7474;
+    --shadow:0 18px 55px rgba(0,0,0,.28);
 }
 
 *{
@@ -34,94 +26,62 @@
     padding:0;
 }
 
-body{
-    min-height:100vh;
-
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(22,199,132,.08),
-            transparent 35%
-        ),
-        var(--bg);
-
-    color:var(--text);
-
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
-
-    padding-bottom:40px;
+html{
+    scroll-behavior:smooth;
 }
 
-button,
-input{
-    font-family:inherit;
+body{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at 90% 0%,rgba(22,199,132,.12),transparent 34%),
+        radial-gradient(circle at 0% 35%,rgba(39,229,154,.05),transparent 30%),
+        var(--bg);
+    color:var(--text);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:45px;
+}
+
+button,input{
+    font:inherit;
 }
 
 button{
     -webkit-tap-highlight-color:transparent;
 }
 
-/* HEADER */
-
 .header{
-    height:68px;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:0 18px;
-
     position:sticky;
     top:0;
     z-index:100;
-
-    background:rgba(6,16,11,.96);
-
+    height:68px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 17px;
+    background:rgba(6,16,11,.94);
     border-bottom:1px solid var(--border);
-
-    backdrop-filter:blur(12px);
+    backdrop-filter:blur(16px);
 }
 
 .brand{
     display:flex;
     align-items:center;
     gap:10px;
-
-    color:white;
+    color:#fff;
     text-decoration:none;
-
     font-size:20px;
-    font-weight:850;
+    font-weight:900;
 }
 
 .brand-icon{
-    width:35px;
-    height:35px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:11px;
-
-    background:
-        linear-gradient(
-            145deg,
-            var(--green-light),
-            #0c9f67
-        );
-
+    width:36px;
+    height:36px;
+    display:grid;
+    place-items:center;
+    border-radius:12px;
+    background:linear-gradient(145deg,var(--green2),#0c9f67);
     color:#04110a;
-
-    font-weight:900;
+    box-shadow:0 8px 25px rgba(22,199,132,.2);
 }
 
 .balance{
@@ -130,68 +90,39 @@ button{
 
 .balance-label{
     display:block;
-
     color:var(--muted);
-
     font-size:10px;
-
     margin-bottom:2px;
 }
 
 .balance-value{
-    color:var(--green-light);
-
+    color:var(--green2);
     font-size:14px;
-
-    font-weight:850;
+    font-weight:900;
 }
-
-/* MAIN */
 
 .container{
     width:min(650px,calc(100% - 24px));
-
     margin:auto;
 }
 
-/* BACK BUTTON */
-
-.back-btn{
+.back{
     display:inline-flex;
-
     align-items:center;
-
     gap:7px;
-
-    margin-top:18px;
-
-    color:var(--text);
-
+    margin-top:17px;
+    padding:9px 13px 9px 10px;
+    color:#fff;
     text-decoration:none;
-
-    font-size:14px;
-
+    font-size:13px;
     font-weight:900;
-
-    letter-spacing:-.2px;
-
-    padding:9px 14px 9px 10px;
-
     border-radius:12px;
-
     background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid var(--border);
 }
 
-.back-btn:active{
+.back:active{
     transform:scale(.97);
-}
-
-.back-btn .arrow{
-    font-size:17px;
-
-    line-height:1;
 }
 
 .hero{
@@ -201,503 +132,261 @@ button{
 .badge{
     display:inline-flex;
     align-items:center;
-
+    gap:7px;
     padding:7px 11px;
-
-    margin-bottom:13px;
-
+    margin-bottom:12px;
     border-radius:999px;
-
+    color:var(--green2);
     background:rgba(22,199,132,.08);
-
-    border:1px solid rgba(22,199,132,.14);
-
-    color:var(--green-light);
-
+    border:1px solid rgba(22,199,132,.17);
     font-size:10px;
-    font-weight:800;
+    font-weight:900;
 }
 
 h1{
     font-size:31px;
-
-    letter-spacing:-1px;
-
+    line-height:1.05;
+    letter-spacing:-1.2px;
     margin-bottom:9px;
 }
 
 .hero p{
     color:var(--muted);
-
     font-size:13px;
-
     line-height:1.6;
 }
 
-.hero-min{
+.minimum{
     display:inline-flex;
-
-    align-items:center;
-
-    gap:6px;
-
     margin-top:11px;
-
-    padding:8px 12px;
-
+    padding:8px 11px;
     border-radius:11px;
-
-    background:rgba(240,207,107,.08);
-
-    border:1px solid rgba(240,207,107,.2);
-
-    color:var(--warning);
-
+    color:var(--yellow);
+    background:rgba(240,207,107,.07);
+    border:1px solid rgba(240,207,107,.17);
     font-size:11px;
-
     font-weight:800;
 }
 
-/* CARDS */
-
 .card{
-    background:
-        linear-gradient(
-            145deg,
-            var(--card2),
-            var(--card)
-        );
-
-    border:1px solid var(--border);
-
-    border-radius:21px;
-
-    padding:18px;
-
     margin-bottom:14px;
+    padding:18px;
+    border-radius:21px;
+    background:linear-gradient(145deg,var(--panel2),var(--panel));
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
 }
 
-/* PAYMENT */
-
-.payment-card{
-    border:1px solid rgba(22,199,132,.22);
-
-    box-shadow:0 16px 44px rgba(22,199,132,.08);
+.payment{
+    border-color:rgba(22,199,132,.22);
 }
 
-.payment-top{
+.card-head{
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
-
+    gap:12px;
     margin-bottom:16px;
 }
 
-.payment-title{
+.title-wrap{
     display:flex;
-
     align-items:center;
-
     gap:11px;
 }
 
 .payment-icon{
     width:46px;
     height:46px;
-
+    display:grid;
+    place-items:center;
     border-radius:14px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:rgba(22,199,132,.12);
-
+    background:rgba(22,199,132,.11);
     border:1px solid rgba(22,199,132,.2);
-
     font-size:22px;
-
-    overflow:hidden;
 }
 
-.payment-icon img{
-    width:100%;
-    height:100%;
-
-    object-fit:cover;
-
-    display:block;
-}
-
-.payment-title h2{
+.title-wrap h2{
     font-size:17px;
-
     margin-bottom:3px;
 }
 
-.payment-title p{
+.title-wrap p{
     color:var(--muted);
-
     font-size:10px;
 }
 
-.verified{
-    display:flex;
-
-    align-items:center;
-
-    gap:5px;
-
-    color:var(--green-light);
-
-    font-size:9px;
-
-    font-weight:900;
-
+.active{
     padding:6px 9px;
-
     border-radius:999px;
-
-    background:rgba(22,199,132,.1);
-
-    border:1px solid rgba(22,199,132,.18);
+    color:var(--green2);
+    background:rgba(22,199,132,.08);
+    border:1px solid rgba(22,199,132,.16);
+    font-size:9px;
+    font-weight:900;
+    white-space:nowrap;
 }
 
 .recipient{
-    background:
-        linear-gradient(
-            160deg,
-            rgba(22,199,132,.1),
-            rgba(22,199,132,.03)
-        );
-
-    border:1.5px solid rgba(22,199,132,.32);
-
+    padding:16px;
+    margin-bottom:17px;
     border-radius:17px;
-
-    padding:17px;
-
-    margin-bottom:18px;
-
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
+    background:linear-gradient(160deg,rgba(22,199,132,.11),rgba(22,199,132,.025));
+    border:1.5px solid rgba(22,199,132,.32);
 }
 
 .recipient-label{
-    display:flex;
-
-    align-items:center;
-
-    gap:6px;
-
-    color:var(--green-light);
-
+    color:var(--green2);
     font-size:10px;
-
-    font-weight:800;
-
-    letter-spacing:.3px;
-
+    font-weight:900;
     text-transform:uppercase;
-
-    margin-bottom:10px;
+    letter-spacing:.3px;
+    margin-bottom:9px;
 }
 
 .recipient-row{
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
-
     gap:10px;
 }
 
 .recipient-id{
-    font-size:27px;
-
-    font-weight:900;
-
-    letter-spacing:1.5px;
-
+    font-size:26px;
+    font-weight:950;
+    letter-spacing:1.3px;
     font-variant-numeric:tabular-nums;
 }
 
-.copy-btn{
-    border:0;
-
-    background:var(--green);
-
-    color:#04110a;
-
-    border-radius:11px;
-
-    min-width:72px;
-
-    height:40px;
-
-    font-size:11px;
-
-    font-weight:900;
-
-    cursor:pointer;
-
+.copy{
     flex-shrink:0;
+    min-width:72px;
+    height:40px;
+    border:0;
+    border-radius:11px;
+    background:var(--green);
+    color:#04110a;
+    font-size:11px;
+    font-weight:950;
 }
 
-.copy-btn:active{
+.copy:active{
     transform:scale(.96);
 }
 
-.copy-btn.copied{
-    background:var(--green-light);
+.copy.copied{
+    background:var(--green2);
 }
 
-/* INSTRUCTIONS */
-
-.instructions-title{
+.section-title{
     font-size:14px;
-
     font-weight:900;
-
-    margin:4px 0 12px;
+    margin-bottom:11px;
 }
 
 .steps{
     display:grid;
-
-    gap:10px;
-
-    margin-bottom:16px;
+    gap:9px;
 }
 
 .step{
     display:flex;
-
     align-items:flex-start;
-
-    gap:12px;
-
+    gap:11px;
     padding:13px;
-
     border-radius:15px;
-
-    background:rgba(0,0,0,.16);
-
+    background:rgba(0,0,0,.15);
     border:1px solid rgba(255,255,255,.05);
 }
 
 .step-number{
     width:30px;
     height:30px;
-
-    flex-shrink:0;
-
+    flex:0 0 30px;
+    display:grid;
+    place-items:center;
     border-radius:10px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:rgba(22,199,132,.14);
-
-    border:1px solid rgba(22,199,132,.25);
-
-    color:var(--green-light);
-
-    font-size:14px;
-
-    font-weight:900;
-}
-
-.step-body{
-    padding-top:2px;
+    color:var(--green2);
+    background:rgba(22,199,132,.12);
+    border:1px solid rgba(22,199,132,.22);
+    font-size:13px;
+    font-weight:950;
 }
 
 .step strong{
     display:block;
-
-    font-size:13px;
-
-    font-weight:800;
-
-    margin-bottom:3px;
+    font-size:12.5px;
+    margin:1px 0 3px;
 }
 
 .step p{
     color:var(--muted);
-
     font-size:11px;
-
     line-height:1.5;
 }
 
-.step-id{
-    display:inline-block;
-
-    margin-top:6px;
-
-    padding:5px 10px;
-
-    border-radius:8px;
-
-    background:rgba(22,199,132,.12);
-
-    border:1px solid rgba(22,199,132,.22);
-
-    color:var(--green-light);
-
-    font-size:12px;
-
-    font-weight:900;
-
-    letter-spacing:.5px;
-}
-
-.step-path{
+.chips{
     display:flex;
-
     align-items:center;
-
     gap:6px;
-
-    margin-top:6px;
-
     flex-wrap:wrap;
+    margin-top:6px;
 }
 
-.path-chip{
-    padding:5px 10px;
-
+.chip{
+    padding:5px 9px;
     border-radius:8px;
-
-    background:rgba(255,255,255,.06);
-
+    background:rgba(255,255,255,.055);
     border:1px solid rgba(255,255,255,.08);
-
-    color:var(--text);
-
-    font-size:11px;
-
+    font-size:10px;
     font-weight:800;
 }
 
-.path-arrow{
-    color:var(--green-light);
-
+.arrow{
+    color:var(--green2);
     font-weight:900;
-
-    font-size:12px;
 }
 
-/* SCROLL CTA */
-
-.scroll-cta{
-    width:100%;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    gap:8px;
-
-    min-height:52px;
-
-    border:0;
-
-    border-radius:15px;
-
-    background:var(--green);
-
-    color:#04110a;
-
-    font-size:13px;
-
-    font-weight:900;
-
-    cursor:pointer;
-
-    margin-bottom:16px;
-}
-
-.scroll-cta:active{
-    transform:scale(.98);
-}
-
-.scroll-cta .bell{
-    font-size:15px;
-}
-
-/* INFO BOX */
-
-.info-box{
-    padding:13px;
-
+.notice{
     margin-top:13px;
-
-    border-radius:14px;
-
-    background:rgba(22,199,132,.06);
-
-    border:1px solid rgba(22,199,132,.15);
-
-    font-size:11px;
-
-    line-height:1.55;
-
-    color:#bfd2c8;
-}
-
-.info-box strong{
-    color:var(--green-light);
-}
-
-/* WARNING */
-
-.warning-box{
     padding:13px;
-
-    margin-top:10px;
-
     border-radius:14px;
-
-    background:rgba(255,193,7,.06);
-
-    border:1px solid rgba(255,193,7,.16);
-
-    color:#dcd2a8;
-
+    color:#bfd2c8;
+    background:rgba(22,199,132,.055);
+    border:1px solid rgba(22,199,132,.14);
     font-size:11px;
-
     line-height:1.55;
 }
 
-.warning-box strong{
-    color:var(--warning);
+.notice strong{
+    color:var(--green2);
 }
 
-/* FORM */
+.warning{
+    margin-top:9px;
+    padding:13px;
+    border-radius:14px;
+    color:#dcd2a8;
+    background:rgba(240,193,7,.055);
+    border:1px solid rgba(240,193,7,.14);
+    font-size:11px;
+    line-height:1.55;
+}
+
+.warning strong{
+    color:var(--yellow);
+}
 
 .form-title{
-    font-size:17px;
-
-    font-weight:850;
-
+    font-size:18px;
+    font-weight:900;
     margin-bottom:5px;
 }
 
 .form-subtitle{
     color:var(--muted);
-
     font-size:11px;
-
-    line-height:1.5;
-
+    line-height:1.55;
     margin-bottom:18px;
 }
 
@@ -705,75 +394,53 @@ h1{
     margin-bottom:15px;
 }
 
-.field label{
+label.field-label{
     display:block;
-
-    color:#c9d8d0;
-
-    font-size:11px;
-
-    font-weight:700;
-
     margin-bottom:7px;
+    color:#c9d8d0;
+    font-size:11px;
+    font-weight:800;
 }
 
-.field-hint{
-    display:block;
-
-    margin-top:7px;
-
-    color:var(--warning);
-
-    font-size:10.5px;
-
-    font-weight:700;
-}
-
-.input-wrap{
+.amount-wrap{
     position:relative;
 }
 
-.input-prefix{
+.amount-prefix{
     position:absolute;
-
     left:14px;
     top:50%;
-
     transform:translateY(-50%);
-
-    color:var(--green-light);
-
-    font-weight:850;
-
+    color:var(--green2);
     font-size:14px;
-
+    font-weight:900;
     pointer-events:none;
 }
 
 input[type="number"]{
     width:100%;
-
-    height:51px;
-
-    border-radius:13px;
-
-    border:1px solid rgba(255,255,255,.07);
-
-    outline:none;
-
-    background:rgba(0,0,0,.18);
-
-    color:white;
-
+    height:52px;
     padding:0 13px 0 34px;
-
+    outline:0;
+    border-radius:13px;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(0,0,0,.18);
+    color:#fff;
     font-size:15px;
-
-    font-weight:700;
+    font-weight:800;
 }
 
 input[type="number"]:focus{
-    border-color:rgba(22,199,132,.5);
+    border-color:rgba(22,199,132,.55);
+    box-shadow:0 0 0 3px rgba(22,199,132,.07);
+}
+
+.hint{
+    display:block;
+    margin-top:7px;
+    color:var(--yellow);
+    font-size:10px;
+    font-weight:750;
 }
 
 input[type="file"]{
@@ -781,420 +448,324 @@ input[type="file"]{
 }
 
 .upload{
-    min-height:135px;
-
-    border:1px dashed rgba(22,199,132,.35);
-
-    border-radius:15px;
-
-    background:rgba(22,199,132,.035);
-
+    min-height:145px;
     display:flex;
-
+    flex-direction:column;
     align-items:center;
     justify-content:center;
-
-    flex-direction:column;
-
-    text-align:center;
-
     padding:18px;
-
+    text-align:center;
+    border:1px dashed rgba(22,199,132,.38);
+    border-radius:16px;
+    background:rgba(22,199,132,.035);
     cursor:pointer;
 }
 
+.upload:active{
+    transform:scale(.99);
+}
+
 .upload-icon{
-    width:45px;
-    height:45px;
-
-    border-radius:14px;
-
-    background:rgba(22,199,132,.1);
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    font-size:21px;
-
+    width:47px;
+    height:47px;
+    display:grid;
+    place-items:center;
     margin-bottom:8px;
+    border-radius:14px;
+    background:rgba(22,199,132,.1);
+    font-size:22px;
 }
 
 .upload strong{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
     font-size:12px;
-
-    margin-bottom:4px;
 }
 
 .upload span{
     color:var(--muted);
-
-    font-size:9px;
-
-    line-height:1.4;
+    font-size:9.5px;
+    margin-top:4px;
 }
 
 .preview{
     display:none;
-
-    margin-top:10px;
-
-    border-radius:13px;
-
-    overflow:hidden;
-
-    border:1px solid var(--border);
-
     position:relative;
+    margin-top:10px;
+    overflow:hidden;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:#020704;
 }
 
 .preview img{
     display:block;
-
     width:100%;
-
-    max-height:250px;
-
+    max-height:260px;
     object-fit:contain;
-
-    background:#020704;
 }
 
-.remove-image{
+.remove{
     position:absolute;
-
-    right:8px;
     top:8px;
-
-    width:30px;
-    height:30px;
-
+    right:8px;
+    width:31px;
+    height:31px;
     border:0;
-
     border-radius:50%;
-
-    background:rgba(0,0,0,.72);
-
-    color:white;
-
-    cursor:pointer;
+    background:rgba(0,0,0,.75);
+    color:#fff;
+    font-size:20px;
 }
 
-.submit-btn{
+.submit{
     width:100%;
-
-    min-height:52px;
-
+    min-height:54px;
     border:0;
-
-    border-radius:14px;
-
-    background:var(--green);
-
+    border-radius:15px;
+    background:linear-gradient(135deg,var(--green2),var(--green));
     color:#04110a;
-
     font-size:13px;
-
-    font-weight:900;
-
-    cursor:pointer;
-
-    margin-top:5px;
+    font-weight:950;
+    box-shadow:0 12px 28px rgba(22,199,132,.18);
 }
 
-.submit-btn:disabled{
-    opacity:.5;
-
-    pointer-events:none;
+.submit:active{
+    transform:scale(.985);
 }
 
-/* HISTORY */
+.submit:disabled{
+    opacity:.58;
+}
 
-.history-header{
+.submit.loading{
+    position:relative;
+    color:transparent;
+}
+
+.submit.loading::after{
+    content:"";
+    position:absolute;
+    width:19px;
+    height:19px;
+    top:50%;
+    left:50%;
+    margin:-9.5px 0 0 -9.5px;
+    border:3px solid rgba(4,17,10,.25);
+    border-top-color:#04110a;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+.history-head{
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
-
+    gap:10px;
     margin-bottom:13px;
 }
 
 .history-title{
     font-size:17px;
-
-    font-weight:850;
+    font-weight:900;
 }
 
 .history-subtitle{
-    color:var(--muted);
-
-    font-size:10px;
-
     margin-top:3px;
+    color:var(--muted);
+    font-size:10px;
 }
 
 .history-badge{
     padding:6px 9px;
-
     border-radius:999px;
-
-    background:rgba(255,255,255,.04);
-
     color:var(--muted);
-
+    background:rgba(255,255,255,.04);
     font-size:9px;
-
-    font-weight:800;
+    font-weight:900;
 }
 
 .history-list{
     display:grid;
-
     gap:9px;
 }
 
 .history-item{
     display:flex;
-
     align-items:center;
-
     justify-content:space-between;
-
     gap:12px;
-
     padding:12px;
-
     border-radius:14px;
-
     background:rgba(0,0,0,.14);
-
     border:1px solid rgba(255,255,255,.045);
 }
 
 .history-left{
-    display:flex;
-
-    align-items:center;
-
-    gap:10px;
-
     min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
 
 .history-icon{
     width:36px;
     height:36px;
-
-    flex-shrink:0;
-
+    flex:0 0 36px;
+    display:grid;
+    place-items:center;
     border-radius:11px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
     background:rgba(22,199,132,.08);
-
-    font-size:15px;
 }
 
 .history-amount{
     font-size:13px;
-
-    font-weight:850;
-
+    font-weight:900;
     margin-bottom:3px;
 }
 
 .history-date{
     color:var(--muted);
-
     font-size:9px;
 }
 
 .status{
     padding:6px 8px;
-
     border-radius:999px;
-
     font-size:8px;
-
-    font-weight:900;
-
+    font-weight:950;
     white-space:nowrap;
 }
 
-.status.pending{
-    color:#f0cf6b;
-
+.pending{
+    color:var(--yellow);
     background:rgba(240,207,107,.08);
 }
 
-.status.approved{
-    color:var(--green-light);
-
+.approved{
+    color:var(--green2);
     background:rgba(22,199,132,.08);
 }
 
-.status.rejected{
+.rejected{
     color:#ff8888;
-
     background:rgba(255,107,107,.08);
 }
 
-.history-empty{
+.failed{
+    color:#ff9b7a;
+    background:rgba(255,130,90,.08);
+}
+
+.empty{
     padding:22px 10px;
-
     text-align:center;
-
     color:var(--muted);
-
     font-size:11px;
-
     line-height:1.5;
-}
-
-/* MODAL */
-
-.modal-overlay{
-    position:fixed;
-
-    inset:0;
-
-    z-index:500;
-
-    display:none;
-
-    align-items:center;
-
-    justify-content:center;
-
-    padding:20px;
-
-    background:rgba(0,0,0,.74);
-
-    backdrop-filter:blur(7px);
-}
-
-.modal-overlay.show{
-    display:flex;
 }
 
 .modal{
-    width:min(410px,100%);
-
-    background:#0b1b12;
-
-    border:1px solid rgba(255,255,255,.08);
-
-    border-radius:22px;
-
-    padding:23px;
-
-    text-align:center;
-}
-
-.modal-icon{
-    width:57px;
-    height:57px;
-
-    margin:0 auto 13px;
-
-    border-radius:18px;
-
-    display:flex;
-
+    position:fixed;
+    inset:0;
+    z-index:500;
+    display:none;
     align-items:center;
     justify-content:center;
-
-    background:rgba(22,199,132,.1);
-
-    font-size:26px;
+    padding:20px;
+    background:rgba(0,0,0,.76);
+    backdrop-filter:blur(8px);
 }
 
-.modal h3{
-    font-size:19px;
+.modal.show{
+    display:flex;
+}
 
+.modal-card{
+    width:min(410px,100%);
+    padding:24px;
+    text-align:center;
+    border-radius:23px;
+    background:#0b1b12;
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:0 25px 80px rgba(0,0,0,.45);
+    animation:pop .25s ease;
+}
+
+@keyframes pop{
+    from{opacity:0;transform:scale(.94) translateY(8px)}
+    to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+.success-icon{
+    width:59px;
+    height:59px;
+    display:grid;
+    place-items:center;
+    margin:0 auto 13px;
+    border-radius:19px;
+    color:var(--green2);
+    background:rgba(22,199,132,.1);
+    border:1px solid rgba(22,199,132,.17);
+    font-size:28px;
+    font-weight:950;
+}
+
+.modal-card h3{
+    font-size:19px;
     margin-bottom:7px;
 }
 
-.modal p{
+.modal-card p{
     color:var(--muted);
-
     font-size:11px;
-
-    line-height:1.5;
-
+    line-height:1.55;
     margin-bottom:18px;
 }
 
 .modal-btn{
     width:100%;
-
-    height:46px;
-
+    height:47px;
     border:0;
-
-    border-radius:12px;
-
+    border-radius:13px;
     background:var(--green);
-
     color:#04110a;
-
-    font-weight:900;
-
     font-size:12px;
-
-    cursor:pointer;
+    font-weight:950;
 }
-
-/* TOAST */
 
 .toast{
     position:fixed;
-
     left:50%;
-
-    bottom:26px;
-
-    z-index:800;
-
+    bottom:24px;
+    z-index:900;
+    width:max-content;
     max-width:calc(100% - 30px);
-
     padding:11px 15px;
-
-    border-radius:12px;
-
+    border-radius:13px;
     background:#12261b;
-
-    border:1px solid rgba(255,255,255,.08);
-
-    color:white;
-
+    border:1px solid rgba(255,255,255,.09);
+    color:#fff;
     font-size:11px;
-
-    font-weight:700;
-
-    transform:translate(-50%,20px);
-
+    font-weight:750;
+    transform:translate(-50%,18px);
     opacity:0;
-
     pointer-events:none;
-
     transition:.2s ease;
 }
 
 .toast.show{
     transform:translate(-50%,0);
-
     opacity:1;
 }
 
 @media(min-width:700px){
-
     .header{
         padding:0 35px;
     }
@@ -1202,323 +773,133 @@ input[type="file"]{
     .hero{
         padding-top:28px;
     }
-
 }
-
 </style>
-
 </head>
 
 <body>
 
-
 <header class="header">
-
-    <a
-        href="/dashboard.html"
-        class="brand"
-    >
-
-        <div class="brand-icon">
-            ₦
-        </div>
-
-        <span>
-            Netnaira
-        </span>
-
+    <a class="brand" href="/dashboard.html">
+        <span class="brand-icon">₦</span>
+        <span>Netnaira</span>
     </a>
 
-
     <div class="balance">
-
-        <span class="balance-label">
-            Current Balance
-        </span>
-
-        <span
-            class="balance-value"
-            id="balance"
-        >
-            ₦0.00
-        </span>
-
+        <span class="balance-label">Current Balance</span>
+        <span class="balance-value" id="balance">₦0.00</span>
     </div>
-
 </header>
-
 
 <main class="container">
 
-<a href="/dashboard.html" class="back-btn">
-    <span class="arrow">←</span>
+<a class="back" href="/dashboard.html">
+    <span>←</span>
     <span>Back</span>
 </a>
 
 <section class="hero">
-
-    <div class="badge">
-        💳 SECURE DEPOSIT
-    </div>
-
-    <h1>
-        Fund your account.
-    </h1>
-
+    <div class="badge">💳 SECURE DEPOSIT</div>
+    <h1>Fund your account.</h1>
     <p>
-        Complete your payment first, then send the
-        transaction details below for manual verification.
+        Make your payment first, then submit the amount and
+        transaction screenshot for manual verification.
     </p>
-
-    <div class="hero-min">
-        ⚠️ Minimum deposit amount: ₦100
-    </div>
-
+    <div class="minimum">⚠️ Minimum deposit: ₦100</div>
 </section>
 
-
-<!-- PAYMENT DETAILS -->
-
-<section class="card payment-card">
-
-    <div class="payment-top">
-
-        <div class="payment-title">
-
-            <div class="payment-icon">
-                <img src="data:image/webp;base64,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" alt="SportyBet">
-            </div>
-
+<section class="card payment">
+    <div class="card-head">
+        <div class="title-wrap">
+            <div class="payment-icon">🏦</div>
             <div>
-
-                <h2>
-                    SportyBet
-                </h2>
-
-                <p>
-                    Deposit destination
-                </p>
-
+                <h2>SportyBet</h2>
+                <p>Deposit destination</p>
             </div>
-
         </div>
-
-
-        <div class="verified">
-            ● ACTIVE
-        </div>
-
+        <div class="active">● ACTIVE</div>
     </div>
-
 
     <div class="recipient">
-
-        <div class="recipient-label">
-            🔒 SportyBet User ID
-        </div>
-
+        <div class="recipient-label">🔒 SportyBet User ID</div>
         <div class="recipient-row">
-
-            <div
-                class="recipient-id"
-                id="sportyId"
-            >
-                8050976449
-            </div>
-
-
-            <button
-                type="button"
-                class="copy-btn"
-                id="copyBtn"
-                onclick="copySportyId()"
-            >
-                Copy
-            </button>
-
+            <div class="recipient-id" id="sportyId">8050976449</div>
+            <button class="copy" id="copyBtn" type="button">Copy</button>
         </div>
-
     </div>
 
-
-    <div class="instructions-title">
-        How to deposit with SportyBet
-    </div>
-
+    <div class="section-title">How to deposit</div>
 
     <div class="steps">
 
-
         <div class="step">
-
-            <div class="step-number">
-                1
+            <div class="step-number">1</div>
+            <div>
+                <strong>Open your banking app</strong>
+                <p>Open the banking app you normally use to send money.</p>
             </div>
-
-            <div class="step-body">
-
-                <strong>
-                    Open your banking app
-                </strong>
-
-                <p>
-                    Launch the mobile banking app you normally
-                    use to send money.
-                </p>
-
-            </div>
-
         </div>
 
-
         <div class="step">
-
-            <div class="step-number">
-                2
-            </div>
-
-            <div class="step-body">
-
-                <strong>
-                    Select Betting ➜ SportyBet
-                </strong>
-
-                <p>
-                    Choose the "Betting" or "Bills Payment"
-                    option, then pick SportyBet.
-                </p>
-
-                <div class="step-path">
-                    <span class="path-chip">Betting</span>
-                    <span class="path-arrow">➜</span>
-                    <span class="path-chip">SportyBet</span>
+            <div class="step-number">2</div>
+            <div>
+                <strong>Select Betting ➜ SportyBet</strong>
+                <p>Choose the Betting or Bills Payment option, then select SportyBet.</p>
+                <div class="chips">
+                    <span class="chip">Betting</span>
+                    <span class="arrow">➜</span>
+                    <span class="chip">SportyBet</span>
                 </div>
-
             </div>
-
         </div>
-
 
         <div class="step">
-
-            <div class="step-number">
-                3
+            <div class="step-number">3</div>
+            <div>
+                <strong>Send the recharge</strong>
+                <p>Enter the SportyBet User ID above and send your desired amount.</p>
             </div>
-
-            <div class="step-body">
-
-                <strong>
-                    Send your recharge to the User ID
-                </strong>
-
-                <p>
-                    Enter the SportyBet User ID below as the
-                    recipient and send your desired amount
-                    (minimum ₦100).
-                </p>
-
-                <span class="step-id">
-                    8050976449
-                </span>
-
-            </div>
-
         </div>
-
 
         <div class="step">
-
-            <div class="step-number">
-                4
+            <div class="step-number">4</div>
+            <div>
+                <strong>Submit your verification</strong>
+                <p>After the payment succeeds, enter the exact amount and upload the transaction screenshot below.</p>
             </div>
-
-            <div class="step-body">
-
-                <strong>
-                    Complete the process below
-                </strong>
-
-                <p>
-                    After the deposit goes through, scroll
-                    down and submit your amount and screenshot
-                    to complete verification.
-                </p>
-
-            </div>
-
         </div>
-
 
     </div>
 
-
-    <button
-        type="button"
-        class="scroll-cta"
-        onclick="scrollToForm()"
-    >
-        <span class="bell">🔔</span>
-        I've made my deposit — Continue
-    </button>
-
-
-    <div class="info-box">
-
+    <div class="notice">
         <strong>What happens after you submit?</strong><br>
-
-        Your request is sent to the Netnaira verification
-        team. Your balance is only credited after the
+        Your request is stored immediately and sent to the Netnaira
+        verification team. Your balance is credited only after the
         payment has been reviewed and approved.
-
     </div>
 
-
-    <div class="warning-box">
-
+    <div class="warning">
         <strong>Important:</strong>
-
-        Never submit a fake, edited or reused payment
-        screenshot. Only submit a transaction that you
-        have actually completed. The minimum deposit
-        amount accepted is ₦100.
-
+        Never submit a fake, edited or reused payment screenshot.
+        Only submit a transaction you actually completed.
     </div>
-
 </section>
 
-
-<!-- FORM -->
-
 <section class="card" id="verifyForm">
-
-    <div class="form-title">
-        Verify your deposit
-    </div>
-
+    <div class="form-title">Verify your deposit</div>
     <div class="form-subtitle">
-        Enter the exact amount from your successful
-        transaction and upload the payment screenshot.
-        Minimum deposit: ₦100.
+        Enter the exact amount from your successful transaction
+        and upload its screenshot. Your submission is recorded
+        before the notification is sent to the admin.
     </div>
 
-
-    <form id="depositForm">
-
+    <form id="depositForm" novalidate>
 
         <div class="field">
+            <label class="field-label" for="amount">Amount deposited</label>
 
-            <label for="amount">
-                Amount deposited
-            </label>
-
-
-            <div class="input-wrap">
-
-                <span class="input-prefix">
-                    ₦
-                </span>
-
-
+            <div class="amount-wrap">
+                <span class="amount-prefix">₦</span>
                 <input
                     id="amount"
                     name="amount"
@@ -1527,47 +908,23 @@ input[type="file"]{
                     min="100"
                     max="10000000"
                     step="0.01"
-                    placeholder="Enter amount (min ₦100)"
+                    autocomplete="off"
+                    placeholder="Enter amount"
                     required
                 >
-
             </div>
 
-            <span class="field-hint">
-                ⚠️ Minimum deposit amount is ₦100.
-            </span>
-
+            <span class="hint">⚠️ Minimum deposit amount is ₦100.</span>
         </div>
 
-
         <div class="field">
+            <label class="field-label">Payment screenshot</label>
 
-            <label>
-                Payment screenshot
+            <label class="upload" for="screenshot">
+                <div class="upload-icon">📸</div>
+                <strong id="uploadTitle">Upload transaction screenshot</strong>
+                <span id="uploadText">JPG, PNG or WEBP • Max 5MB</span>
             </label>
-
-
-            <label
-                class="upload"
-                for="screenshot"
-            >
-
-                <div class="upload-icon">
-                    📸
-                </div>
-
-
-                <strong id="uploadTitle">
-                    Upload transaction screenshot
-                </strong>
-
-
-                <span id="uploadText">
-                    JPG, PNG or WEBP • Max 5MB
-                </span>
-
-            </label>
-
 
             <input
                 id="screenshot"
@@ -1577,861 +934,594 @@ input[type="file"]{
                 required
             >
 
-
-            <div
-                class="preview"
-                id="preview"
-            >
-
-                <img
-                    id="previewImage"
-                    alt="Payment screenshot preview"
-                >
-
-
-                <button
-                    type="button"
-                    class="remove-image"
-                    onclick="removeImage()"
-                >
-                    ×
-                </button>
-
+            <div class="preview" id="preview">
+                <img id="previewImage" alt="Payment screenshot preview">
+                <button class="remove" id="removeBtn" type="button">×</button>
             </div>
-
         </div>
 
-
-        <button
-            type="submit"
-            class="submit-btn"
-            id="submitBtn"
-        >
+        <button class="submit" id="submitBtn" type="submit">
             Verify Deposit
         </button>
 
     </form>
-
-
 </section>
-
-
-<!-- HISTORY -->
 
 <section class="card">
-
-    <div class="history-header">
-
+    <div class="history-head">
         <div>
-
-            <div class="history-title">
-                Deposit history
-            </div>
-
-            <div class="history-subtitle">
-                Your two most recent deposit requests
-            </div>
-
+            <div class="history-title">Deposit history</div>
+            <div class="history-subtitle">Your latest deposit requests</div>
         </div>
-
-
-        <div class="history-badge">
-            LAST 2
-        </div>
-
+        <div class="history-badge">RECENT</div>
     </div>
 
-
-    <div
-        class="history-list"
-        id="historyList"
-    >
-
-        <div class="history-empty">
-            Loading deposit history...
-        </div>
-
+    <div class="history-list" id="historyList">
+        <div class="empty">Loading deposit history...</div>
     </div>
-
 </section>
-
 
 </main>
 
-
-<!-- SUCCESS MODAL -->
-
-<div
-    class="modal-overlay"
-    id="successModal"
->
-
-    <div class="modal">
-
-        <div class="modal-icon">
-            ✓
-        </div>
-
-
-        <h3>
-            Verification Submitted
-        </h3>
-
-
+<div class="modal" id="successModal">
+    <div class="modal-card">
+        <div class="success-icon">✓</div>
+        <h3>Verification Submitted</h3>
         <p>
-            Your deposit request has been sent for
-            review. Your balance will only be credited
-            after the payment is approved.
+            Your deposit request has been recorded successfully.
+            It has been sent for review. Your balance will only
+            change after the payment is approved.
         </p>
-
-
-        <button
-            class="modal-btn"
-            onclick="window.location.href='/dashboard.html'"
-        >
+        <button class="modal-btn" id="dashboardBtn" type="button">
             Back to Dashboard
         </button>
-
     </div>
-
 </div>
 
-
-<div
-    class="toast"
-    id="toast"
-></div>
-
+<div class="toast" id="toast"></div>
 
 <script>
+"use strict";
 
-const form =
-    document.getElementById("depositForm");
+const $ = id => document.getElementById(id);
 
-const screenshot =
-    document.getElementById("screenshot");
+const form = $("depositForm");
+const amountInput = $("amount");
+const screenshotInput = $("screenshot");
+const preview = $("preview");
+const previewImage = $("previewImage");
+const uploadTitle = $("uploadTitle");
+const uploadText = $("uploadText");
+const submitBtn = $("submitBtn");
+const historyList = $("historyList");
+const successModal = $("successModal");
+const toast = $("toast");
+const copyBtn = $("copyBtn");
+const removeBtn = $("removeBtn");
 
-const preview =
-    document.getElementById("preview");
+let submitting = false;
+let toastTimer = null;
+let pageLoadController = null;
 
-const previewImage =
-    document.getElementById("previewImage");
+function showToast(message){
+    toast.textContent = message;
+    toast.classList.add("show");
 
-const uploadTitle =
-    document.getElementById("uploadTitle");
+    clearTimeout(toastTimer);
 
-const uploadText =
-    document.getElementById("uploadText");
-
-const submitBtn =
-    document.getElementById("submitBtn");
-
-
-/* ================================
-   RELOAD ON BACK/FORWARD RESTORE
-================================
-
-Mobile browsers often restore this page from
-their back-forward cache instead of loading it
-fresh - e.g. after tapping "Back" from the
-dashboard, or the OS/browser suspending the
-tab in the background. A restored page shows
-exactly whatever it looked like when you left
-(a stuck "Submitting..." button, a stale
-balance, an old success modal) without
-re-running anything below.
-
-Forcing a reload in that one case guarantees
-this page is always freshly loaded - and only
-that case, so a normal first-time visit still
-loads once as usual.
-================================ */
-
-window.addEventListener(
-    "pageshow",
-    function(event){
-
-        if(event.persisted){
-            window.location.reload();
-        }
-
-    }
-);
-
-
-/* ================================
-   REFRESH ON RE-ENTRY
-================================
-
-The pageshow/persisted reload above only covers
-the back-forward cache case. It doesn't cover
-the far more common case of a user switching to
-another tab/app and coming back to this one -
-that doesn't touch the bfcache at all, so the
-balance and history shown could be stale (e.g.
-a deposit approved while they were away).
-
-This re-fetches the page data (without a full
-reload) any time the tab becomes visible again,
-so the balance and history are always current
-the moment the user re-enters this page.
-================================ */
-
-document.addEventListener(
-    "visibilitychange",
-    function(){
-
-        if(document.visibilityState === "visible"){
-            loadPageData();
-        }
-
-    }
-);
-
-
-/* ================================
-   MONEY
-================================ */
-
-function formatNaira(amount){
-
-    return "₦" +
-        Number(amount || 0).toLocaleString(
-            "en-NG",
-            {
-                minimumFractionDigits:2,
-                maximumFractionDigits:2
-            }
-        );
-
+    toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2800);
 }
 
-
-/* ================================
-   FETCH WITH RETRY
-================================
-
-A plain fetch() has no timeout - on a
-weak connection it can just hang instead
-of failing, which looks like the page is
-stuck. This gives each attempt a bounded
-time to respond, and retries a couple of
-times before giving up for good.
-================================ */
-
-async function fetchWithRetry(url, options = {}, retries = 2, timeoutMs = 15000){
-
-    let lastError;
-
-    for(let attempt = 0; attempt <= retries; attempt++){
-
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-        try{
-            const response = await fetch(url, {
-                ...options,
-                signal: controller.signal,
-                headers: {
-                    ...(options.headers || {}),
-                    "Cache-Control": "no-cache",
-                    "Accept": "application/json"
-                }
-            });
-            clearTimeout(timer);
-            return response;
-        }catch(error){
-            clearTimeout(timer);
-            lastError = error;
-            if(attempt < retries){
-                await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
-            }
+function formatNaira(value){
+    return "₦" + Number(value || 0).toLocaleString(
+        "en-NG",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         }
-    }
-
-    throw lastError;
+    );
 }
 
-
-/* ================================
-   SCROLL TO FORM
-================================ */
-
-function scrollToForm(){
-
-    document
-        .getElementById("verifyForm")
-        .scrollIntoView({
-            behavior:"smooth",
-            block:"start"
-        });
-
+function setLoading(loading){
+    submitting = loading;
+    submitBtn.disabled = loading;
+    submitBtn.classList.toggle("loading", loading);
 }
 
+function resetImage(){
+    screenshotInput.value = "";
+    previewImage.removeAttribute("src");
+    preview.style.display = "none";
+    uploadTitle.textContent = "Upload transaction screenshot";
+    uploadText.textContent = "JPG, PNG or WEBP • Max 5MB";
+}
 
-/* ================================
-   LOAD PAGE DATA
-================================ */
+removeBtn.addEventListener("click", resetImage);
 
-let isLoadingPageData = false;
+screenshotInput.addEventListener("change", () => {
 
-async function loadPageData(){
+    const file = screenshotInput.files?.[0];
 
-    if(isLoadingPageData){
+    if(!file){
+        resetImage();
         return;
     }
 
-    isLoadingPageData = true;
+    const allowed = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    if(!allowed.includes(file.type)){
+        resetImage();
+        showToast("Please use a JPG, PNG or WEBP image.");
+        return;
+    }
+
+    if(file.size > 5 * 1024 * 1024){
+        resetImage();
+        showToast("Screenshot must be below 5MB.");
+        return;
+    }
+
+    previewImage.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+    uploadTitle.textContent = file.name;
+    uploadText.textContent = "Screenshot selected";
+});
+
+copyBtn.addEventListener("click", async () => {
+
+    const id = $("sportyId").textContent.trim();
+
+    try{
+
+        if(navigator.clipboard){
+            await navigator.clipboard.writeText(id);
+        }else{
+            const helper = document.createElement("textarea");
+            helper.value = id;
+            document.body.appendChild(helper);
+            helper.select();
+            document.execCommand("copy");
+            helper.remove();
+        }
+
+        copyBtn.textContent = "Copied!";
+        copyBtn.classList.add("copied");
+        showToast("SportyBet ID copied.");
+
+        setTimeout(() => {
+            copyBtn.textContent = "Copy";
+            copyBtn.classList.remove("copied");
+        }, 1800);
+
+    }catch{
+        showToast("Unable to copy the ID.");
+    }
+});
+
+async function requestJson(
+    url,
+    options = {},
+    timeoutMs = 30000
+){
+
+    const controller =
+        new AbortController();
+
+    const timeout =
+        setTimeout(
+            () => controller.abort(),
+            timeoutMs
+        );
+
+    try{
+
+        return await fetch(
+            url,
+            {
+                ...options,
+                credentials:"include",
+                cache:"no-store",
+                signal:controller.signal,
+                headers:{
+                    ...(options.headers || {}),
+                    "Accept":"application/json"
+                }
+            }
+        );
+
+    }finally{
+
+        clearTimeout(timeout);
+
+    }
+}
+
+async function loadPageData(){
+
+    if(pageLoadController){
+        pageLoadController.abort();
+    }
+
+    pageLoadController =
+        new AbortController();
 
     try{
 
         const response =
-            await fetchWithRetry(
+            await fetch(
                 "/api/deposit-page",
                 {
+                    method:"GET",
                     credentials:"include",
-                    cache:"no-store"
+                    cache:"no-store",
+                    signal:pageLoadController.signal,
+                    headers:{
+                        "Accept":"application/json",
+                        "Cache-Control":"no-cache"
+                    }
                 }
             );
 
-
         if(response.status === 401){
-
-            window.location.href =
-                "/login.html";
-
-            return;
-
-        }
-
-
-        if(!response.ok){
+            window.location.replace("/login.html");
             return;
         }
-
 
         const data =
-            await response.json();
+            await response
+                .json()
+                .catch(() => null);
 
-
-        if(!data.success){
-            return;
+        if(!response.ok || !data?.success){
+            throw new Error(
+                data?.message ||
+                "Unable to load deposit information."
+            );
         }
 
-
-        document.getElementById(
-            "balance"
-        ).textContent =
-            formatNaira(
-                data.balance
-            );
-
+        $("balance").textContent =
+            formatNaira(data.balance);
 
         renderHistory(
             data.history || []
         );
 
-
     }catch(error){
 
+        if(error.name === "AbortError"){
+            return;
+        }
+
         console.error(
-            "Deposit page error:",
+            "Deposit page load error:",
             error
         );
 
-        document.getElementById(
-            "historyList"
-        ).innerHTML = `
-            <div class="history-empty">
+        historyList.innerHTML =
+            `<div class="empty">
                 Deposit history could not be loaded.
-            </div>
-        `;
-
-    }finally{
-
-        isLoadingPageData = false;
+             </div>`;
 
     }
-
 }
-
-
-/* ================================
-   HISTORY
-================================ */
 
 function renderHistory(history){
 
-    const list =
-        document.getElementById(
-            "historyList"
-        );
+    if(!Array.isArray(history) || !history.length){
 
-
-    if(!history.length){
-
-        list.innerHTML = `
-            <div class="history-empty">
+        historyList.innerHTML =
+            `<div class="empty">
                 No deposit transactions yet.
-            </div>
-        `;
+             </div>`;
 
         return;
-
     }
 
-
-    list.innerHTML =
+    historyList.innerHTML =
         history.map(item => {
 
-            const status =
+            const rawStatus =
                 String(
                     item.status || "pending"
                 ).toLowerCase();
 
+            let statusClass = "pending";
+            let statusText = "Pending";
 
-            let statusClass =
-                "pending";
-
-
-            let statusText =
-                "Pending";
-
-
-            if(status === "approved"){
-
-                statusClass =
-                    "approved";
-
-                statusText =
-                    "Approved";
-
+            if(rawStatus === "approved"){
+                statusClass = "approved";
+                statusText = "Approved";
+            }else if(rawStatus === "rejected"){
+                statusClass = "rejected";
+                statusText = "Rejected";
+            }else if(
+                rawStatus === "telegram_failed"
+            ){
+                statusClass = "failed";
+                statusText = "Retry needed";
             }
-
-
-            if(status === "rejected"){
-
-                statusClass =
-                    "rejected";
-
-                statusText =
-                    "Rejected";
-
-            }
-
 
             const date =
-                new Date(
-                    item.created_at
-                ).toLocaleString(
-                    "en-NG",
-                    {
-                        day:"numeric",
-                        month:"short",
-                        hour:"2-digit",
-                        minute:"2-digit"
-                    }
-                );
-
+                item.created_at
+                    ? new Date(
+                        item.created_at
+                    ).toLocaleString(
+                        "en-NG",
+                        {
+                            day:"numeric",
+                            month:"short",
+                            hour:"2-digit",
+                            minute:"2-digit"
+                        }
+                    )
+                    : "—";
 
             return `
-
                 <div class="history-item">
-
                     <div class="history-left">
-
-                        <div class="history-icon">
-                            ₦
-                        </div>
-
+                        <div class="history-icon">₦</div>
                         <div>
-
                             <div class="history-amount">
                                 ${formatNaira(item.amount)}
                             </div>
-
                             <div class="history-date">
                                 ${date}
                             </div>
-
                         </div>
-
                     </div>
-
 
                     <div class="status ${statusClass}">
                         ${statusText}
                     </div>
-
                 </div>
-
             `;
 
         }).join("");
-
 }
 
+function isNetworkError(error){
 
-/* ================================
-   COPY ID
-================================ */
+    return (
+        error?.name === "AbortError" ||
+        error instanceof TypeError ||
+        /failed to fetch/i.test(
+            error?.message || ""
+        )
+    );
+}
 
-async function copySportyId(){
+form.addEventListener("submit", async event => {
 
-    const id =
-        document
-            .getElementById("sportyId")
-            .textContent
-            .trim();
+    event.preventDefault();
 
-    const btn =
-        document.getElementById("copyBtn");
+    if(submitting){
+        return;
+    }
 
+    const amount =
+        Number(
+            amountInput.value
+        );
+
+    const file =
+        screenshotInput.files?.[0];
+
+    if(
+        !Number.isFinite(amount) ||
+        amount < 100 ||
+        amount > 10000000
+    ){
+        showToast(
+            "Enter a valid amount between ₦100 and ₦10,000,000."
+        );
+        amountInput.focus();
+        return;
+    }
+
+    if(!file){
+        showToast(
+            "Please upload your payment screenshot."
+        );
+        return;
+    }
+
+    if(file.size > 5 * 1024 * 1024){
+        showToast(
+            "Screenshot must be below 5MB."
+        );
+        return;
+    }
+
+    setLoading(true);
 
     try{
 
-        await navigator.clipboard.writeText(id);
-
-        btn.textContent = "Copied!";
-        btn.classList.add("copied");
-
-        showToast(
-            "SportyBet ID copied."
-        );
-
-        setTimeout(() => {
-            btn.textContent = "Copy";
-            btn.classList.remove("copied");
-        }, 1800);
-
-    }catch{
-
-        showToast(
-            "Unable to copy ID."
-        );
-
-    }
-
-}
-
-
-/* ================================
-   IMAGE
-================================ */
-
-screenshot.addEventListener(
-    "change",
-    function(){
-
-        const file =
-            this.files[0];
-
-
-        if(!file){
-            return;
-        }
-
-
-        const allowed = [
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-        ];
-
-
-        if(!allowed.includes(file.type)){
-
-            this.value = "";
-
-            showToast(
-                "Use JPG, PNG or WEBP."
-            );
-
-            return;
-
-        }
-
-
-        if(file.size > 5 * 1024 * 1024){
-
-            this.value = "";
-
-            showToast(
-                "Screenshot must be below 5MB."
-            );
-
-            return;
-
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function(event){
-
-                previewImage.src =
-                    event.target.result;
-
-                preview.style.display =
-                    "block";
-
-
-                uploadTitle.textContent =
-                    file.name;
-
-                uploadText.textContent =
-                    "Screenshot selected";
-
-            };
-
-
-        reader.readAsDataURL(file);
-
-    }
-);
-
-
-/* ================================
-   REMOVE IMAGE
-================================ */
-
-function removeImage(){
-
-    screenshot.value = "";
-
-    previewImage.src = "";
-
-    preview.style.display =
-        "none";
-
-
-    uploadTitle.textContent =
-        "Upload transaction screenshot";
-
-
-    uploadText.textContent =
-        "JPG, PNG or WEBP • Max 5MB";
-
-}
-
-
-/* ================================
-   SUBMIT
-================================ */
-
-let isSubmittingDeposit = false;
-
-form.addEventListener(
-    "submit",
-    async function(event){
-
-        event.preventDefault();
-
-        if(isSubmittingDeposit){
-            return;
-        }
-
-        isSubmittingDeposit = true;
-
-
-        const amount =
-            Number(
-                document
-                    .getElementById("amount")
-                    .value
-            );
-
-
-        const file =
-            screenshot.files[0];
-
-
-        if(!Number.isFinite(amount) ||
-           amount < 100 ||
-           amount > 10000000){
-
-            showToast(
-                "Enter a valid amount between ₦100 and ₦10,000,000."
-            );
-
-            return;
-
-        }
-
-
-        if(!file){
-
-            showToast(
-                "Please upload your payment screenshot."
-            );
-
-            return;
-
-        }
-
-
-        submitBtn.disabled =
-            true;
-
-        submitBtn.textContent =
-            "Submitting...";
-
-
+        /*
+        Wake the Render instance first.
+        This is a separate tiny request and gives a sleeping
+        instance a chance to become responsive before the
+        multipart upload starts.
+        */
         try{
 
-            const formData =
-                new FormData();
-
-
-            formData.append(
-                "amount",
-                String(amount)
+            await requestJson(
+                "/api/health",
+                {
+                    method:"GET"
+                },
+                15000
             );
-
-
-            formData.append(
-                "screenshot",
-                file
-            );
-
-
-            const response =
-                await fetchWithRetry(
-                    "/api/deposits/verify",
-                    {
-                        method:"POST",
-                        credentials:"include",
-                        body:formData
-                    },
-                    2,
-                    25000
-                );
-
-
-            const data =
-                await response
-                    .json()
-                    .catch(() => null);
-
-
-            if(response.status === 401){
-
-                window.location.href =
-                    "/login.html";
-
-                return;
-
-            }
-
-
-            if(!response.ok ||
-               !data ||
-               !data.success){
-
-                throw new Error(
-                    data?.message ||
-                    "Unable to submit verification."
-                );
-
-            }
-
-
-            form.reset();
-
-            removeImage();
-
-
-            document
-                .getElementById(
-                    "successModal"
-                )
-                .classList
-                .add("show");
-
-
-            /*
-             * Refresh history once.
-             * No polling.
-             */
-
-            loadPageData();
-
 
         }catch(error){
 
-            console.error(
-                "Deposit error:",
+            /*
+            A health ping failure is not automatically a failed
+            deposit. The actual submission below is still attempted.
+            */
+            console.warn(
+                "Deposit wake-up ping failed:",
                 error
             );
 
-            const isNetworkFailure =
-                error instanceof TypeError ||
-                error.name === "AbortError" ||
-                /failed to fetch/i.test(error.message || "");
+        }
 
-            showToast(
-                isNetworkFailure
-                    ? "Connection issue — please try again."
-                    : (error.message || "Something went wrong.")
+        const formData =
+            new FormData();
+
+        formData.append(
+            "amount",
+            String(amount)
+        );
+
+        formData.append(
+            "screenshot",
+            file,
+            file.name
+        );
+
+        /*
+        Long enough for a cold Render instance and a mobile upload,
+        while the server itself responds immediately after the DB
+        insert.
+        */
+        const response =
+            await requestJson(
+                "/api/deposits/verify",
+                {
+                    method:"POST",
+                    body:formData
+                },
+                90000
             );
 
-        }finally{
+        if(response.status === 401){
+            window.location.replace(
+                "/login.html"
+            );
+            return;
+        }
 
-            submitBtn.disabled =
-                false;
+        const data =
+            await response
+                .json()
+                .catch(() => null);
 
-            submitBtn.textContent =
-                "Verify Deposit";
+        if(!response.ok || !data?.success){
 
+            if(
+                data?.code ===
+                "DEPOSIT_PENDING"
+            ){
+                throw new Error(
+                    "You already have a deposit verification pending. Please wait for it to be reviewed."
+                );
+            }
+
+            if(
+                data?.code ===
+                "SUBMISSION_IN_PROGRESS"
+            ){
+                throw new Error(
+                    "Your previous submission is still being processed. Please wait a moment."
+                );
+            }
+
+            throw new Error(
+                data?.message ||
+                "Unable to submit deposit verification."
+            );
+
+        }
+
+        /*
+        The server has confirmed that the request is safely
+        stored. Telegram delivery happens separately.
+        */
+        form.reset();
+        resetImage();
+
+        successModal.classList.add("show");
+
+        /*
+        Refresh the visible history after submission.
+        */
+        await loadPageData();
+
+    }catch(error){
+
+        console.error(
+            "Deposit submission error:",
+            error
+        );
+
+        showToast(
+            isNetworkError(error)
+                ? "Connection is taking too long. Please try again."
+                : (
+                    error.message ||
+                    "Something went wrong."
+                )
+        );
+
+    }finally{
+
+        setLoading(false);
+
+    }
+
+});
+
+$("dashboardBtn").addEventListener(
+    "click",
+    () => {
+        window.location.replace(
+            "/dashboard.html"
+        );
+    }
+);
+
+/*
+When Telegram/another app causes the page to return to the
+foreground, refresh only the lightweight balance/history request.
+Do not automatically resubmit the deposit form.
+*/
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if(
+            document.visibilityState ===
+            "visible"
+        ){
+            loadPageData();
         }
 
     }
 );
 
+/*
+Avoid stale mobile bfcache state.
+*/
+window.addEventListener(
+    "pageshow",
+    event => {
 
-/* ================================
-   TOAST
-================================ */
+        if(event.persisted){
+            loadPageData();
+        }
 
-function showToast(message){
-
-    const toast =
-        document.getElementById(
-            "toast"
-        );
-
-
-    toast.textContent =
-        message;
-
-
-    toast.classList.add("show");
-
-
-    setTimeout(
-        () => {
-            toast.classList.remove("show");
-        },
-        2600
-    );
-
-}
-
-
-/* ================================
-   START
-================================ */
+    }
+);
 
 loadPageData();
-
 </script>
 
 </body>
-
 </html>
-
-
 

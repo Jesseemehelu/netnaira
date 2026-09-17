@@ -5538,20 +5538,28 @@ app.post(
 
 /*
 ========================================
-DEPOSIT PAGE DATA
+DEPOSIT SYSTEM — REBUILT
 ========================================
 
-Used by deposit.html on load to show
-the current balance and the user's
-last 2 deposit requests.
-
-This endpoint did not exist before,
-which is why the deposit history and
-header balance on that page never
-loaded (the fetch to it was a 404).
+Design goals:
+- The browser receives a response as soon as the deposit request is
+  safely stored in Supabase.
+- Telegram delivery never blocks the browser request.
+- Telegram delivery is retried automatically.
+- A failed Telegram delivery does NOT make the browser think the
+  deposit request failed.
+- Duplicate taps are protected by both an in-process lock and the
+  database pending check.
+- The screenshot remains in RAM only until the background Telegram
+  delivery finishes. No screenshot is written to disk.
 ========================================
 */
 
+/*
+========================================
+DEPOSIT PAGE DATA
+========================================
+*/
 app.get(
     "/api/deposit-page",
     authenticate,
@@ -5564,56 +5572,35 @@ app.get(
                 error: userError
             } = await supabase
                 .from("users")
-                .select(
-                    "balance"
-                )
-                .eq(
-                    "id",
-                    req.userId
-                )
+                .select("balance")
+                .eq("id", req.userId)
                 .single();
 
-
-            if (
-                userError ||
-                !user
-            ) {
+            if (userError || !user) {
 
                 console.error(
-                    "Deposit page user error:",
+                    "Deposit page user lookup error:",
                     userError
                 );
 
                 return res.status(404).json({
                     success: false,
-                    message:
-                        "User account not found."
+                    message: "User account not found."
                 });
 
             }
-
 
             const {
                 data: history,
                 error: historyError
             } = await supabase
                 .from("deposit_requests")
-                .select(
-                    "id, amount, status, created_at"
-                )
-                .eq(
-                    "user_id",
-                    req.userId
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:
-                            false
-                    }
-                )
+                .select("id, amount, status, created_at")
+                .eq("user_id", req.userId)
+                .order("created_at", {
+                    ascending: false
+                })
                 .limit(2);
-
 
             if (historyError) {
 
@@ -5624,28 +5611,16 @@ app.get(
 
                 return res.status(500).json({
                     success: false,
-                    message:
-                        "Unable to load deposit history."
+                    message: "Unable to load deposit history."
                 });
 
             }
 
-
             return res.json({
-
-                success:
-                    true,
-
-                balance:
-                    Number(
-                        user.balance || 0
-                    ),
-
-                history:
-                    history || []
-
+                success: true,
+                balance: Number(user.balance || 0),
+                history: history || []
             });
-
 
         } catch (error) {
 
@@ -5656,8 +5631,7 @@ app.get(
 
             return res.status(500).json({
                 success: false,
-                message:
-                    "Unable to load deposit page data."
+                message: "Unable to load deposit page data."
             });
 
         }
@@ -5668,369 +5642,137 @@ app.get(
 
 /*
 ========================================
-DEPOSIT VERIFICATION
+DEPOSIT DELIVERY QUEUE
+========================================
+
+The important change is that the HTTP request and the Telegram
+notification are now two separate operations.
+
+The browser only waits for:
+    1. authentication
+    2. validation
+    3. user lookup
+    4. creation of the pending deposit row
+
+It does NOT wait for Telegram.
+
+A small queue prevents multiple background sends for the same
+request and lets us retry transient Telegram/network failures.
 ========================================
 */
 
-app.post(
-    "/api/deposits/verify",
-    authenticate,
-    upload.single("screenshot"),
+const depositDeliveryQueue = [];
+let depositDeliveryRunning = false;
 
-    async (req, res) => {
+function queueDepositTelegramDelivery(job) {
 
-        let depositId = null;
+    depositDeliveryQueue.push(job);
 
+    processDepositDeliveryQueue()
+        .catch(error => {
+            console.error(
+                "Deposit delivery queue error:",
+                error
+            );
+        });
 
-        try {
+}
 
-            /*
-            Telegram configuration
-            */
+async function processDepositDeliveryQueue() {
 
-            if (
-                !TELEGRAM_BOT_TOKEN ||
-                !TELEGRAM_ADMIN_CHAT_ID
-            ) {
+    if (depositDeliveryRunning) {
+        return;
+    }
 
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Deposit verification is temporarily unavailable."
-                });
+    depositDeliveryRunning = true;
 
-            }
+    try {
 
+        while (depositDeliveryQueue.length) {
 
-            /*
-            Amount
-            */
+            const job =
+                depositDeliveryQueue.shift();
 
-            const amount =
-                Number(
-                    req.body.amount
-                );
+            try {
 
+                await deliverDepositToTelegram(job);
 
-            if (
-                !Number.isFinite(amount) ||
-                amount < 100 ||
-                amount > 10000000
-            ) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Please enter a valid deposit amount."
-                });
-
-            }
-
-
-            /*
-            Screenshot
-            */
-
-            if (!req.file) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Please upload your payment screenshot."
-                });
-
-            }
-
-
-            /*
-            User
-            */
-
-            const {
-                data: user,
-                error: userError
-            } = await supabase
-                .from("users")
-                .select(
-                    "id, full_name, username"
-                )
-                .eq(
-                    "id",
-                    req.userId
-                )
-                .single();
-
-
-            if (
-                userError ||
-                !user
-            ) {
+            } catch (error) {
 
                 console.error(
-                    "Deposit user lookup error:",
-                    userError
+                    "Deposit Telegram delivery failed:",
+                    error
                 );
-
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "User account not found."
-                });
 
             }
 
+        }
 
-            /*
-            ========================================
-            CHECK PENDING DEPOSIT
-            ========================================
-            */
+    } finally {
 
-            const {
-                data: pendingDeposits,
-                error: pendingError
-            } = await supabase
-                .from("deposit_requests")
-                .select(
-                    "id, amount, created_at"
-                )
-                .eq(
-                    "user_id",
-                    req.userId
-                )
-                .eq(
-                    "status",
-                    "pending"
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending:
-                            false
-                    }
-                )
-                .limit(1);
+        depositDeliveryRunning = false;
+
+    }
+
+}
 
 
-            if (pendingError) {
+async function deliverDepositToTelegram(job) {
 
-                console.error(
-                    "Pending deposit check error:",
-                    pendingError
-                );
+    const {
+        depositId,
+        amount,
+        user,
+        screenshot
+    } = job;
 
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Unable to check your deposit status."
-                });
+    if (
+        !TELEGRAM_BOT_TOKEN ||
+        !TELEGRAM_ADMIN_CHAT_ID
+    ) {
 
+        console.error(
+            "Deposit delivery skipped: Telegram is not configured."
+        );
+
+        await supabase
+            .from("deposit_requests")
+            .update({
+                status: "telegram_failed"
+            })
+            .eq("id", depositId)
+            .eq("status", "pending");
+
+        return;
+
+    }
+
+    const submittedAt =
+        new Date(
+            job.createdAt || Date.now()
+        ).toLocaleString(
+            "en-NG",
+            {
+                timeZone: "Africa/Lagos"
             }
+        );
 
-
-            if (
-                pendingDeposits &&
-                pendingDeposits.length > 0
-            ) {
-
-                const pending =
-                    pendingDeposits[0];
-
-
-                return res.status(429).json({
-
-                    success:
-                        false,
-
-                    code:
-                        "DEPOSIT_PENDING",
-
-                    message:
-                        "You already have a deposit verification pending. Please wait for it to be reviewed.",
-
-                    deposit: {
-
-                        id:
-                            pending.id,
-
-                        amount:
-                            Number(
-                                pending.amount
-                            ),
-
-                        createdAt:
-                            pending.created_at,
-
-                        status:
-                            pending.status
-
-                    }
-
-                });
-
-            }
-
-
-            /*
-            ========================================
-            CREATE DEPOSIT
-            ========================================
-            */
-
-            const {
-                data: deposit,
-                error: depositError
-            } = await supabase
-                .from("deposit_requests")
-                .insert({
-
-                    user_id:
-                        req.userId,
-
-                    amount:
-                        amount,
-
-                    status:
-                        "pending"
-
-                })
-                .select(
-                    "id, amount, created_at"
-                )
-                .single();
-
-
-            if (depositError) {
-
-                console.error(
-                    "Deposit insert error:",
-                    depositError
-                );
-
-
-                /*
-                If a unique pending-deposit
-                index exists, this catches
-                simultaneous submissions.
-                */
-
-                if (
-                    depositError.code ===
-                    "23505"
-                ) {
-
-                    return res.status(429).json({
-
-                        success:
-                            false,
-
-                        code:
-                            "DEPOSIT_PENDING",
-
-                        message:
-                            "You already have a deposit verification pending. Please wait for it to be reviewed."
-
-                    });
-
-                }
-
-
-                return res.status(500).json({
-                    success: false,
-                    message:
-                        "Unable to create deposit request."
-                });
-
-            }
-
-
-            depositId =
-                deposit.id;
-
-
-            const submittedAt =
-                new Date(
-                    deposit.created_at
-                ).toLocaleString(
-                    "en-NG",
-                    {
-                        timeZone:
-                            "Africa/Lagos"
-                    }
-                );
-
-
-            /*
-            ========================================
-            RESPOND TO CLIENT IMMEDIATELY
-            ========================================
-
-            The deposit request already exists in
-            the database as "pending" at this point.
-
-            Everything from here on (building the
-            Telegram caption, uploading the photo to
-            Telegram, handling Telegram failures) can
-            take several seconds if the connection is
-            slow, and that used to leave the client's
-            fetch() call open the whole time. On a
-            flaky mobile connection that easily times
-            out with "Failed to fetch" even though the
-            deposit was recorded successfully.
-
-            So we respond to the browser right away,
-            and do the Telegram notification in the
-            background. If it fails, the deposit is
-            marked "telegram_failed" (as before) so
-            the admin can be told to check manually
-            and the user is allowed to resubmit.
-            */
-
-            res.json({
-
-                success:
-                    true,
-
-                message:
-                    "Deposit verification submitted successfully.",
-
-                requestId:
-                    depositId,
-
-                amount:
-                    Number(
-                        deposit.amount
-                    ),
-
-                createdAt:
-                    deposit.created_at
-
-            });
-
-
-            /*
-            ========================================
-            TELEGRAM CAPTION
-            ========================================
-            */
-
-            const telegramCaption =
-
+    const telegramCaption =
 `💰 NEW DEPOSIT VERIFICATION
 
 ━━━━━━━━━━━━━━━━━━
 
 👤 Name:
-${user.full_name}
+${user.full_name || "Unknown"}
 
 🔗 Username:
-@${user.username}
+@${user.username || "unknown"}
 
 🆔 User ID:
 ${user.id}
 
 💵 Amount:
-₦${amount.toLocaleString(
+₦${Number(amount).toLocaleString(
     "en-NG",
     {
         minimumFractionDigits: 2,
@@ -6060,182 +5802,490 @@ approving this deposit.
 The screenshot alone should not be
 treated as proof of payment.`;
 
+    const telegramUrl =
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
 
-            /*
-            ========================================
-            SEND TO TELEGRAM (BACKGROUND)
-            ========================================
-            */
+    let lastError = null;
+
+    /*
+    Three delivery attempts:
+    - immediate
+    - after 2 seconds
+    - after 5 seconds
+
+    The browser is already finished by this point.
+    */
+    for (
+        let attempt = 0;
+        attempt < 3;
+        attempt++
+    ) {
+
+        try {
+
+            const telegramForm =
+                new FormData();
+
+            telegramForm.append(
+                "chat_id",
+                String(TELEGRAM_ADMIN_CHAT_ID)
+            );
+
+            telegramForm.append(
+                "caption",
+                telegramCaption
+            );
+
+            telegramForm.append(
+                "reply_markup",
+                JSON.stringify({
+                    inline_keyboard: [
+                        [
+                            {
+                                text: "✅ Accept",
+                                callback_data:
+                                    `deposit:approve:${depositId}`
+                            },
+                            {
+                                text: "❌ Reject",
+                                callback_data:
+                                    `deposit:reject:${depositId}`
+                            }
+                        ]
+                    ]
+                })
+            );
+
+            telegramForm.append(
+                "photo",
+                new Blob(
+                    [
+                        screenshot.buffer
+                    ],
+                    {
+                        type:
+                            screenshot.mimetype ||
+                            "application/octet-stream"
+                    }
+                ),
+                screenshot.originalname ||
+                    `deposit-${depositId}.jpg`
+            );
+
+            const controller =
+                new AbortController();
+
+            const timeout =
+                setTimeout(
+                    () => controller.abort(),
+                    20000
+                );
+
+            let telegramResponse;
 
             try {
 
-                const telegramUrl =
-                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
-
-
-                const telegramForm =
-                    new FormData();
-
-
-                telegramForm.append(
-                    "chat_id",
-                    TELEGRAM_ADMIN_CHAT_ID
-                );
-
-
-                telegramForm.append(
-                    "caption",
-                    telegramCaption
-                );
-
-
-                telegramForm.append(
-                    "reply_markup",
-                    JSON.stringify({
-
-                        inline_keyboard: [
-
-                            [
-
-                                {
-                                    text:
-                                        "✅ Accept",
-
-                                    callback_data:
-                                        `deposit:approve:${depositId}`
-                                },
-
-                                {
-                                    text:
-                                        "❌ Reject",
-
-                                    callback_data:
-                                        `deposit:reject:${depositId}`
-                                }
-
-                            ]
-
-                        ]
-
-                    })
-                );
-
-
-                telegramForm.append(
-                    "photo",
-                    new Blob(
-                        [
-                            req.file.buffer
-                        ],
-                        {
-                            type:
-                                req.file.mimetype
-                        }
-                    ),
-                    req.file.originalname
-                );
-
-
-                const telegramResponse =
+                telegramResponse =
                     await fetch(
                         telegramUrl,
                         {
-                            method:
-                                "POST",
-
-                            body:
-                                telegramForm
+                            method: "POST",
+                            body: telegramForm,
+                            signal: controller.signal
                         }
                     );
 
+            } finally {
 
-                const telegramData =
-                    await telegramResponse
-                        .json()
-                        .catch(
-                            () => null
-                        );
-
-
-                /*
-                ========================================
-                TELEGRAM FAILED
-                ========================================
-                */
-
-                if (
-                    !telegramResponse.ok ||
-                    !telegramData ||
-                    !telegramData.ok
-                ) {
-
-                    console.error(
-                        "Telegram API error:",
-                        telegramData
-                    );
-
-
-                    /*
-                    VERY IMPORTANT:
-
-                    Do not leave the deposit
-                    stuck as pending.
-
-                    It becomes telegram_failed,
-                    which allows the user to
-                    submit again.
-                    */
-
-                    await supabase
-                        .from("deposit_requests")
-                        .update({
-                            status:
-                                "telegram_failed"
-                        })
-                        .eq(
-                            "id",
-                            depositId
-                        );
-
-                }
-
-            } catch (telegramSendError) {
-
-                console.error(
-                    "Telegram send error:",
-                    telegramSendError
-                );
-
-                try {
-
-                    await supabase
-                        .from("deposit_requests")
-                        .update({
-                            status:
-                                "telegram_failed"
-                        })
-                        .eq(
-                            "id",
-                            depositId
-                        )
-                        .eq(
-                            "status",
-                            "pending"
-                        );
-
-                } catch (cleanupError) {
-
-                    console.error(
-                        "Deposit cleanup error:",
-                        cleanupError
-                    );
-
-                }
+                clearTimeout(timeout);
 
             }
 
-            return;
+            const telegramData =
+                await telegramResponse
+                    .json()
+                    .catch(() => null);
 
+            if (
+                telegramResponse.ok &&
+                telegramData &&
+                telegramData.ok
+            ) {
+
+                console.log(
+                    `Deposit Telegram delivery successful: ${depositId}`
+                );
+
+                /*
+                Leave the row as pending. Only the admin approval
+                callback changes it to approved/rejected.
+                */
+
+                return;
+
+            }
+
+            lastError =
+                new Error(
+                    telegramData?.description ||
+                    `Telegram HTTP ${telegramResponse.status}`
+                );
+
+        } catch (error) {
+
+            lastError = error;
+
+        }
+
+        if (attempt < 2) {
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        attempt === 0
+                            ? 2000
+                            : 5000
+                    )
+            );
+
+        }
+
+    }
+
+    console.error(
+        `Deposit Telegram delivery permanently failed: ${depositId}`,
+        lastError
+    );
+
+    /*
+    Do not leave a request looking like it is pending when the
+    admin never received it. The user can safely resubmit.
+    */
+    await supabase
+        .from("deposit_requests")
+        .update({
+            status: "telegram_failed"
+        })
+        .eq("id", depositId)
+        .eq("status", "pending");
+
+}
+
+
+/*
+========================================
+DEPOSIT VERIFICATION
+========================================
+*/
+
+const activeDepositSubmissions =
+    new Set();
+
+app.post(
+    "/api/deposits/verify",
+    authenticate,
+    upload.single("screenshot"),
+
+    async (req, res) => {
+
+        let depositId = null;
+
+        try {
+
+            if (
+                !TELEGRAM_BOT_TOKEN ||
+                !TELEGRAM_ADMIN_CHAT_ID
+            ) {
+
+                return res.status(503).json({
+                    success: false,
+                    message:
+                        "Deposit verification is temporarily unavailable."
+                });
+
+            }
+
+            const amount =
+                Number(
+                    req.body?.amount
+                );
+
+            if (
+                !Number.isFinite(amount) ||
+                amount < 100 ||
+                amount > 10000000
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter a valid deposit amount between ₦100 and ₦10,000,000."
+                });
+
+            }
+
+            if (!req.file) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please upload your payment screenshot."
+                });
+
+            }
+
+            /*
+            Protect against two taps from the same user while
+            the first request is still being processed.
+            */
+            if (
+                activeDepositSubmissions.has(
+                    req.userId
+                )
+            ) {
+
+                return res.status(409).json({
+                    success: false,
+                    code: "SUBMISSION_IN_PROGRESS",
+                    message:
+                        "Your deposit is already being submitted. Please wait."
+                });
+
+            }
+
+            activeDepositSubmissions.add(
+                req.userId
+            );
+
+            try {
+
+                const {
+                    data: user,
+                    error: userError
+                } = await supabase
+                    .from("users")
+                    .select(
+                        "id, full_name, username"
+                    )
+                    .eq(
+                        "id",
+                        req.userId
+                    )
+                    .single();
+
+                if (
+                    userError ||
+                    !user
+                ) {
+
+                    console.error(
+                        "Deposit user lookup error:",
+                        userError
+                    );
+
+                    return res.status(404).json({
+                        success: false,
+                        message:
+                            "User account not found."
+                    });
+
+                }
+
+                /*
+                Check for an existing pending request.
+                telegram_failed is intentionally NOT treated as
+                pending, because it is safe for the user to retry
+                after a failed Telegram delivery.
+                */
+                const {
+                    data: pendingDeposits,
+                    error: pendingError
+                } = await supabase
+                    .from("deposit_requests")
+                    .select(
+                        "id, amount, created_at, status"
+                    )
+                    .eq(
+                        "user_id",
+                        req.userId
+                    )
+                    .eq(
+                        "status",
+                        "pending"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false
+                        }
+                    )
+                    .limit(1);
+
+                if (pendingError) {
+
+                    console.error(
+                        "Pending deposit check error:",
+                        pendingError
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message:
+                            "Unable to check your existing deposit request."
+                    });
+
+                }
+
+                if (
+                    pendingDeposits &&
+                    pendingDeposits.length
+                ) {
+
+                    const pending =
+                        pendingDeposits[0];
+
+                    return res.status(409).json({
+                        success: false,
+                        code:
+                            "DEPOSIT_PENDING",
+                        message:
+                            "You already have a deposit verification pending. Please wait for it to be reviewed.",
+                        deposit: {
+                            id:
+                                pending.id,
+                            amount:
+                                Number(
+                                    pending.amount
+                                ),
+                            createdAt:
+                                pending.created_at,
+                            status:
+                                pending.status
+                        }
+                    });
+
+                }
+
+                /*
+                Create the database row BEFORE touching Telegram.
+                This is the durable record of the user's request.
+                */
+                const {
+                    data: deposit,
+                    error: depositError
+                } = await supabase
+                    .from("deposit_requests")
+                    .insert({
+                        user_id:
+                            req.userId,
+                        amount:
+                            amount,
+                        status:
+                            "pending"
+                    })
+                    .select(
+                        "id, amount, created_at"
+                    )
+                    .single();
+
+                if (
+                    depositError ||
+                    !deposit
+                ) {
+
+                    console.error(
+                        "Deposit insert error:",
+                        depositError
+                    );
+
+                    if (
+                        depositError?.code ===
+                        "23505"
+                    ) {
+
+                        return res.status(409).json({
+                            success: false,
+                            code:
+                                "DEPOSIT_PENDING",
+                            message:
+                                "You already have a deposit verification pending. Please wait for it to be reviewed."
+                        });
+
+                    }
+
+                    return res.status(500).json({
+                        success: false,
+                        message:
+                            "Unable to create deposit request. Please try again."
+                    });
+
+                }
+
+                depositId =
+                    deposit.id;
+
+                /*
+                IMPORTANT:
+                Send the HTTP response NOW.
+
+                The browser is no longer waiting for Telegram,
+                so a slow Telegram connection cannot turn a valid
+                deposit submission into "Connection issue".
+                */
+                res.status(201).json({
+                    success: true,
+                    message:
+                        "Deposit verification submitted successfully.",
+                    requestId:
+                        deposit.id,
+                    amount:
+                        Number(deposit.amount),
+                    createdAt:
+                        deposit.created_at
+                });
+
+                /*
+                Queue Telegram delivery after the response.
+                The screenshot is copied into the queue object so
+                the request object can safely disappear.
+                */
+                queueDepositTelegramDelivery({
+                    depositId:
+                        deposit.id,
+                    amount:
+                        Number(deposit.amount),
+                    createdAt:
+                        deposit.created_at,
+                    user: {
+                        id:
+                            user.id,
+                        full_name:
+                            user.full_name,
+                        username:
+                            user.username
+                    },
+                    screenshot: {
+                        buffer:
+                            Buffer.from(
+                                req.file.buffer
+                            ),
+                        mimetype:
+                            req.file.mimetype,
+                        originalname:
+                            req.file.originalname
+                    }
+                });
+
+                return;
+
+            } finally {
+
+                activeDepositSubmissions.delete(
+                    req.userId
+                );
+
+            }
 
         } catch (error) {
 
@@ -6244,14 +6294,10 @@ treated as proof of payment.`;
                 error
             );
 
-
             /*
-            If something fails AFTER
-            creating the database record,
-            don't leave it permanently
-            stuck as pending.
+            If the DB row was created but something unexpected
+            happened before the response, release it for retry.
             */
-
             if (depositId) {
 
                 try {
@@ -6282,30 +6328,14 @@ treated as proof of payment.`;
 
             }
 
-
-            /*
-            The response may have already been
-            sent to the client (we now respond
-            as soon as the deposit row exists,
-            before the Telegram step). Sending
-            a second response would crash the
-            process, so only respond here if
-            nothing has gone out yet.
-            */
-
             if (res.headersSent) {
                 return;
             }
 
-
             return res.status(500).json({
-
-                success:
-                    false,
-
+                success: false,
                 message:
-                    "Unable to submit deposit verification."
-
+                    "Unable to submit deposit verification. Please try again."
             });
 
         }
@@ -6313,6 +6343,158 @@ treated as proof of payment.`;
     }
 );
 
+
+/*
+========================================
+DEPOSIT HISTORY
+========================================
+*/
+
+app.get(
+    "/api/deposits",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                data: deposits,
+                error
+            } = await supabase
+                .from("deposit_requests")
+                .select(
+                    "id, amount, status, created_at"
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                )
+                .limit(10);
+
+            if (error) {
+
+                console.error(
+                    "Deposit history error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to load deposit history."
+                });
+
+            }
+
+            return res.json({
+                success: true,
+                deposits:
+                    deposits || []
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Deposit history error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to load deposit history."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+DEPOSIT STATUS
+========================================
+*/
+
+app.get(
+    "/api/deposits/status/:id",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const {
+                data: deposit,
+                error
+            } = await supabase
+                .from("deposit_requests")
+                .select(
+                    "id, amount, status, created_at"
+                )
+                .eq(
+                    "id",
+                    req.params.id
+                )
+                .eq(
+                    "user_id",
+                    req.userId
+                )
+                .maybeSingle();
+
+            if (error) {
+
+                console.error(
+                    "Deposit status error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to check deposit status."
+                });
+
+            }
+
+            if (!deposit) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Deposit not found."
+                });
+
+            }
+
+            return res.json({
+                success: true,
+                deposit
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Deposit status error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Unable to check deposit status."
+            });
+
+        }
+
+    }
+);
 
 /*
 ========================================
