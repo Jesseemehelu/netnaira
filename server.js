@@ -300,6 +300,27 @@ const TELEGRAM_WEBAPP_SHORT_NAME =
 const REFERRAL_BONUS = 500;
 
 /*
+========================================
+WELCOME BONUS
+========================================
+
+Every brand-new account is credited this
+amount, straight into their spendable
+balance, the moment their row is created.
+
+Paired with the `welcome_bonus_shown`
+column on `users` — the dashboard reads
+that flag to decide whether to pop up the
+"you've been credited" + "join Telegram"
+modals, then calls
+POST /api/user/ack-welcome-bonus to flip
+it to true so it never shows again.
+========================================
+*/
+
+const WELCOME_BONUS = 1000;
+
+/*
 Referral earnings land in referral_balance, not the
 main balance. A user must move it across manually,
 subject to both rules below (also enforced inside the
@@ -2794,10 +2815,13 @@ app.post(
                             tgUser.username || null,
 
                         balance:
-                            0,
+                            WELCOME_BONUS,
 
                         total_earned:
                             0,
+
+                        welcome_bonus_shown:
+                            false,
 
                         referred_by:
                             referrer
@@ -3273,10 +3297,13 @@ app.post(
                         passwordHash,
 
                     balance:
-                        0,
+                        WELCOME_BONUS,
 
                     total_earned:
                         0,
+
+                    welcome_bonus_shown:
+                        false,
 
                     referred_by:
                         referrer
@@ -4156,7 +4183,7 @@ app.get(
             } = await supabase
                 .from("users")
                 .select(
-                    "id, full_name, username, balance, total_earned, created_at"
+                    "id, full_name, username, balance, total_earned, created_at, welcome_bonus_shown"
                 )
                 .eq(
                     "id",
@@ -4421,7 +4448,24 @@ app.get(
 
                     recentDeposits:
                         recentDeposits ||
-                        []
+                        [],
+
+                    /*
+                    True only until the dashboard
+                    acknowledges it via
+                    POST /api/user/ack-welcome-bonus.
+                    Existing accounts (created before
+                    this column existed) default to
+                    true in the DB, so they never see
+                    this popup retroactively.
+                    */
+
+                    showWelcomeBonus:
+                        user.welcome_bonus_shown ===
+                        false,
+
+                    welcomeBonusAmount:
+                        WELCOME_BONUS
 
                 }
 
@@ -4439,6 +4483,78 @@ app.get(
                 success: false,
                 message:
                     "Unable to load dashboard."
+            });
+
+        }
+
+    }
+);
+
+
+/*
+========================================
+ACKNOWLEDGE WELCOME BONUS POPUP
+========================================
+
+Called once by dashboard.html right as it
+shows the "you've been credited" / "join
+Telegram" popup sequence to a brand-new
+user. Flips welcome_bonus_shown to true
+so the sequence never appears again for
+this account, even across devices.
+========================================
+*/
+
+app.post(
+    "/api/user/ack-welcome-bonus",
+    authenticate,
+    async (req, res) => {
+
+        try {
+
+            const { error } =
+                await supabase
+                    .from("users")
+                    .update({
+                        welcome_bonus_shown:
+                            true
+                    })
+                    .eq(
+                        "id",
+                        req.userId
+                    );
+
+            if (error) {
+
+                console.error(
+                    "Ack welcome bonus error:",
+                    error
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Unable to update account."
+                });
+
+            }
+
+            return res.json({
+                success:
+                    true
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Ack welcome bonus error:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Something went wrong."
             });
 
         }

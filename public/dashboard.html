@@ -454,6 +454,14 @@
       transform: scale(.98);
     }
 
+    a.dashboard-prompt-allow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      text-decoration: none;
+    }
+
     .avatar {
       width: 39px;
       height: 39px;
@@ -2077,6 +2085,96 @@
     </section>
 
 
+    <!-- WELCOME BONUS POPUP (one-time, new users only) -->
+
+    <div
+      class="dashboard-prompt-overlay"
+      id="welcomeBonusOverlay"
+    >
+
+      <div class="dashboard-prompt-modal">
+
+        <div class="dashboard-prompt-icon">
+          🎉
+        </div>
+
+        <h3>
+          You've been credited!
+        </h3>
+
+        <p>
+          Welcome to Netnaira — we've added a
+          <strong id="welcomeBonusAmountText">₦1,000.00</strong>
+          bonus to your balance to get you started.
+        </p>
+
+        <div class="dashboard-prompt-actions">
+
+          <button
+            type="button"
+            class="dashboard-prompt-allow"
+            id="welcomeBonusOkBtn"
+          >
+            Awesome, thanks!
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- TELEGRAM JOIN POPUP (one-time, shown right after the bonus popup) -->
+
+    <div
+      class="dashboard-prompt-overlay"
+      id="telegramJoinOverlay"
+    >
+
+      <div class="dashboard-prompt-modal">
+
+        <div class="dashboard-prompt-icon">
+          📣
+        </div>
+
+        <h3>
+          Join our Telegram channel
+        </h3>
+
+        <p>
+          Get the latest updates, announcements and
+          promos first by joining our official
+          Telegram channel.
+        </p>
+
+        <div class="dashboard-prompt-actions">
+
+          <a
+            href="https://t.me/netnairaupdates"
+            target="_blank"
+            rel="noopener"
+            class="dashboard-prompt-allow"
+            id="telegramJoinBtn"
+          >
+            Join Channel
+          </a>
+
+          <button
+            type="button"
+            class="dashboard-prompt-later"
+            id="telegramJoinLaterBtn"
+          >
+            Later
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
     <!-- REFERRAL -->
 
     <section class="referral-card">
@@ -3144,6 +3242,148 @@
 
     let isLoadingDashboard = false;
 
+    /* ================= WELCOME BONUS + TELEGRAM JOIN POPUPS ================= */
+
+    /*
+      Runs once per brand-new user, the first time their
+      dashboard data loads. The server only sends
+      showWelcomeBonus: true until we call
+      /api/user/ack-welcome-bonus, so this normally fires
+      exactly once ever for a given account — this local
+      flag just protects against loadDashboard() being
+      called again (visibilitychange, bfcache) before that
+      request finishes.
+    */
+
+    let welcomeBonusHandled = false;
+
+    function maybeShowWelcomeBonusPopup(amount) {
+
+      if (welcomeBonusHandled) {
+        return;
+      }
+
+      welcomeBonusHandled = true;
+
+      const amountText =
+        "₦" +
+        Number(amount || 0).toLocaleString(
+          "en-NG",
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        );
+
+      const amountEl =
+        document.getElementById(
+          "welcomeBonusAmountText"
+        );
+
+      if (amountEl) {
+        amountEl.textContent = amountText;
+      }
+
+      /*
+        Tell the server right away so a reload mid-sequence
+        (or the same account opening the app on another
+        device) never shows this again.
+      */
+
+      fetch(
+        "/api/user/ack-welcome-bonus",
+        {
+          method: "POST",
+          credentials: "same-origin"
+        }
+      ).catch(
+        (error) => {
+
+          console.error(
+            "Ack welcome bonus failed:",
+            error
+          );
+
+        }
+      );
+
+      showPromptOverlay("welcomeBonusOverlay");
+
+    }
+
+    function showPromptOverlay(id) {
+
+      const overlay =
+        document.getElementById(id);
+
+      if (overlay) {
+        overlay.classList.add("show");
+      }
+
+    }
+
+    function hidePromptOverlay(id) {
+
+      const overlay =
+        document.getElementById(id);
+
+      if (overlay) {
+        overlay.classList.remove("show");
+      }
+
+    }
+
+    const welcomeBonusOkBtn =
+      document.getElementById("welcomeBonusOkBtn");
+
+    if (welcomeBonusOkBtn) {
+
+      welcomeBonusOkBtn.addEventListener(
+        "click",
+        () => {
+
+          hidePromptOverlay("welcomeBonusOverlay");
+
+          showPromptOverlay("telegramJoinOverlay");
+
+        }
+      );
+
+    }
+
+    const telegramJoinLaterBtn =
+      document.getElementById("telegramJoinLaterBtn");
+
+    if (telegramJoinLaterBtn) {
+
+      telegramJoinLaterBtn.addEventListener(
+        "click",
+        () => {
+
+          hidePromptOverlay("telegramJoinOverlay");
+
+        }
+      );
+
+    }
+
+    const telegramJoinBtn =
+      document.getElementById("telegramJoinBtn");
+
+    if (telegramJoinBtn) {
+
+      telegramJoinBtn.addEventListener(
+        "click",
+        () => {
+
+          hidePromptOverlay("telegramJoinOverlay");
+
+        }
+      );
+
+    }
+
+
     async function loadDashboard() {
 
       if (isLoadingDashboard) {
@@ -3256,6 +3496,15 @@
             apiUser.planTotalReturn
 
         });
+
+
+        if (apiUser.showWelcomeBonus) {
+
+          maybeShowWelcomeBonusPopup(
+            apiUser.welcomeBonusAmount
+          );
+
+        }
 
 
       } catch (error) {
