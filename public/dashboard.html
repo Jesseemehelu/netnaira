@@ -306,6 +306,35 @@
       position: relative;
     }
 
+    .contact-support-btn {
+      height: 39px;
+
+      padding: 0 16px;
+
+      border-radius: 11px;
+
+      border: 1px solid rgba(22,199,132,.25);
+
+      background: rgba(39,229,154,.1);
+
+      color: white;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+
+      font-size: 12.5px;
+      font-weight: 800;
+
+      text-decoration: none;
+
+      white-space: nowrap;
+    }
+
+    .contact-support-btn:active {
+      transform: scale(.97);
+    }
+
     /* ================= DASHBOARD PROMPT (shared modal shell) ================= */
 
     .dashboard-prompt-overlay {
@@ -425,29 +454,6 @@
       transform: scale(.98);
     }
 
-    /* ================= TELEGRAM ANNOUNCEMENTS PROMPT ================= */
-
-    .telegram-prompt-dont-show {
-      width: 100%;
-
-      padding: 11px;
-
-      border-radius: 11px;
-
-      background: transparent;
-
-      color: rgba(140,158,147,.7);
-
-      font-size: 11.5px;
-      font-weight: 700;
-
-      text-decoration: underline;
-    }
-
-    .telegram-prompt-dont-show:active {
-      transform: scale(.98);
-    }
-
     .avatar {
       width: 39px;
       height: 39px;
@@ -505,6 +511,66 @@
       font-size: 11px;
 
       margin-top: 7px;
+    }
+
+    /* ================= TELEGRAM JOIN BANNER ================= */
+
+    .telegram-join-banner {
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      padding: 13px 16px;
+
+      margin-bottom: 16px;
+
+      border-radius: 14px;
+
+      background: linear-gradient(
+        135deg,
+        rgba(39,229,154,.14),
+        rgba(22,199,132,.06)
+      );
+
+      border: 1px solid rgba(22,199,132,.25);
+
+      text-decoration: none;
+
+      color: white;
+    }
+
+    .telegram-join-banner:active {
+      transform: scale(.98);
+    }
+
+    .telegram-join-banner-text {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      font-size: 13px;
+
+      font-weight: 700;
+    }
+
+    .telegram-join-banner-icon {
+      font-size: 18px;
+
+      line-height: 1;
+    }
+
+    .telegram-join-banner-arrow {
+      color: var(--green-light);
+
+      font-size: 16px;
+
+      font-weight: 900;
     }
 
     /* ================= BALANCE ================= */
@@ -1854,58 +1920,6 @@
 
   </div>
 
-  <!-- ================= TELEGRAM ANNOUNCEMENTS PROMPT ================= -->
-
-  <div
-    class="dashboard-prompt-overlay"
-    id="telegramPromptOverlay"
-  >
-
-    <div class="dashboard-prompt-modal">
-
-      <div class="dashboard-prompt-icon">
-        📣
-      </div>
-
-      <h3>Join our announcements channel</h3>
-
-      <p>
-        Get the latest updates, news and important announcements
-        straight from Netnaira by joining our Telegram channel.
-      </p>
-
-      <div class="dashboard-prompt-actions">
-
-        <a
-          class="dashboard-prompt-allow"
-          href="https://t.me/netnairaupdates"
-          target="_blank"
-          rel="noopener"
-          id="telegramPromptJoin"
-          style="display:block; text-decoration:none; text-align:center;"
-        >
-          Join Telegram channel
-        </a>
-
-        <button
-          class="dashboard-prompt-later"
-          id="telegramPromptLater"
-        >
-          Maybe later
-        </button>
-
-        <button
-          class="telegram-prompt-dont-show"
-          id="telegramPromptDontShow"
-        >
-          Don't show this again
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
 
 
   <!-- ================= HEADER ================= -->
@@ -1936,23 +1950,12 @@
         <div class="header-right">
 
           <a
-            class="notification"
+            class="contact-support-btn"
             href="https://t.me/netnaira"
             target="_blank"
             rel="noopener"
-            aria-label="Support on Telegram"
           >
-            💬
-          </a>
-
-          <a
-            class="notification"
-            href="https://t.me/netnairaupdates"
-            target="_blank"
-            rel="noopener"
-            aria-label="Updates channel on Telegram"
-          >
-            📢
+            Contact support
           </a>
 
 
@@ -2005,6 +2008,28 @@
       </div>
 
     </section>
+
+
+    <!-- TELEGRAM JOIN BANNER -->
+
+    <a
+      href="https://t.me/netnairaupdates"
+      target="_blank"
+      rel="noopener"
+      class="telegram-join-banner"
+    >
+
+      <div class="telegram-join-banner-text">
+
+        <span class="telegram-join-banner-icon">📣</span>
+
+        <span>Join our Telegram channel for updates</span>
+
+      </div>
+
+      <span class="telegram-join-banner-arrow">→</span>
+
+    </a>
 
 
     <!-- BALANCE -->
@@ -3284,112 +3309,6 @@
     );
 
 
-    /*
-      "Join our announcements channel" prompt, shown every
-      time the user lands on the dashboard, unless they've
-      tapped "Don't show this again" within the last 2 days.
-    */
-
-    const TELEGRAM_PROMPT_DISMISS_KEY =
-      "netnaira_telegram_prompt_dismissed_at";
-
-    const TELEGRAM_PROMPT_COOLDOWN_MS =
-      2 * 24 * 60 * 60 * 1000; // 2 days
-
-    const telegramPromptOverlay =
-      document.getElementById("telegramPromptOverlay");
-
-    function showTelegramPrompt() {
-
-      telegramPromptOverlay.classList.add("show");
-
-    }
-
-    function hideTelegramPrompt() {
-
-      telegramPromptOverlay.classList.remove("show");
-
-    }
-
-    function markTelegramPromptDismissed() {
-
-      localStorage.setItem(
-        TELEGRAM_PROMPT_DISMISS_KEY,
-        String(Date.now())
-      );
-
-    }
-
-    function telegramPromptOnCooldown() {
-
-      const dismissedAt =
-        Number(
-          localStorage.getItem(TELEGRAM_PROMPT_DISMISS_KEY) || 0
-        );
-
-      return Boolean(
-        dismissedAt &&
-        (Date.now() - dismissedAt) < TELEGRAM_PROMPT_COOLDOWN_MS
-      );
-
-    }
-
-    function initTelegramPrompt() {
-
-      if (!telegramPromptOverlay) {
-        return;
-      }
-
-      if (telegramPromptOnCooldown()) {
-        return;
-      }
-
-      showTelegramPrompt();
-
-    }
-
-    if (document.getElementById("telegramPromptJoin")) {
-
-      document
-        .getElementById("telegramPromptJoin")
-        .addEventListener("click", () => {
-
-          hideTelegramPrompt();
-
-        });
-
-    }
-
-    if (document.getElementById("telegramPromptLater")) {
-
-      document
-        .getElementById("telegramPromptLater")
-        .addEventListener("click", () => {
-
-          hideTelegramPrompt();
-
-        });
-
-    }
-
-    if (document.getElementById("telegramPromptDontShow")) {
-
-      document
-        .getElementById("telegramPromptDontShow")
-        .addEventListener("click", () => {
-
-          hideTelegramPrompt();
-          markTelegramPromptDismissed();
-
-        });
-
-    }
-
-    // Shown shortly after the dashboard renders.
-    setTimeout(initTelegramPrompt, 600);
-
-
-
     /* ================= PAGE TRANSITION LOADER ================= */
 
     /*
@@ -3502,7 +3421,7 @@
 
     document
       .querySelectorAll(
-        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .dashboard-prompt-allow, .dashboard-prompt-later, .telegram-prompt-dont-show"
+        ".quick-action, .balance-btn, .nav-item, .nav-earn, .plan-cta, .referral-btn, .notification, .dashboard-prompt-allow, .dashboard-prompt-later"
       )
       .forEach(element => {
 
