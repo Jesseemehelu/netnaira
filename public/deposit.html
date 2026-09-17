@@ -1573,17 +1573,21 @@ input[type="file"]{
 }
 
 .deposit-guide-kicker{
+    display:flex;
+    align-items:center;
+    gap:5px;
     color:var(--green-light);
-    font-size:9px;
+    font-size:10px;
     font-weight:900;
     letter-spacing:.7px;
     text-transform:uppercase;
-    margin-bottom:4px;
+    margin-bottom:5px;
 }
 
 .deposit-guide-title{
-    font-size:19px;
-    line-height:1.15;
+    font-size:22px;
+    line-height:1.18;
+    letter-spacing:-.4px;
     font-weight:900;
 }
 
@@ -1600,10 +1604,10 @@ input[type="file"]{
 }
 
 .deposit-guide-subtitle{
-    color:var(--muted);
-    font-size:10px;
-    line-height:1.45;
-    margin-bottom:10px;
+    color:#b9ccc2;
+    font-size:12px;
+    line-height:1.55;
+    margin-bottom:12px;
 }
 
 .deposit-guide-progress{
@@ -1627,10 +1631,18 @@ input[type="file"]{
 }
 
 .deposit-guide-step-label{
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    padding:5px 11px;
+    border-radius:999px;
+    background:rgba(22,199,132,.13);
+    border:1px solid rgba(22,199,132,.28);
     color:var(--green-light);
-    font-size:9.5px;
+    font-size:10px;
     font-weight:900;
-    margin-bottom:7px;
+    letter-spacing:.4px;
+    margin-bottom:9px;
 }
 
 .deposit-guide-image-wrap{
@@ -1669,21 +1681,48 @@ input[type="file"]{
 }
 
 .deposit-guide-copy{
-    min-height:52px;
-    margin-bottom:10px;
+    min-height:64px;
+    margin-bottom:12px;
+}
+
+.deposit-guide-copy-head{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:6px;
+}
+
+.deposit-guide-step-num{
+    display:flex;
+    flex:0 0 25px;
+    align-items:center;
+    justify-content:center;
+    width:25px;
+    height:25px;
+    border-radius:9px;
+    background:linear-gradient(145deg,rgba(22,199,132,.24),rgba(22,199,132,.08));
+    border:1px solid rgba(22,199,132,.35);
+    color:var(--green-light);
+    font-size:12px;
+    font-weight:900;
 }
 
 .deposit-guide-copy h4{
-    font-size:14px;
+    font-size:17.5px;
+    line-height:1.28;
+    letter-spacing:-.3px;
     font-weight:900;
-    margin-bottom:4px;
 }
 
 .deposit-guide-copy p{
     margin:0;
-    color:var(--muted);
-    font-size:10.5px;
-    line-height:1.5;
+    color:#cfe0d8;
+    font-size:13px;
+    line-height:1.62;
+}
+
+.deposit-guide-copy p strong{
+    color:var(--green-light);
 }
 
 .deposit-guide-checkbox{
@@ -1692,9 +1731,10 @@ input[type="file"]{
     gap:8px;
     width:max-content;
     max-width:100%;
-    margin-bottom:11px;
-    color:#b9c9c0;
-    font-size:10px;
+    margin-bottom:13px;
+    color:#c3d3ca;
+    font-size:11.5px;
+    font-weight:600;
     cursor:pointer;
     user-select:none;
 }
@@ -1716,23 +1756,29 @@ input[type="file"]{
 
 .deposit-guide-skip,
 .deposit-guide-next{
-    min-height:45px;
-    border-radius:12px;
-    font-size:11px;
+    min-height:47px;
+    border-radius:13px;
+    font-size:12.5px;
     font-weight:900;
+    letter-spacing:.1px;
     cursor:pointer;
 }
 
 .deposit-guide-skip{
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.09);
     background:rgba(255,255,255,.05);
     color:var(--text);
 }
 
 .deposit-guide-next{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
     border:0;
     background:linear-gradient(90deg,var(--green),var(--blue));
     color:#04110a;
+    box-shadow:0 12px 26px rgba(22,199,132,.28);
 }
 
 .deposit-guide-skip:active,
@@ -2324,7 +2370,8 @@ input[type="file"]{
         <div class="deposit-guide-header">
             <div>
                 <div class="deposit-guide-kicker">
-                    NETNAIRA DEPOSIT GUIDE
+                    <span>🧭</span>
+                    <span>Netnaira Deposit Guide</span>
                 </div>
 
                 <h3
@@ -2347,8 +2394,8 @@ input[type="file"]{
 
 
         <p class="deposit-guide-subtitle">
-            Follow these simple steps to make your deposit and
-            submit it for verification.
+            Just 4 quick steps to fund your account — follow
+            along and you'll be done in under a minute.
         </p>
 
 
@@ -2390,13 +2437,22 @@ input[type="file"]{
 
 
         <div class="deposit-guide-copy">
-            <h4 id="depositGuideHeading">
-                Open your OPay app
-            </h4>
+            <div class="deposit-guide-copy-head">
+                <span
+                    class="deposit-guide-step-num"
+                    id="depositGuideStepNum"
+                >
+                    1
+                </span>
+
+                <h4 id="depositGuideHeading">
+                    Open your bank app
+                </h4>
+            </div>
 
             <p id="depositGuideText">
-                Open OPay and tap <strong>Betting</strong> from
-                the home screen.
+                Open your bank's app and tap on
+                <strong>Betting</strong> from the home screen.
             </p>
         </div>
 
@@ -3526,26 +3582,26 @@ const DEPOSIT_GUIDE_KEY =
 const DEPOSIT_GUIDE_STEPS = [
     {
         image:"/netnaira-deposit-step-1.webp",
-        title:"Open your OPay app",
-        text:"Open OPay and tap <strong>Betting</strong> from the home screen.",
-        alt:"OPay home screen showing the Betting option."
+        title:"Open your bank app",
+        text:"Open your bank's app on your phone, then tap on <strong>Betting</strong> (sometimes labelled Bills or Pay Bills).",
+        alt:"Bank app home screen showing the Betting option."
     },
     {
         image:"/netnaira-deposit-step-2.webp",
-        title:"Choose SportyBet, enter the ID and amount",
-        text:"Select <strong>SportyBet</strong>, enter the SportyBet User ID shown on Netnaira, choose your amount, then tap <strong>Pay</strong>.",
+        title:"Pick SportyBet and fill in the details",
+        text:"Tap <strong>SportyBet</strong>, then enter the SportyBet User ID shown on this page. Pick or type the amount you're paying, then tap <strong>Pay</strong>.",
         alt:"SportyBet payment screen with User ID, amount options and Pay button."
     },
     {
         image:"/netnaira-deposit-step-3.webp",
-        title:"Confirm that the payment was successful",
-        text:"After OPay shows <strong>Successful</strong>, keep the payment receipt or screenshot so you can submit it on Netnaira.",
-        alt:"Successful OPay payment receipt showing the deposited amount."
+        title:"Make sure it says \"Successful\"",
+        text:"Once your screen shows <strong>Successful</strong>, save a screenshot of it — you'll need this in the next step.",
+        alt:"Successful payment receipt showing the deposited amount."
     },
     {
         image:"/netnaira-deposit-step-4.webp",
-        title:"Return to Netnaira and verify your deposit",
-        text:"Enter the exact amount you paid, upload your payment screenshot, then tap <strong>Verify Deposit</strong>.",
+        title:"Come back here to verify it",
+        text:"Type the exact amount you paid, upload the screenshot you just saved, then tap <strong>Verify Deposit</strong>.",
         alt:"Netnaira deposit verification page with amount and screenshot upload."
     }
 ];
@@ -3625,6 +3681,9 @@ function renderDepositGuideStep(){
     const heading =
         document.getElementById("depositGuideHeading");
 
+    const stepNum =
+        document.getElementById("depositGuideStepNum");
+
     const textElement =
         document.getElementById("depositGuideText");
 
@@ -3644,6 +3703,11 @@ function renderDepositGuideStep(){
     if(heading){
         heading.textContent =
             step.title;
+    }
+
+    if(stepNum){
+        stepNum.textContent =
+            currentDepositGuideStep + 1;
     }
 
     if(textElement){
