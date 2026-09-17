@@ -1808,68 +1808,43 @@ function formatNaira(amount){
 
 
 /* ================================
-   PRE-WARM THE SERVER
-================================
-
-Fires the instant this script runs -
-before images, before the rest of the
-page even finishes loading. If Render's
-free instance is asleep, this is what
-starts waking it, so by the time the
-user has picked a screenshot and tapped
-submit, the cold-start delay has already
-been absorbed in the background instead
-of happening during the upload itself.
-
-Fire-and-forget: we don't care about the
-result, only that the request went out.
-================================ */
-
-fetch("/api/health", { cache: "no-store" }).catch(() => {});
-
-
-/* ================================
    FETCH WITH RETRY
 ================================
 
-Render's free tier spins the server down
-after a period of no traffic. The first
-request after that has to wait for it to
-wake back up - a small GET can survive that
-wait, but a bigger multipart upload (like
-this form's screenshot) is more likely to
-have its connection drop mid-wake, which
-shows up here as "Failed to fetch".
-
-A cold start can take 50+ seconds, so a
-couple of quick retries isn't enough to
-outlast it. This retries several times
-with a growing delay, and reports back
-which attempt it's on (via onRetry) so the
-caller can keep the user informed instead
-of the button just looking stuck.
+A plain fetch() has no timeout - on a
+weak connection it can just hang instead
+of failing, which looks like the page is
+stuck. This gives each attempt a bounded
+time to respond, and retries a couple of
+times before giving up for good.
 ================================ */
 
-async function fetchWithRetry(url, options = {}, retries = 6, onRetry = null){
+async function fetchWithRetry(url, options = {}, retries = 2, timeoutMs = 15000){
 
     let lastError;
 
     for(let attempt = 0; attempt <= retries; attempt++){
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+
         try{
-            return await fetch(url, {
+            const response = await fetch(url, {
                 ...options,
+                signal: controller.signal,
                 headers: {
                     ...(options.headers || {}),
                     "Cache-Control": "no-cache",
                     "Accept": "application/json"
                 }
             });
+            clearTimeout(timer);
+            return response;
         }catch(error){
+            clearTimeout(timer);
             lastError = error;
             if(attempt < retries){
-                if(onRetry) onRetry(attempt + 1, retries);
-                const delay = Math.min(3000 * (attempt + 1), 12000);
-                await new Promise(resolve => setTimeout(resolve, delay));
+                await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
             }
         }
     }
@@ -2331,15 +2306,8 @@ form.addEventListener(
                         credentials:"include",
                         body:formData
                     },
-                    8,
-                    function(attempt, total){
-
-                        submitBtn.textContent =
-                            attempt === 1
-                                ? "Waking up server..."
-                                : `Still trying (${attempt}/${total})...`;
-
-                    }
+                    2,
+                    25000
                 );
 
 
@@ -2401,11 +2369,12 @@ form.addEventListener(
 
             const isNetworkFailure =
                 error instanceof TypeError ||
+                error.name === "AbortError" ||
                 /failed to fetch/i.test(error.message || "");
 
             showToast(
                 isNetworkFailure
-                    ? "The server is taking longer than usual to respond. Please check your connection and try again."
+                    ? "Connection issue — please try again."
                     : (error.message || "Something went wrong.")
             );
 
