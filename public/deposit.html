@@ -1632,6 +1632,41 @@ input[type="file"]{
     padding:0 4px;
 }
 
+.verify-deposit-overlay{
+    z-index:600;
+}
+
+.verify-deposit-modal{
+    display:flex;
+    flex-direction:column;
+    width:min(440px,100%);
+    max-height:calc(100vh - 28px);
+    max-height:calc(100dvh - 28px);
+    overflow:hidden;
+    padding:18px;
+    text-align:left;
+    border:1px solid rgba(22,199,132,.25);
+    border-radius:22px;
+    background:
+        linear-gradient(
+            160deg,
+            #0c1e14,
+            #08150e 70%,
+            #0b1720
+        );
+    box-shadow:0 25px 80px rgba(0,0,0,.6);
+    animation:deposit-guide-pop .28s cubic-bezier(.16,1,.3,1) both;
+}
+
+.verify-deposit-scroll{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    flex:1 1 auto;
+    min-height:0;
+    margin:0 -4px;
+    padding:0 4px 4px;
+}
+
 .deposit-guide-dot{
     width:24px;
     height:4px;
@@ -2099,22 +2134,11 @@ input[type="file"]{
     <button
         type="button"
         class="scroll-cta"
-        onclick="scrollToForm()"
+        onclick="openVerifyDepositModal()"
     >
         <span class="bell">🔔</span>
-        I've made my deposit — Continue
+        Next
     </button>
-
-
-    <div class="info-box">
-
-        <strong>What happens after you submit?</strong><br>
-
-        Your request is sent to the Netnaira verification
-        team. Your balance is only credited after the
-        payment has been reviewed and approved.
-
-    </div>
 
 
     <div class="warning-box">
@@ -2127,135 +2151,6 @@ input[type="file"]{
         amount accepted is ₦100.
 
     </div>
-
-</section>
-
-
-<!-- FORM -->
-
-<section class="card" id="verifyForm">
-
-    <div class="form-title">
-        Verify your deposit
-    </div>
-
-    <div class="form-subtitle">
-        Enter the exact amount from your successful
-        transaction and upload the payment screenshot.
-        Minimum deposit: ₦100.
-    </div>
-
-
-    <form id="depositForm">
-
-
-        <div class="field">
-
-            <label for="amount">
-                Amount deposited
-            </label>
-
-
-            <div class="input-wrap">
-
-                <span class="input-prefix">
-                    ₦
-                </span>
-
-
-                <input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    inputmode="decimal"
-                    min="100"
-                    max="10000000"
-                    step="0.01"
-                    placeholder="Enter amount (min ₦100)"
-                    required
-                >
-
-            </div>
-
-            <span class="field-hint">
-                ⚠️ Minimum deposit amount is ₦100.
-            </span>
-
-        </div>
-
-
-        <div class="field">
-
-            <label>
-                Payment screenshot
-            </label>
-
-
-            <label
-                class="upload"
-                for="screenshot"
-            >
-
-                <div class="upload-icon">
-                    📸
-                </div>
-
-
-                <strong id="uploadTitle">
-                    Upload transaction screenshot
-                </strong>
-
-
-                <span id="uploadText">
-                    JPG, PNG or WEBP • Max 5MB
-                </span>
-
-            </label>
-
-
-            <input
-                id="screenshot"
-                name="screenshot"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                required
-            >
-
-
-            <div
-                class="preview"
-                id="preview"
-            >
-
-                <img
-                    id="previewImage"
-                    alt="Payment screenshot preview"
-                >
-
-
-                <button
-                    type="button"
-                    class="remove-image"
-                    onclick="removeImage()"
-                >
-                    ×
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <button
-            type="submit"
-            class="submit-btn"
-            id="submitBtn"
-        >
-            Verify Deposit
-        </button>
-
-    </form>
-
 
 </section>
 
@@ -2515,6 +2410,165 @@ input[type="file"]{
 </div>
 
 
+<!-- VERIFY DEPOSIT MODAL -->
+
+<div
+    class="modal-overlay verify-deposit-overlay"
+    id="verifyDepositModal"
+    aria-hidden="true"
+>
+    <div
+        class="modal verify-deposit-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="verifyDepositTitle"
+    >
+
+        <div class="deposit-guide-header">
+            <h3
+                class="deposit-guide-title"
+                id="verifyDepositTitle"
+            >
+                Verify your deposit
+            </h3>
+
+            <button
+                type="button"
+                class="deposit-guide-close"
+                id="verifyDepositClose"
+                aria-label="Close"
+            >
+                ×
+            </button>
+        </div>
+
+
+        <div class="verify-deposit-scroll">
+
+            <div class="form-subtitle">
+                Enter the exact amount from your successful
+                transaction and upload the payment screenshot.
+                Minimum deposit: ₦100.
+            </div>
+
+
+            <form id="depositForm">
+
+
+                <div class="field">
+
+                    <label for="amount">
+                        Amount deposited
+                    </label>
+
+
+                    <div class="input-wrap">
+
+                        <span class="input-prefix">
+                            ₦
+                        </span>
+
+
+                        <input
+                            id="amount"
+                            name="amount"
+                            type="number"
+                            inputmode="decimal"
+                            min="100"
+                            max="10000000"
+                            step="0.01"
+                            placeholder="Enter amount (min ₦100)"
+                            required
+                        >
+
+                    </div>
+
+                    <span class="field-hint">
+                        ⚠️ Minimum deposit amount is ₦100.
+                    </span>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        Payment screenshot
+                    </label>
+
+
+                    <label
+                        class="upload"
+                        for="screenshot"
+                    >
+
+                        <div class="upload-icon">
+                            📸
+                        </div>
+
+
+                        <strong id="uploadTitle">
+                            Upload transaction screenshot
+                        </strong>
+
+
+                        <span id="uploadText">
+                            JPG, PNG or WEBP • Max 5MB
+                        </span>
+
+                    </label>
+
+
+                    <input
+                        id="screenshot"
+                        name="screenshot"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        required
+                    >
+
+
+                    <div
+                        class="preview"
+                        id="preview"
+                    >
+
+                        <img
+                            id="previewImage"
+                            alt="Payment screenshot preview"
+                        >
+
+
+                        <button
+                            type="button"
+                            class="remove-image"
+                            onclick="removeImage()"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="submit-btn"
+                    id="submitBtn"
+                >
+                    Verify Deposit
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
 <!-- SUCCESS MODAL -->
 
 <div
@@ -2710,19 +2764,77 @@ async function fetchWithRetry(url, options = {}, retries = 2, timeoutMs = 15000)
 
 
 /* ================================
-   SCROLL TO FORM
+   VERIFY DEPOSIT MODAL
 ================================ */
 
-function scrollToForm(){
+function openVerifyDepositModal(){
 
-    document
-        .getElementById("verifyForm")
-        .scrollIntoView({
-            behavior:"smooth",
-            block:"start"
-        });
+    const overlay =
+        document.getElementById("verifyDepositModal");
+
+    if(!overlay){
+        return;
+    }
+
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
+
+    document.body.classList.add("deposit-guide-open");
 
 }
+
+function closeVerifyDepositModal(){
+
+    const overlay =
+        document.getElementById("verifyDepositModal");
+
+    if(!overlay){
+        return;
+    }
+
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
+
+    document.body.classList.remove("deposit-guide-open");
+
+}
+
+const verifyDepositClose =
+    document.getElementById("verifyDepositClose");
+
+if(verifyDepositClose){
+    verifyDepositClose.addEventListener(
+        "click",
+        closeVerifyDepositModal
+    );
+}
+
+const verifyDepositModal =
+    document.getElementById("verifyDepositModal");
+
+if(verifyDepositModal){
+    verifyDepositModal.addEventListener(
+        "click",
+        function(event){
+            if(event.target === verifyDepositModal){
+                closeVerifyDepositModal();
+            }
+        }
+    );
+}
+
+document.addEventListener(
+    "keydown",
+    function(event){
+        if(
+            event.key === "Escape" &&
+            verifyDepositModal &&
+            verifyDepositModal.classList.contains("show")
+        ){
+            closeVerifyDepositModal();
+        }
+    }
+);
 
 
 /* ================================
@@ -3366,6 +3478,8 @@ form.addEventListener(
             form.reset();
 
             removeImage();
+
+            closeVerifyDepositModal();
 
 
             document
