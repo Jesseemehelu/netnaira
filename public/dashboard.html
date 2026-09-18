@@ -1779,128 +1779,64 @@
 
     }
 
-    /* ================= RECENT PAYOUTS TICKER ================= */
+    /* ================= ACTIVITY POPUP ================= */
 
-    .activity-ticker {
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      margin: 0 0 18px;
-      padding: 7px 0;
-      border-top: 1px solid rgba(255,255,255,.045);
-      border-bottom: 1px solid rgba(255,255,255,.045);
-      background: rgba(14,28,20,.32);
-      border-radius: 10px;
-      isolation: isolate;
-    }
-
-    .activity-track {
+    .activity-popup {
+      position: fixed;
+      top: 78px;
+      left: 50%;
+      transform: translate(-50%, -135%);
+      width: min(340px, calc(100% - 28px));
+      min-height: 48px;
+      padding: 9px 12px;
       display: flex;
-      width: max-content;
-      gap: 12px;
-      will-change: transform;
-      /*
-        No CSS @keyframes animation here anymore — some
-        Samsung Internet / Android WebView builds silently
-        fail to run long-duration CSS keyframe animations
-        (they render the first frame and never advance).
-        The scroll is instead driven frame-by-frame from
-        JavaScript further down, which is reliable across
-        every browser and still respects the visitor's
-        reduced-motion preference.
-      */
-    }
-
-    .activity-item {
-      flex: 0 0 auto;
-      display: inline-flex;
       align-items: center;
-      gap: 7px;
-      min-height: 29px;
-      padding: 5px 10px;
-      border: 1px solid rgba(255,255,255,.065);
-      border-radius: 999px;
-      background: rgba(255,255,255,.025);
-      color: #b9c8bf;
-      font-size: 9.5px;
-      font-weight: 700;
-      white-space: nowrap;
-      box-shadow: 0 5px 18px rgba(0,0,0,.10);
+      gap: 9px;
+      border-radius: 12px;
+      background: rgba(14,28,20,.97);
+      border: 1px solid rgba(39,229,154,.22);
+      box-shadow: 0 12px 32px rgba(0,0,0,.32);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 120;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .38s cubic-bezier(.2,.8,.2,1), opacity .28s ease;
     }
 
-    .activity-dot {
-      width: 6px;
-      height: 6px;
-      flex: 0 0 6px;
-      border-radius: 50%;
-      background: var(--green-light);
-      box-shadow: 0 0 9px rgba(39,229,154,.55);
+    .activity-popup.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
     }
 
-    .activity-label {
-      color: #7f9087;
-      font-weight: 700;
-    }
-
-    .activity-amount {
-      color: #e9fff3;
-      font-weight: 900;
-    }
-
-    .activity-item.premium {
-      border-color: rgba(245,196,81,.28);
-      background: linear-gradient(90deg, rgba(245,196,81,.055), rgba(255,255,255,.025));
-      box-shadow:
-        0 0 18px rgba(245,196,81,.12),
-        inset 0 0 18px rgba(245,196,81,.025);
-    }
-
-    .activity-item.premium .activity-dot {
-      background: var(--yellow);
-      box-shadow: 0 0 12px rgba(245,196,81,.85);
-    }
-
-    .activity-item.premium .activity-amount {
-      color: #ffe49a;
-      text-shadow: 0 0 9px rgba(245,196,81,.45);
-    }
-
-    /* Rare jackpot tier: ₦600,000 – ₦1,500,000 */
-
-    .activity-item.jackpot {
+    .activity-popup.jackpot {
       border-color: rgba(245,196,81,.55);
-      background: linear-gradient(90deg, rgba(245,196,81,.14), rgba(255,225,140,.05));
-      box-shadow:
-        0 0 22px rgba(245,196,81,.30),
-        inset 0 0 20px rgba(245,196,81,.06);
-      animation: jackpot-pulse 1.8s ease-in-out infinite;
+      box-shadow: 0 12px 38px rgba(245,196,81,.18);
+      background: linear-gradient(135deg, rgba(49,38,12,.98), rgba(20,27,18,.98));
     }
 
-    .activity-item.jackpot .activity-dot {
-      background: var(--yellow);
-      box-shadow: 0 0 16px rgba(245,196,81,1);
+    .activity-popup-icon {
+      width: 29px; height: 29px; flex: 0 0 29px;
+      display: grid; place-items: center; border-radius: 9px;
+      background: rgba(39,229,154,.10); font-size: 14px;
     }
 
-    .activity-item.jackpot .activity-label {
-      color: #e8c988;
+    .activity-popup.jackpot .activity-popup-icon { background: rgba(245,196,81,.12); }
+
+    .activity-popup-copy {
+      min-width: 0; flex: 1; color: #eafff2;
+      font-size: 10.5px; line-height: 1.3; font-weight: 700;
     }
 
-    .activity-item.jackpot .activity-amount {
-      color: #fff2c9;
-      text-shadow: 0 0 12px rgba(245,196,81,.75);
-    }
+    .activity-popup-copy strong { color: var(--green-light); font-weight: 850; }
 
-    @keyframes jackpot-pulse {
-      0%, 100% {
-        box-shadow:
-          0 0 16px rgba(245,196,81,.25),
-          inset 0 0 16px rgba(245,196,81,.05);
-      }
-      50% {
-        box-shadow:
-          0 0 30px rgba(245,196,81,.55),
-          inset 0 0 24px rgba(245,196,81,.12);
-      }
+    .activity-popup.jackpot .activity-popup-copy strong,
+    .activity-popup.jackpot .activity-popup-amount { color: var(--yellow); }
+
+    .activity-popup-amount { color: var(--green-light); font-weight: 900; white-space: nowrap; }
+
+    .activity-popup-demo {
+      display: block; margin-top: 2px; color: #708177; font-size: 8px; font-weight: 600;
     }
 
   </style>
@@ -1985,14 +1921,12 @@
 
   <!-- ================= MAIN ================= -->
 
+  <div class="activity-popup" id="activityPopup" role="status" aria-live="polite">
+    <div class="activity-popup-icon" id="activityPopupIcon">✨</div>
+    <div class="activity-popup-copy" id="activityPopupCopy"></div>
+  </div>
+
   <main class="app">
-
-
-    <!-- ================= RECENT PAYOUTS TICKER ================= -->
-
-    <div class="activity-ticker" aria-label="Recent payout examples">
-      <div class="activity-track" id="activityTrack"></div>
-    </div>
 
 
     <!-- WELCOME -->
@@ -2104,7 +2038,7 @@
 
         <p>
           Welcome to Netnaira — we've added a
-          <strong id="welcomeBonusAmountText">₦1,000.00</strong>
+          <strong id="welcomeBonusAmountText">₦500.00</strong>
           bonus to your balance to get you started.
         </p>
 
@@ -2613,215 +2547,126 @@
 
   <script>
 
-    /* ================= RECENT PAYOUTS TICKER ================= */
+    /* ================= ROTATING ACTIVITY POPUPS ================= */
 
-    /*
-      Generates a fresh, effectively endless set of
-      name + action + amount combinations on every
-      page load. Amounts are pulled from weighted
-      tiers so small payouts show up constantly,
-      mid-range payouts show up less often, larger
-      payouts are rarer still, and the top tier
-      (₦600,000–₦1,500,000) is a rare "jackpot" that
-      renders gold and glowing.
-    */
+    /* Illustrative activity examples — not live or verified transaction data. */
+    const ACTIVITY_CONSONANTS = "bcdfghjklmnpqrstvwxyz";
+    const ACTIVITY_VOWELS = "aeiou";
 
-    const TICKER_FIRST_NAMES = [
-      "Chidinma", "Tunde", "Blessing", "Ibrahim", "Amaka", "Segun",
-      "Grace", "Emeka", "Ngozi", "Yusuf", "Funmilayo", "Chukwuemeka",
-      "Aisha", "Femi", "Adaeze", "Musa", "Oluwaseun", "Kemi",
-      "Chinedu", "Hauwa", "Damilola", "Kelechi", "Zainab", "Bolanle",
-      "Uche", "Abdullahi", "Precious", "Olamide", "Nkechi", "Suleiman",
-      "Tolu", "Chiamaka", "Faruk", "Ifeoma", "Wale", "Halima",
-      "Obinna", "Ronke", "Sadiq", "Ebube", "Yetunde", "Chukwudi",
-      "Fatima", "Kayode", "Adaobi", "Bashir", "Temitope", "Nneka",
-      "Rasheed", "Omolara"
+    const ACTIVITY_ACTIONS = [
+      { type: "withdraw", weight: 52 },
+      { type: "bonus", weight: 16 },
+      { type: "joined", weight: 16 },
+      { type: "plan", weight: 8 },
+      { type: "daily", weight: 8 }
     ];
 
-    const TICKER_LAST_INITIALS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
-    const TICKER_ACTIONS = ["received", "withdrew"];
-
-    /*
-      Amount tiers, each with a relative weight
-      controlling how often it's picked:
-
-        ₦2,500     – ₦50,000      → common
-        ₦60,000    – ₦100,000     → less common
-        ₦100,000   – ₦500,000     → rarer still
-        ₦600,000   – ₦1,500,000   → very rare, gold "jackpot"
-    */
-
-    const TICKER_TIERS = [
-      { min: 2500,   max: 50000,   weight: 58, jackpot: false },
-      { min: 60000,  max: 100000,  weight: 22, jackpot: false },
-      { min: 100000, max: 500000,  weight: 15, jackpot: false },
-      { min: 600000, max: 1500000, weight: 3,  jackpot: true  }
+    const ACTIVITY_AMOUNT_TIERS = [
+      { min: 1000, max: 20000, weight: 65, jackpot: false },
+      { min: 20000, max: 100000, weight: 20, jackpot: false },
+      { min: 100000, max: 500000, weight: 10, jackpot: false },
+      { min: 500000, max: 1300000, weight: 5, jackpot: true }
     ];
 
-    const TICKER_TOTAL_WEIGHT =
-      TICKER_TIERS.reduce((sum, tier) => sum + tier.weight, 0);
+    const usedActivityMessages = new Set();
+    let activityPopupTimer = null;
+    let activityHideTimer = null;
 
-    function pickTicker(list) {
-      return list[Math.floor(Math.random() * list.length)];
+    function randomActivityChar(chars) {
+      return chars[Math.floor(Math.random() * chars.length)];
     }
 
-    function pickTickerTier() {
-      let roll = Math.random() * TICKER_TOTAL_WEIGHT;
+    function makeActivityName() {
+      return randomActivityChar(ACTIVITY_CONSONANTS) +
+        randomActivityChar(ACTIVITY_VOWELS) +
+        randomActivityChar(ACTIVITY_CONSONANTS) +
+        "****" +
+        String(Math.floor(1000 + Math.random() * 9000));
+    }
 
-      for (const tier of TICKER_TIERS) {
-        if (roll < tier.weight) {
-          return tier;
-        }
-        roll -= tier.weight;
+    function pickWeightedActivity(list) {
+      const total = list.reduce((sum, item) => sum + item.weight, 0);
+      let roll = Math.random() * total;
+      for (const item of list) {
+        if (roll < item.weight) return item;
+        roll -= item.weight;
       }
-
-      return TICKER_TIERS[0];
+      return list[0];
     }
 
-    function randomTickerAmount(tier) {
-      const raw =
-        tier.min + Math.random() * (tier.max - tier.min);
-
-      // round to a clean-looking figure
-      const step = tier.max >= 100000 ? 500 : 50;
-
-      return Math.round(raw / step) * step;
+    function randomActivityAmount(tier) {
+      const raw = tier.min + Math.random() * (tier.max - tier.min);
+      const step = tier.min >= 500000 ? 1000 : tier.min >= 100000 ? 500 : 100;
+      return Math.max(tier.min, Math.round(raw / step) * step);
     }
 
-    function formatNaira(amount) {
-      return "₦" + amount.toLocaleString("en-NG");
-    }
+    function buildUniqueActivity() {
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const name = makeActivityName();
+        const action = pickWeightedActivity(ACTIVITY_ACTIONS);
+        let amount = null;
+        let jackpot = false;
 
-    function buildTickerItem() {
-      const firstName = pickTicker(TICKER_FIRST_NAMES);
-      const lastInitial = pickTicker(TICKER_LAST_INITIALS);
-      const action = pickTicker(TICKER_ACTIONS);
-      const tier = pickTickerTier();
-      const amount = randomTickerAmount(tier);
-
-      const item = document.createElement("div");
-      item.className =
-        "activity-item" + (tier.jackpot ? " jackpot" : "");
-
-      item.innerHTML =
-        '<span class="activity-dot"></span>' +
-        '<span class="activity-label">' +
-          firstName + " " + lastInitial + ". " + action +
-        '</span>' +
-        '<span class="activity-amount">' +
-          formatNaira(amount) +
-        '</span>';
-
-      return item;
-    }
-
-    function renderPayoutTicker() {
-      const track = document.getElementById("activityTrack");
-
-      if (!track) {
-        return;
-      }
-
-      const ITEM_COUNT = 26;
-      const fragment = document.createDocumentFragment();
-      const items = [];
-
-      for (let i = 0; i < ITEM_COUNT; i++) {
-        items.push(buildTickerItem());
-      }
-
-      // duplicate the set so the scroll loop is seamless
-      items.forEach(item => fragment.appendChild(item));
-
-      items.forEach(item => {
-        const clone = item.cloneNode(true);
-        clone.setAttribute("aria-hidden", "true");
-        fragment.appendChild(clone);
-      });
-
-      track.appendChild(fragment);
-    }
-
-    renderPayoutTicker();
-
-    /*
-      Moves the ticker with requestAnimationFrame instead
-      of a CSS @keyframes animation. Some Samsung Internet /
-      Android WebView builds render the ticker's first frame
-      and then just stop advancing a CSS animation that runs
-      this long (240s) - it isn't a reduced-motion setting,
-      the animation itself simply never progresses on those
-      browsers. Driving the same transform from JS on every
-      frame works identically everywhere, and still respects
-      a visitor's actual reduced-motion preference.
-    */
-
-    function startTickerAnimation() {
-
-      const track =
-        document.getElementById("activityTrack");
-
-      if (!track) {
-        return;
-      }
-
-      const DURATION_SECONDS = 240;
-
-      // The track's content is duplicated once (see
-      // renderPayoutTicker), so scrolling exactly half its
-      // total width loops seamlessly back to the start.
-      let halfWidth =
-        track.scrollWidth / 2;
-
-      if (!halfWidth) {
-
-        // Layout may not have settled yet on a slower
-        // device — try again shortly instead of giving up
-        // on the ticker permanently.
-        setTimeout(startTickerAnimation, 200);
-
-        return;
-
-      }
-
-      let speed =
-        halfWidth / DURATION_SECONDS; // pixels per second
-
-      let distance = 0;
-      let lastTimestamp = null;
-
-      function step(timestamp) {
-
-        if (lastTimestamp === null) {
-          lastTimestamp = timestamp;
+        if (action.type === "withdraw" || action.type === "daily") {
+          const tier = pickWeightedActivity(ACTIVITY_AMOUNT_TIERS);
+          amount = randomActivityAmount(tier);
+          jackpot = tier.jackpot;
         }
 
-        const deltaSeconds =
-          (timestamp - lastTimestamp) / 1000;
+        let text;
+        if (action.type === "withdraw") text = `${name} withdrew ₦${amount.toLocaleString("en-NG")}`;
+        if (action.type === "bonus") text = `${name} received bonus 🎁`;
+        if (action.type === "joined") text = `${name} joined the team 🎉`;
+        if (action.type === "plan") text = `${name} activated earning plan 📈`;
+        if (action.type === "daily") text = `${name} received daily earning ₦${amount.toLocaleString("en-NG")}`;
 
-        lastTimestamp = timestamp;
-
-        distance =
-          (distance + speed * deltaSeconds) % halfWidth;
-
-        const x =
-          -halfWidth + distance;
-
-        track.style.transform =
-          `translate3d(${x}px, 0, 0)`;
-
-        requestAnimationFrame(step);
-
+        if (!usedActivityMessages.has(text)) {
+          usedActivityMessages.add(text);
+          return { text, jackpot };
+        }
       }
-
-      requestAnimationFrame(step);
-
+      return null;
     }
 
-    startTickerAnimation();
+    function showActivityPopup() {
+      const popup = document.getElementById("activityPopup");
+      const copy = document.getElementById("activityPopupCopy");
+      const icon = document.getElementById("activityPopupIcon");
+      if (!popup || !copy || !icon) return;
 
+      const activity = buildUniqueActivity();
+      if (!activity) return;
+
+      clearTimeout(activityHideTimer);
+      popup.classList.remove("show", "jackpot");
+
+      const firstSpace = activity.text.indexOf(" ");
+      const name = activity.text.slice(0, firstSpace);
+      const rest = activity.text.slice(firstSpace + 1);
+
+      copy.innerHTML = `<strong>${name}</strong> ${rest}`;
+      icon.textContent = activity.jackpot ? "🏆" : "✨";
+      if (activity.jackpot) popup.classList.add("jackpot");
+
+      requestAnimationFrame(() => popup.classList.add("show"));
+
+      // Keep the popup visible for 3.6 seconds, then wait a full
+      // 5 seconds after it closes before showing the next one.
+      activityHideTimer = setTimeout(() => {
+        popup.classList.remove("show");
+
+        clearTimeout(activityPopupTimer);
+        activityPopupTimer = setTimeout(showActivityPopup, 5000);
+      }, 3600);
+    }
+
+    function startActivityPopups() {
+      clearTimeout(activityPopupTimer);
+      clearTimeout(activityHideTimer);
+      showActivityPopup();
+    }
+
+    startActivityPopups();
 
     /* ================= DATE ================= */
 
@@ -3504,6 +3349,12 @@
             apiUser.welcomeBonusAmount
           );
 
+        } else {
+
+          // Existing/returning users see the Telegram popup every time
+          // the dashboard is opened.
+          showPromptOverlay("telegramJoinOverlay");
+
         }
 
 
@@ -3707,6 +3558,7 @@
 
 </body>
 </html>
+
 
 
 

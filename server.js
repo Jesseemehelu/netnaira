@@ -192,58 +192,58 @@ const EARNING_PLANS = {
 
     Starter: {
         amount: 3000,
-        daily: 500,
-        total: 7500,
-        durationDays: 15
+        daily: 1000,
+        total: 30000,
+        durationDays: 30
     },
 
     Basic: {
         amount: 5000,
-        daily: 900,
-        total: 13500,
-        durationDays: 15
+        daily: 1800,
+        total: 54000,
+        durationDays: 30
     },
 
     Growth: {
         amount: 10000,
-        daily: 2000,
-        total: 30000,
-        durationDays: 15
+        daily: 4000,
+        total: 120000,
+        durationDays: 30
     },
 
     Pro: {
         amount: 25000,
-        daily: 5500,
-        total: 82500,
-        durationDays: 15
+        daily: 11000,
+        total: 330000,
+        durationDays: 30
     },
 
     Elite: {
         amount: 50000,
-        daily: 12000,
-        total: 180000,
-        durationDays: 15
+        daily: 24000,
+        total: 720000,
+        durationDays: 30
     },
 
     Premium: {
         amount: 100000,
-        daily: 26000,
-        total: 390000,
-        durationDays: 15
+        daily: 52000,
+        total: 1560000,
+        durationDays: 30
     },
 
     VIP: {
         amount: 250000,
-        daily: 70000,
-        total: 1050000,
-        durationDays: 15
+        daily: 140000,
+        total: 4200000,
+        durationDays: 30
     },
 
     Ultimate: {
         amount: 500000,
-        daily: 150000,
-        total: 2250000,
-        durationDays: 15
+        daily: 300000,
+        total: 9000000,
+        durationDays: 30
     }
 
 };
@@ -318,7 +318,7 @@ it to true so it never shows again.
 ========================================
 */
 
-const WELCOME_BONUS = 1000;
+const WELCOME_BONUS = 500;
 
 /*
 Referral earnings land in referral_balance, not the
@@ -5306,14 +5306,14 @@ app.post(
 
             if (
                 !Number.isFinite(amount) ||
-                amount < 100 ||
+                amount < 3000 ||
                 amount > 10000000
             ) {
 
                 return res.status(400).json({
                     success: false,
                     message:
-                        "Please enter a valid deposit amount."
+                        "Please enter a valid deposit amount (minimum ₦3,000)."
                 });
 
             }
@@ -5630,11 +5630,14 @@ ${user.id}
     }
 )}
 
-🏦 Deposit Destination:
-SportyBet
+🏦 Deposit Account:
+6682064981
 
-🆔 SportyBet User ID:
-8050976449
+👤 Account Name:
+Vtuexpress Jes (paymentpoint)
+
+🏦 Bank:
+PalmPay
 
 📋 Request ID:
 ${depositId}
@@ -6876,6 +6879,7 @@ greater than keepAliveTimeout.
 
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
+
 
 
 
