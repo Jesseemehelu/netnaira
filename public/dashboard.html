@@ -63,7 +63,7 @@
 
       overflow-x: hidden;
 
-      padding-bottom: 110px;
+      padding-bottom: 136px;
     }
 
     a {
@@ -1453,10 +1453,19 @@
 
     /* ================= BOTTOM NAV (floating) ================= */
 
+    /*
+      Layout: [ Home ] [ notch for Earn ] [ Profile ]
+
+      The glass bar has a circular notch cut out of its top edge
+      (mask) and a thin arc (.nav-cradle) drawn along the cut, so
+      the Earn button sits in a real cradle instead of just
+      overlapping the bar.
+    */
+
     .bottom-nav {
       position: fixed;
 
-      bottom: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       left: 0;
       right: 0;
 
@@ -1470,35 +1479,132 @@
     }
 
     .bottom-inner {
+      --earn-size: 74px;      /* diameter of the Earn button */
+      --earn-lift: 44px;      /* how far its top rises above the bar */
+      --notch-r: 50px;        /* radius of the cut-out in the bar */
+      --earn-edge: #05613b;   /* colour of the button's thick side */
+
       position: relative;
 
-      width: min(280px, calc(100% - 28px));
+      width: min(340px, calc(100% - 28px));
 
       height: 68px;
 
       display: grid;
 
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr calc(var(--notch-r) * 2) 1fr;
 
       align-items: center;
 
-      background: rgba(14,28,20,.82);
+      pointer-events: auto;
+    }
+
+    /* soft shadow that sits under the whole bar */
+
+    .bottom-inner::before {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      border-radius: 26px;
+
+      background: rgba(0,0,0,.6);
+
+      filter: blur(18px);
+
+      transform: translateY(14px) scale(.94);
+
+      z-index: 0;
+
+      pointer-events: none;
+    }
+
+    /* frosted glass bar, with the notch cut out */
+
+    .bottom-inner::after {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      border-radius: 26px;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(22,42,31,.92),
+          rgba(11,22,16,.94)
+        );
 
       border: 1px solid rgba(255,255,255,.09);
 
-      border-radius: 22px;
-
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-
       box-shadow:
-        0 16px 40px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.04);
+        inset 0 1px 0 rgba(255,255,255,.07);
 
-      pointer-events: all;
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+
+      -webkit-mask-image:
+        radial-gradient(
+          circle var(--notch-r)
+          at 50% calc(var(--earn-size) / 2 - var(--earn-lift)),
+          transparent calc(var(--notch-r) - .5px),
+          #000 var(--notch-r)
+        );
+
+      mask-image:
+        radial-gradient(
+          circle var(--notch-r)
+          at 50% calc(var(--earn-size) / 2 - var(--earn-lift)),
+          transparent calc(var(--notch-r) - .5px),
+          #000 var(--notch-r)
+        );
+
+      z-index: 0;
+
+      pointer-events: none;
     }
 
+    /* thin arc that outlines the notch */
+
+    .nav-cradle {
+      position: absolute;
+
+      left: 50%;
+
+      top: calc(var(--earn-size) / 2 - var(--earn-lift) - var(--notch-r));
+
+      width: calc(var(--notch-r) * 2);
+      height: calc(var(--notch-r) * 2);
+
+      margin-left: calc(var(--notch-r) * -1);
+
+      border-radius: 50%;
+
+      border: 1px solid rgba(61,255,176,.14);
+
+      /* only show the part that's below the bar's top edge */
+      clip-path: inset(
+        calc(var(--notch-r) + var(--earn-lift) - var(--earn-size) / 2)
+        0 0 0
+      );
+
+      z-index: 0;
+
+      pointer-events: none;
+    }
+
+    /* ---- Home / Profile ---- */
+
     .nav-item {
+      position: relative;
+
+      z-index: 1;
+
+      grid-row: 1;
+      grid-column: 1;
+
       display: flex;
 
       flex-direction: column;
@@ -1507,43 +1613,181 @@
 
       justify-content: center;
 
-      gap: 4px;
+      gap: 3px;
 
-      color: #6c7b72;
+      height: 100%;
 
-      font-size: 9px;
+      color: #71827a;
+
+      font-size: 10px;
 
       font-weight: 700;
 
-      transition: color .18s ease;
+      letter-spacing: .1px;
+
+      transition: color .2s ease;
     }
 
-    .nav-item-icon {
-      font-size: 18px;
+    .nav-item + .nav-item {
+      grid-column: 3;
+    }
 
-      line-height: 1;
+    /* pill behind the icon: only visible on the current page */
+
+    .nav-item-icon {
+      width: 50px;
+      height: 28px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      border-radius: 14px;
+
+      background: transparent;
+
+      transition:
+        background .25s ease,
+        transform .2s ease;
+    }
+
+    .nav-item-icon svg {
+      width: 22px;
+      height: 22px;
+
+      display: block;
+
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .nav-item.active {
       color: var(--green-light);
     }
 
-    .nav-item:active {
-      transform: scale(.95);
+    .nav-item.active .nav-item-icon {
+      background: rgba(39,229,154,.14);
     }
 
-    /* ---- raised, glowing center "Earn" button ---- */
+    .nav-item:active .nav-item-icon {
+      transform: scale(.9);
+    }
+
+    .nav-item:focus-visible {
+      outline: 2px solid var(--green-light);
+      outline-offset: -4px;
+      border-radius: 18px;
+    }
+
+    /* ---- raised 3D "Earn" button ---- */
 
     .nav-earn {
       position: absolute;
 
-      top: -30px;
+      top: calc(var(--earn-lift) * -1);
       left: 50%;
 
-      transform: translateX(-50%);
+      width: var(--earn-size);
+      height: var(--earn-size);
 
-      width: 62px;
-      height: 62px;
+      margin-left: calc(var(--earn-size) / -2);
+
+      z-index: 2;
+
+      display: block;
+
+      border-radius: 50%;
+
+      outline: none;
+    }
+
+    /* breathing glow behind the button */
+
+    .nav-earn::before {
+      content: "";
+
+      position: absolute;
+      inset: -14px;
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(61,255,176,.55) 0%,
+          rgba(61,255,176,0) 68%
+        );
+
+      opacity: .65;
+
+      z-index: -1;
+
+      pointer-events: none;
+    }
+
+    /* ring that bursts outward after the coin spins */
+
+    .nav-earn::after {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      border-radius: 50%;
+
+      border: 3px solid rgba(61,255,176,.8);
+
+      box-shadow: 0 0 18px rgba(61,255,176,.5);
+
+      opacity: 0;
+
+      z-index: -1;
+
+      pointer-events: none;
+    }
+
+    /* the button body: light bezel + a thick stepped edge underneath */
+
+    .nav-earn-btn {
+      position: absolute;
+      inset: 0;
+
+      border-radius: 50%;
+
+      background:
+        linear-gradient(
+          155deg,
+          #c4ffe4 0%,
+          #43f1a8 30%,
+          #0f9f64 78%,
+          #08804e 100%
+        );
+
+      box-shadow:
+        0 2px 0 #0b8f58,
+        0 4px 0 #0a7f4f,
+        0 6px 0 #08693f,
+        0 8px 0 var(--earn-edge),
+        0 16px 20px rgba(0,0,0,.55),
+        0 0 34px rgba(61,255,176,.42);
+
+      transition:
+        transform .12s cubic-bezier(.3,.7,.4,1),
+        box-shadow .12s cubic-bezier(.3,.7,.4,1);
+    }
+
+    /* the domed top face */
+
+    .nav-earn-face {
+      position: absolute;
+      inset: 5px;
+
+      overflow: hidden;
 
       border-radius: 50%;
 
@@ -1555,61 +1799,210 @@
 
       justify-content: center;
 
-      gap: 1px;
+      gap: 0;
+
+      color: #02180e;
+
+      background:
+        radial-gradient(
+          120% 90% at 30% 16%,
+          rgba(255,255,255,.5) 0%,
+          rgba(255,255,255,0) 48%
+        ),
+        linear-gradient(
+          165deg,
+          #56f8b2 0%,
+          #19d68a 48%,
+          #0aa168 100%
+        );
+
+      box-shadow:
+        inset 0 3px 3px rgba(255,255,255,.55),
+        inset 0 -6px 10px rgba(0,88,52,.55),
+        inset 0 0 0 1px rgba(0,80,48,.28);
+    }
+
+    /* glossy highlight across the top of the dome */
+
+    .nav-earn-face::before {
+      content: "";
+
+      position: absolute;
+
+      top: 3px;
+      left: 14%;
+      right: 14%;
+
+      height: 40%;
+
+      border-radius: 50% 50% 60% 60% / 75% 75% 35% 35%;
 
       background:
         linear-gradient(
-          150deg,
-          var(--glow),
-          var(--green) 65%
+          180deg,
+          rgba(255,255,255,.55),
+          rgba(255,255,255,0)
         );
 
-      color: #03150d;
-
-      border: 3px solid var(--dark);
-
-      box-shadow:
-        0 0 0 1px rgba(61,255,176,.35),
-        0 10px 26px rgba(22,199,132,.55),
-        0 0 30px rgba(61,255,176,.45);
-
-      animation: earn-pulse 2.6s ease-in-out infinite;
+      pointer-events: none;
     }
 
-    .nav-earn-icon {
-      font-size: 20px;
+    .nav-earn-coin {
+      position: relative;
+
+      z-index: 1;
+
+      font-size: 27px;
 
       font-weight: 900;
 
       line-height: 1;
+
+      text-shadow: 0 1px 0 rgba(255,255,255,.4);
     }
 
     .nav-earn-label {
-      font-size: 8px;
+      position: relative;
+
+      z-index: 1;
+
+      margin-top: 1px;
+
+      font-size: 10px;
 
       font-weight: 900;
 
-      letter-spacing: .3px;
+      letter-spacing: .2px;
+
+      text-shadow: 0 1px 0 rgba(255,255,255,.4);
     }
 
-    .nav-earn:active {
-      transform: translateX(-50%) scale(.94);
+    /* light streak that sweeps across the face */
+
+    .nav-earn-shine {
+      position: absolute;
+      inset: 0;
+
+      background:
+        linear-gradient(
+          115deg,
+          rgba(255,255,255,0) 35%,
+          rgba(255,255,255,.7) 50%,
+          rgba(255,255,255,0) 65%
+        );
+
+      transform: translateX(-130%);
+
+      pointer-events: none;
     }
 
-    @keyframes earn-pulse {
+    /* pressed: the button sinks into its base */
 
-      0%, 100% {
-        box-shadow:
-          0 0 0 1px rgba(61,255,176,.35),
-          0 10px 26px rgba(22,199,132,.55),
-          0 0 30px rgba(61,255,176,.45);
+    .nav-earn:active .nav-earn-btn {
+      transform: translateY(6px);
+
+      box-shadow:
+        0 1px 0 #0b8f58,
+        0 1px 0 #0a7f4f,
+        0 2px 0 #08693f,
+        0 2px 0 var(--earn-edge),
+        0 6px 10px rgba(0,0,0,.5),
+        0 0 24px rgba(61,255,176,.4);
+    }
+
+    .nav-earn:focus-visible .nav-earn-btn {
+      outline: 3px solid #fff;
+      outline-offset: 4px;
+    }
+
+    /*
+      One orchestrated loop (4.8s):
+        rest  ->  coin spins + light sweeps across  ->  ring bursts out
+      with a slow float and glow breathing underneath the whole time.
+      Only runs when the user hasn't asked for reduced motion.
+    */
+
+    @media (prefers-reduced-motion: no-preference) {
+
+      .nav-earn {
+        animation: earn-float 3.2s ease-in-out infinite;
       }
 
-      50% {
-        box-shadow:
-          0 0 0 1px rgba(61,255,176,.5),
-          0 10px 30px rgba(22,199,132,.7),
-          0 0 42px rgba(61,255,176,.7);
+      .nav-earn::before {
+        animation: earn-glow 3.2s ease-in-out infinite;
+      }
+
+      .nav-earn::after {
+        animation: earn-ring 4.8s ease-out infinite;
+      }
+
+      .nav-earn-coin {
+        animation: earn-spin 4.8s cubic-bezier(.45,0,.25,1) infinite;
+      }
+
+      .nav-earn-shine {
+        animation: earn-shine 4.8s ease-in-out infinite;
+      }
+
+      @keyframes earn-float {
+
+        0%, 100% { transform: translateY(0); }
+
+        50% { transform: translateY(-4px); }
+
+      }
+
+      @keyframes earn-glow {
+
+        0%, 100% {
+          opacity: .55;
+          transform: scale(.95);
+        }
+
+        50% {
+          opacity: .95;
+          transform: scale(1.08);
+        }
+
+      }
+
+      @keyframes earn-spin {
+
+        0%, 52% {
+          transform: perspective(240px) rotateY(0deg);
+        }
+
+        70%, 100% {
+          transform: perspective(240px) rotateY(360deg);
+        }
+
+      }
+
+      @keyframes earn-shine {
+
+        0%, 54% { transform: translateX(-130%); }
+
+        72%, 100% { transform: translateX(130%); }
+
+      }
+
+      @keyframes earn-ring {
+
+        0%, 66% {
+          opacity: 0;
+          transform: scale(1);
+        }
+
+        68% {
+          opacity: .75;
+          transform: scale(1);
+        }
+
+        100% {
+          opacity: 0;
+          transform: scale(1.8);
+        }
+
       }
 
     }
@@ -1625,7 +2018,7 @@
       .bottom-nav {
         position: static;
 
-        margin-top: 46px;
+        margin-top: 70px;
 
         justify-content: center;
       }
@@ -2498,18 +2891,24 @@
 
   <!-- ================= BOTTOM NAV ================= -->
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" aria-label="Main">
 
     <div class="bottom-inner">
+
+      <span class="nav-cradle" aria-hidden="true"></span>
 
       <a
         href="/dashboard.html"
         class="nav-item active"
+        aria-current="page"
       >
 
-        <div class="nav-item-icon">
-          🏠
-        </div>
+        <span class="nav-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 10.5 12 3l9 7.5"/>
+            <path d="M5 9v10.5a1.5 1.5 0 0 0 1.5 1.5H10v-6h4v6h3.5a1.5 1.5 0 0 0 1.5-1.5V9"/>
+          </svg>
+        </span>
 
         Home
 
@@ -2521,21 +2920,37 @@
         class="nav-item"
       >
 
-        <div class="nav-item-icon">
-          👤
-        </div>
+        <span class="nav-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7"/>
+          </svg>
+        </span>
 
         Profile
 
       </a>
 
 
-      <!-- raised, glowing center button — this replaces the old
-           separate Plans + Earn items -->
+      <!-- raised 3D center button — replaces the old separate
+           Plans + Earn items -->
 
       <a href="/plans.html" class="nav-earn" aria-label="Earn">
-        <div class="nav-earn-icon">₦</div>
-        <div class="nav-earn-label">Earn</div>
+
+        <span class="nav-earn-btn">
+
+          <span class="nav-earn-face">
+
+            <span class="nav-earn-coin">₦</span>
+
+            <span class="nav-earn-label">Earn</span>
+
+            <span class="nav-earn-shine"></span>
+
+          </span>
+
+        </span>
+
       </a>
 
     </div>
@@ -3558,6 +3973,7 @@
 
 </body>
 </html>
+
 
 
 

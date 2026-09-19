@@ -2329,7 +2329,7 @@
     async function sendTelegramBotDeposit(chatId) {
         await sendTelegramUserMessage(
             chatId,
-            `💳 *Make a Deposit*\n\nOpen your Netnaira account below to make your deposit securely.\n\nYour account will take you directly to the Deposit page, where you can follow the payment instructions and submit your deposit for review.`,
+            `💳 *Deposit*\n\nTap below to pay and submit your deposit for review.\n\nMinimum: *${telegramMoney(3000)}*`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
