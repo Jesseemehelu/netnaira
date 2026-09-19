@@ -111,17 +111,16 @@ h1{font-size:32px;line-height:1;letter-spacing:-1.5px;margin-bottom:9px;color:#f
 
 /* Premium amount picker */
 .modal-overlay{
- position:fixed;inset:0;z-index:500;display:none;align-items:flex-end;justify-content:center;padding:10px;
+ position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:14px;
  background:rgba(0,0,0,.76);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
 }
 .modal-overlay.show{display:flex}
 .modal{
- width:min(430px,100%);max-height:94vh;overflow:auto;background:linear-gradient(160deg,#142b20,#08150f 85%);
+ width:min(430px,100%);max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto;margin:auto;background:linear-gradient(160deg,#142b20,#08150f 85%);
  color:var(--text);border:1px solid rgba(32,229,143,.20);border-radius:25px;padding:18px;
  box-shadow:0 35px 100px rgba(0,0,0,.68);animation:modalIn .28s cubic-bezier(.16,1,.3,1)
 }
-@keyframes modalIn{from{opacity:0;transform:translateY(28px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal::before{content:"";display:block;width:42px;height:4px;border-radius:99px;background:rgba(255,255,255,.15);margin:0 auto 16px}
+@keyframes modalIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
 .modal-header h3{color:#fff;font-size:20px;font-weight:950;letter-spacing:-.5px}
 .close-btn{width:34px;height:34px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:19px;cursor:pointer}
@@ -161,7 +160,7 @@ input[type="file"]{display:none}
 .toast{position:fixed;left:50%;bottom:22px;z-index:800;max-width:calc(100% - 28px);padding:11px 14px;border-radius:12px;background:#14291f;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:800;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s ease;box-shadow:0 12px 35px rgba(0,0,0,.35)}
 .toast.show{transform:translate(-50%,0);opacity:1}
 @media(max-width:390px){.account-number{font-size:21px;letter-spacing:.9px}.copy-btn{min-width:68px;padding:0 10px}.container{width:calc(100% - 18px)}h1{font-size:29px}.modal{padding:16px}.amount-grid{gap:7px}}
-@media(min-width:700px){.header{padding:0 32px}.hero{padding-top:26px}.modal-overlay{align-items:center}}
+@media(min-width:700px){.header{padding:0 32px}.hero{padding-top:26px}}
 </style>
 </head>
 
@@ -1233,5 +1232,6 @@ loadPageData();
 
 </body>
 </html>
+
 
 

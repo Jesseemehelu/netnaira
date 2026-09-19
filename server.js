@@ -259,23 +259,29 @@
     referral code, so there's nothing extra
     to generate or look up.
 
-    The link now points at the Telegram Mini
-    App itself (not the website), using
-    Telegram's own deep-link parameter:
+    The link now points at the Telegram BOT
+    itself (not the Mini App), using
+    Telegram's standard bot deep link:
 
-        https://t.me/<bot>/<shortname>?startapp=<username>
+        https://t.me/<bot>?start=<username>
 
-    Telegram passes whatever comes after
-    startapp= straight through into
-    initData as start_param, which
-    auth.html reads and forwards as `ref`
-    when it calls /api/auth/telegram.
+    When someone taps it and presses START,
+    Telegram sends the bot "/start <username>".
+    The bot's /start handler
+    (getOrCreateTelegramBotUser) reads that
+    parameter as the referral code.
 
-    Whoever opens the app with a valid
-    start_param gets tied to that referrer,
+    Whoever starts the bot with a valid
+    referral code gets tied to that referrer,
     and the referrer is credited
-    REFERRAL_BONUS once, at the moment the
-    new account is created.
+    REFERRAL_BONUS once, at the moment the new
+    account is created. The referrer is also
+    sent a Telegram message right away
+    (notifyReferrerOfNewReferral).
+
+    Old Mini App links (?startapp=<username>)
+    still work too — auth.html still forwards
+    start_param as `ref`.
     ========================================
     */
 
@@ -299,6 +305,16 @@
         "Netnaira";
 
     const REFERRAL_BONUS = 500;
+
+    /*
+    Referral link that opens the BOT (not the
+    Mini App). Usernames are [a-z0-9_] only, so
+    they're always valid Telegram start
+    parameters.
+    */
+    function telegramBotReferralLink(username) {
+        return `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}?start=${encodeURIComponent(username || "")}`;
+    }
 
     /*
     ========================================
@@ -1558,6 +1574,60 @@
         }
     }
 
+    /*
+    Tell a referrer, via the user bot, that
+    someone just joined with their link and that
+    their referral balance went up.
+
+    Best-effort only: never throws, never blocks
+    signup. Skipped silently if the referrer has
+    no linked Telegram account (e.g. they signed
+    up on the website with email/password).
+    */
+    async function notifyReferrerOfNewReferral(
+        referrerId,
+        referredName
+    ) {
+        try {
+            if (!referrerId) return;
+
+            const {
+                data: referrerRow,
+                error: referrerError
+            } = await supabase
+                .from("users")
+                .select("telegram_id, referral_balance")
+                .eq("id", referrerId)
+                .maybeSingle();
+
+            if (referrerError) {
+                console.error(
+                    "Referral notify: referrer lookup error:",
+                    referrerError
+                );
+                return;
+            }
+
+            if (!referrerRow?.telegram_id) return;
+
+            const safeName =
+                String(referredName || "Someone").trim() ||
+                "Someone";
+
+            await sendTelegramUserMessage(
+                String(referrerRow.telegram_id),
+                `🎉 ${safeName} joined using your referral link!\n\n` +
+                `💰 Referral balance increased +${telegramMoney(REFERRAL_BONUS)}\n` +
+                `👥 Referral balance: ${telegramMoney(referrerRow.referral_balance)}`
+            );
+        } catch (notifyError) {
+            console.error(
+                "Referral notify error:",
+                notifyError.message || notifyError
+            );
+        }
+    }
+
     async function telegramBotUserById(telegramId) {
         if (!telegramId) return null;
 
@@ -1746,6 +1816,7 @@
 
         if (referrer) {
             const {
+                data: referralResult,
                 error: referralError
             } = await supabase
                 .rpc(
@@ -1766,6 +1837,19 @@
                 console.error(
                     "Telegram bot referral bonus error:",
                     referralError
+                );
+            } else if (referralResult?.success === true) {
+                // Tell the referrer right away (fire-and-forget).
+                notifyReferrerOfNewReferral(
+                    referrer.id,
+                    tgUser.first_name ||
+                        [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") ||
+                        candidateUsername
+                );
+            } else {
+                console.warn(
+                    "Telegram bot referral bonus not credited:",
+                    referralResult?.message
                 );
             }
         }
@@ -2613,7 +2697,7 @@
         const referralCode = user.username || "";
 
         const referralLink =
-            `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}/${TELEGRAM_WEBAPP_SHORT_NAME}?startapp=${encodeURIComponent(referralCode)}`;
+            telegramBotReferralLink(referralCode);
 
         await sendTelegramUserMessage(
             chatId,
@@ -4804,6 +4888,17 @@
                                 referralResult
                             );
 
+                            if (referralResult?.success === true) {
+
+                                notifyReferrerOfNewReferral(
+                                    referrer.id,
+                                    tgUser.first_name ||
+                                        [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") ||
+                                        candidateUsername
+                                );
+
+                            }
+
                         }
 
                     }
@@ -5308,6 +5403,11 @@
 
                             console.log(
                                 `Referral bonus: ₦${REFERRAL_BONUS} credited to @${referrer.username} for referring @${cleanUsername}`
+                            );
+
+                            notifyReferrerOfNewReferral(
+                                referrer.id,
+                                cleanFullName || cleanUsername
                             );
 
                         }
@@ -6704,7 +6804,7 @@
                         user.username,
 
                     referralLink:
-                        `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}/${TELEGRAM_WEBAPP_SHORT_NAME}?startapp=${user.username}`,
+                        telegramBotReferralLink(user.username),
 
                     bonusPerReferral:
                         REFERRAL_BONUS,
