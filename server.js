@@ -1735,6 +1735,18 @@
             throw insertError;
         }
 
+        // Notify the admin for every brand-new Telegram bot account.
+        if (telegramEnabled) {
+            const signupTime = new Date(newUser.created_at || Date.now()).toLocaleString("en-NG", { timeZone: "Africa/Lagos" });
+            const displayName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || candidateUsername;
+            telegramApi("sendMessage", {
+                chat_id: TELEGRAM_ADMIN_CHAT_ID,
+                text: `🆕 NEW TELEGRAM USER\n\n━━━━━━━━━━━━━━━━━━\n\n👤 Name: ${displayName}\n🔗 Username: @${candidateUsername}\n📱 Telegram: ${tgUser.username ? "@" + tgUser.username : "No username"}\n🆔 Telegram ID: ${telegramId}\n💰 Starting balance: ${telegramMoney(WELCOME_BONUS)}\n👥 Referred by: ${referrer ? "@" + referrer.username : "None"}\n🕐 Joined: ${signupTime}`
+            }, TELEGRAM_ADMIN_BOT_TOKEN).catch((telegramError) => {
+                console.error("Telegram bot new-user notification error:", telegramError.message);
+            });
+        }
+
         if (referrer) {
             const {
                 error: referralError
@@ -2236,32 +2248,14 @@
     async function sendTelegramBotDeposit(chatId) {
         await sendTelegramUserMessage(
             chatId,
-            `💳 *Deposit to Netnaira*\n\n` +
-            `Send your payment to:\n\n` +
-            `🏦 Bank: *${TELEGRAM_DEPOSIT_BANK}*\n` +
-            `👤 Name: *${TELEGRAM_DEPOSIT_ACCOUNT_NAME}*\n` +
-            `🔢 Account: *${TELEGRAM_DEPOSIT_ACCOUNT_MASKED}*\n\n` +
-            `Minimum deposit: *${telegramMoney(3000)}*\n\n` +
-            `After you make the transfer, I will collect the amount and payment screenshot here in Telegram. No Web App is required.`,
+            `💳 *Make a Deposit*\n\nOpen your Netnaira account below to make your deposit securely.\n\nYour account will take you directly to the Deposit page, where you can follow the payment instructions and submit your deposit for review.`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
-                    inline_keyboard: [
-                        [
-                            {
-                                text: "💵 I Have Paid",
-                                callback_data: "bot:deposit_start"
-                            }
-                        ],
-                        [
-                            {
-                                text: "🚀 Use Web App",
-                                web_app: {
-                                    url: `${APP_BASE_URL}/auth.html`
-                                }
-                            }
-                        ]
-                    ]
+                    inline_keyboard: [[{
+                        text: "💳 Open Deposit Page",
+                        web_app: { url: `${APP_BASE_URL}/auth.html?next=deposit.html` }
+                    }]]
                 }
             }
         );
@@ -2359,14 +2353,10 @@
         if (insertError || !deposit) throw insertError || new Error("Deposit insert failed");
 
         try {
-            // The screenshot file_id was created by the USER bot, so it MUST
-            // be resolved with the USER bot token. Telegram file_ids are
-            // bot-specific; using the admin bot token here causes
-            // "wrong file_id or the file is temporarily unavailable".
             const fileInfo = await telegramApi(
                 "getFile",
                 { file_id: photo.file_id },
-                TELEGRAM_USER_BOT_TOKEN
+                TELEGRAM_BOT_TOKEN
             );
 
             if (!fileInfo?.ok || !fileInfo.result?.file_path) {
@@ -2374,7 +2364,7 @@
             }
 
             const imageResponse = await fetch(
-                `https://api.telegram.org/file/bot${TELEGRAM_USER_BOT_TOKEN}/${fileInfo.result.file_path}`
+                `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`
             );
 
             if (!imageResponse.ok) throw new Error("Unable to download Telegram screenshot.");
@@ -2448,7 +2438,7 @@
 
         await sendTelegramUserMessage(
             chatId,
-            `💸 *Withdraw funds*\n\nAvailable balance: *${telegramMoney(user.balance)}*\nMinimum withdrawal: *${telegramMoney(MIN_WITHDRAWAL)}*\n\nI can collect your bank details and withdrawal amount directly here in Telegram.`,
+            `💸 *Withdraw funds*\n\nAvailable balance: *${telegramMoney(user.balance)}*\nMinimum withdrawal: *${telegramMoney(MIN_WITHDRAWAL)}*\n\nComplete your withdrawal securely in the Netnaira Web App.`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
@@ -2707,7 +2697,7 @@
 
             if (data === "bot:deposit_start") {
                 await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, botToken);
-                await beginTelegramBotDeposit(callbackQuery.message.chat.id, telegramId);
+                await sendTelegramBotDeposit(callbackQuery.message.chat.id);
                 return true;
             }
 

@@ -37,6 +37,22 @@
   <script>
     const tg = window.Telegram?.WebApp;
 
+    /*
+      Only allow known internal destinations.
+      This prevents an arbitrary external URL from being supplied
+      through the ?next= parameter.
+    */
+    function getRedirectDestination() {
+      const params = new URLSearchParams(location.search);
+      const next = params.get("next");
+
+      if (next === "deposit.html") {
+        return "/deposit.html";
+      }
+
+      return "/dashboard.html";
+    }
+
     async function authenticate() {
       // Must be opened as a Telegram Mini App — initData only exists there.
       if (!tg || !tg.initData) {
@@ -71,9 +87,15 @@
           return;
         }
 
-        document.getElementById("msg").textContent = "Welcome! Redirecting…";
+        const destination = getRedirectDestination();
+
+        document.getElementById("msg").textContent =
+          destination === "/deposit.html"
+            ? "Welcome! Opening Deposit…"
+            : "Welcome! Redirecting…";
+
         setTimeout(() => {
-          location.href = "/dashboard.html";
+          location.replace(destination);
         }, 600);
 
       } catch (err) {
