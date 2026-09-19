@@ -62,8 +62,7 @@
 
     // USER/Web App bot: this is the bot users message with /start, /deposit, /plans, etc.
     const TELEGRAM_USER_BOT_TOKEN =
-        TELEGRAM_WEBAPP_BOT_TOKEN ||
-        TELEGRAM_BOT_TOKEN;
+        TELEGRAM_WEBAPP_BOT_TOKEN;
 
     const TELEGRAM_ADMIN_CHAT_ID =
         process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -1537,19 +1536,29 @@
     async function sendTelegramUserMessage(chatId, text, extra = {}) {
         if (!TELEGRAM_USER_BOT_TOKEN || !chatId) return null;
 
-        return telegramApi(
-            "sendMessage",
-            {
-                chat_id: chatId,
-                text,
-                parse_mode: extra.parse_mode || undefined,
-                disable_web_page_preview:
-                    extra.disable_web_page_preview !== false,
-                reply_markup:
-                    extra.reply_markup || TELEGRAM_BOT_MENU
-            },
-            TELEGRAM_USER_BOT_TOKEN
-        );
+        const payload = {
+            chat_id: chatId,
+            text,
+            parse_mode: extra.parse_mode || undefined,
+            disable_web_page_preview: extra.disable_web_page_preview !== false,
+            reply_markup: extra.reply_markup || TELEGRAM_BOT_MENU
+        };
+
+        try {
+            return await telegramApi(
+                "sendMessage",
+                payload,
+                TELEGRAM_USER_BOT_TOKEN
+            );
+        } catch (error) {
+            // Never let malformed Markdown prevent the user from receiving a response.
+            if (payload.parse_mode && /can't parse entities|parse entities/i.test(error.message || "")) {
+                delete payload.parse_mode;
+                console.warn("Telegram message parse failed; retrying without parse_mode.");
+                return telegramApi("sendMessage", payload, TELEGRAM_USER_BOT_TOKEN);
+            }
+            throw error;
+        }
     }
 
     async function telegramBotUserById(telegramId) {
@@ -1972,7 +1981,7 @@
         );
     }
 
-    async function handleTelegramBotPlanCallback(callbackQuery, user) {
+    async function handleTelegramBotPlanCallback(callbackQuery, user, botToken = TELEGRAM_USER_BOT_TOKEN) {
         const data =
             callbackQuery?.data || "";
 
@@ -2000,7 +2009,7 @@
                     show_alert:
                         true
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             );
 
             return true;
@@ -2017,7 +2026,7 @@
                     show_alert:
                         true
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             );
 
             return true;
@@ -2029,7 +2038,7 @@
                 callback_query_id:
                     callbackQuery.id
             },
-            TELEGRAM_BOT_TOKEN
+            botToken
         );
 
         await telegramApi(
@@ -2075,13 +2084,13 @@
                     ]
                 }
             },
-            TELEGRAM_BOT_TOKEN
+            botToken
         );
 
         return true;
     }
 
-    async function handleTelegramBotActivateCallback(callbackQuery, user) {
+    async function handleTelegramBotActivateCallback(callbackQuery, user, botToken = TELEGRAM_USER_BOT_TOKEN) {
         const data =
             callbackQuery?.data || "";
 
@@ -2109,7 +2118,7 @@
                     show_alert:
                         true
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             );
 
             return true;
@@ -2162,7 +2171,7 @@
                         show_alert:
                             true
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 return true;
@@ -2182,7 +2191,7 @@
                     text:
                         "Plan activated successfully!"
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             );
 
             await sendTelegramUserMessage(
@@ -2217,7 +2226,7 @@
                     show_alert:
                         true
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             );
         }
 
@@ -2750,7 +2759,8 @@
             if (
                 await handleTelegramBotPlanCallback(
                     callbackQuery,
-                    user
+                    user,
+                    botToken
                 )
             ) {
                 return true;
@@ -2759,7 +2769,8 @@
             if (
                 await handleTelegramBotActivateCallback(
                     callbackQuery,
-                    user
+                    user,
+                    botToken
                 )
             ) {
                 return true;
@@ -2813,6 +2824,8 @@
 
         const text =
             (message.text || "").trim();
+
+        console.log(`Telegram USER message: ${message.from.id} ${message.from.username || message.from.first_name || ""} -> ${text || "[non-text]"}`);
 
         const telegramId = String(message.from.id);
         const chatId = telegramBotChatId(message);
@@ -4128,7 +4141,7 @@
             return;
         }
 
-        if (!TELEGRAM_BOT_TOKEN) {
+        if (!TELEGRAM_USER_BOT_TOKEN && !TELEGRAM_ADMIN_BOT_TOKEN) {
             return;
         }
 
