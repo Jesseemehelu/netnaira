@@ -40,6 +40,10 @@
     const TELEGRAM_BOT_TOKEN =
         process.env.TELEGRAM_BOT_TOKEN;
 
+    // ADMIN bot: used for deposit/withdrawal notifications and admin approval buttons.
+    const TELEGRAM_ADMIN_BOT_TOKEN =
+        TELEGRAM_BOT_TOKEN;
+
     /*
     Separate bot used ONLY for the Mini App
     (auth.html). This can be a completely
@@ -54,7 +58,11 @@
     */
 
     const TELEGRAM_WEBAPP_BOT_TOKEN =
-        process.env.TELEGRAM_WEBAPP_BOT_TOKEN ||
+        process.env.TELEGRAM_WEBAPP_BOT_TOKEN;
+
+    // USER/Web App bot: this is the bot users message with /start, /deposit, /plans, etc.
+    const TELEGRAM_USER_BOT_TOKEN =
+        TELEGRAM_WEBAPP_BOT_TOKEN ||
         TELEGRAM_BOT_TOKEN;
 
     const TELEGRAM_ADMIN_CHAT_ID =
@@ -128,15 +136,9 @@
 
         console.warn("");
         console.warn(
-            "WARNING: TELEGRAM_WEBAPP_BOT_TOKEN is not set."
+            "WARNING: TELEGRAM_WEBAPP_BOT_TOKEN is not set. The USER/Web App bot will fall back to the admin bot token."
         );
-        console.warn(
-            "Falling back to TELEGRAM_BOT_TOKEN for Mini App login verification."
-        );
-        console.warn(
-            "If your Web App button lives on a DIFFERENT bot, set " +
-            "TELEGRAM_WEBAPP_BOT_TOKEN to that bot's token or every login will fail."
-        );
+        console.warn("Set TELEGRAM_WEBAPP_BOT_TOKEN to the token of the bot users should message.");
         console.warn("");
 
     } else {
@@ -1533,7 +1535,7 @@
     }
 
     async function sendTelegramUserMessage(chatId, text, extra = {}) {
-        if (!TELEGRAM_BOT_TOKEN || !chatId) return null;
+        if (!TELEGRAM_USER_BOT_TOKEN || !chatId) return null;
 
         return telegramApi(
             "sendMessage",
@@ -1546,7 +1548,7 @@
                 reply_markup:
                     extra.reply_markup || TELEGRAM_BOT_MENU
             },
-            TELEGRAM_BOT_TOKEN
+            TELEGRAM_USER_BOT_TOKEN
         );
     }
 
@@ -2617,7 +2619,7 @@
         );
     }
 
-    async function handleTelegramBotCallback(callbackQuery) {
+    async function handleTelegramBotCallback(callbackQuery, botToken = TELEGRAM_USER_BOT_TOKEN) {
         const data =
             callbackQuery?.data || "";
 
@@ -2645,7 +2647,7 @@
                         callback_query_id:
                             callbackQuery.id
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 await sendTelegramBotBalance(
@@ -2663,7 +2665,7 @@
                         callback_query_id:
                             callbackQuery.id
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 await sendTelegramBotPlans(
@@ -2680,7 +2682,7 @@
                         callback_query_id:
                             callbackQuery.id
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 await sendTelegramBotDeposit(
@@ -2691,20 +2693,20 @@
             }
 
             if (data === "bot:deposit_start") {
-                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, TELEGRAM_BOT_TOKEN);
+                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, botToken);
                 await beginTelegramBotDeposit(callbackQuery.message.chat.id, telegramId);
                 return true;
             }
 
             if (data === "bot:withdraw_start") {
-                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, TELEGRAM_BOT_TOKEN);
+                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, botToken);
                 await beginTelegramBotWithdraw(callbackQuery.message.chat.id, telegramId);
                 return true;
             }
 
             if (data === "bot:cancel") {
                 clearTelegramBotSession(telegramId);
-                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id, text: "Cancelled." }, TELEGRAM_BOT_TOKEN);
+                await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id, text: "Cancelled." }, botToken);
                 await sendTelegramUserMessage(callbackQuery.message.chat.id, "❌ Current action cancelled.", { reply_markup: telegramBotMainMenuInline() });
                 return true;
             }
@@ -2716,7 +2718,7 @@
                         callback_query_id:
                             callbackQuery.id
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 await sendTelegramBotWithdraw(
@@ -2734,7 +2736,7 @@
                         callback_query_id:
                             callbackQuery.id
                     },
-                    TELEGRAM_BOT_TOKEN
+                    botToken
                 );
 
                 await sendTelegramBotReferral(
@@ -2781,7 +2783,7 @@
                     show_alert:
                         true
                 },
-                TELEGRAM_BOT_TOKEN
+                botToken
             ).catch(() => {});
 
             return true;
@@ -2963,6 +2965,7 @@
 
             if (
                 command === "/plans" ||
+                command === "/earn" ||
                 text === "📈 Plans"
             ) {
                 await sendTelegramBotPlans(
@@ -3047,6 +3050,7 @@
                     `/start — Open the main menu\n` +
                     `/balance — Check your balance\n` +
                     `/plans — View earning plans\n` +
+                    `/earn — View earning plans\n` +
                     `/deposit — Deposit instructions\n` +
                     `/withdraw — Withdrawal information\n` +
                     `/referral — Referral details\n` +
@@ -3108,7 +3112,7 @@
     }
 
     async function setupTelegramBotCommands() {
-        if (!TELEGRAM_BOT_TOKEN) {
+        if (!TELEGRAM_USER_BOT_TOKEN) {
             return;
         }
 
@@ -3129,6 +3133,11 @@
                         },
                         {
                             command: "plans",
+                            description:
+                                "View earning plans"
+                        },
+                        {
+                            command: "earn",
                             description:
                                 "View earning plans"
                         },
@@ -3164,7 +3173,7 @@
                         }
                     ]
                 },
-                TELEGRAM_BOT_TOKEN
+                TELEGRAM_USER_BOT_TOKEN
             );
 
             /*
@@ -3186,7 +3195,7 @@
                         }
                     }
                 },
-                TELEGRAM_BOT_TOKEN
+                TELEGRAM_USER_BOT_TOKEN
             );
 
             console.log(
@@ -3358,7 +3367,8 @@
     */
 
     async function handleTelegramCallback(
-        callbackQuery
+        callbackQuery,
+        botToken = TELEGRAM_ADMIN_BOT_TOKEN
     ) {
 
         if (!callbackQuery) {
@@ -3377,7 +3387,8 @@
             callbackData.startsWith("bot:")
         ) {
             await handleTelegramBotCallback(
-                callbackQuery
+                callbackQuery,
+                botToken
             );
             return;
         }
@@ -3984,6 +3995,35 @@
         "/api/telegram/webhook",
         async (req, res) => {
 
+            // This webhook belongs to the USER/Web App bot.
+            return handleTelegramWebhookUpdate(
+                req,
+                res,
+                TELEGRAM_USER_BOT_TOKEN
+            );
+        }
+    );
+
+    // Separate webhook for the ADMIN bot so its Accept/Reject buttons continue to work.
+    app.post(
+        "/api/telegram/admin-webhook",
+        async (req, res) => {
+            return handleTelegramWebhookUpdate(
+                req,
+                res,
+                TELEGRAM_ADMIN_BOT_TOKEN,
+                true
+            );
+        }
+    );
+
+    async function handleTelegramWebhookUpdate(
+        req,
+        res,
+        botToken,
+        adminOnly = false
+    ) {
+
             /*
             Validate the Telegram secret when one is configured.
             The secret is optional, so a missing secret must not
@@ -4013,7 +4053,8 @@
                 ) {
 
                     await handleTelegramCallback(
-                        req.body.callback_query
+                        req.body.callback_query,
+                        botToken
                     );
 
                 }
@@ -4023,15 +4064,21 @@
                     req.body.message
                 ) {
 
-                    const handledByUserBot =
-                        await handleTelegramUserMessage(
-                            req.body.message
-                        );
-
-                    if (!handledByUserBot) {
+                    if (adminOnly) {
                         await handleTelegramAdminMessage(
                             req.body.message
                         );
+                    } else {
+                        const handledByUserBot =
+                            await handleTelegramUserMessage(
+                                req.body.message
+                            );
+
+                        if (!handledByUserBot) {
+                            await handleTelegramAdminMessage(
+                                req.body.message
+                            );
+                        }
                     }
 
                 }
@@ -4046,8 +4093,7 @@
             }
 
             return res.sendStatus(200);
-        }
-    );
+    }
 
 
     /*
@@ -4263,139 +4309,82 @@
 
     async function setupTelegramUpdates() {
 
-        /*
-        The user-facing bot works whenever a bot
-        token exists. Admin approval buttons remain
-        protected separately by the admin IDs.
-        */
-        if (!TELEGRAM_BOT_TOKEN) {
+        if (!TELEGRAM_ADMIN_BOT_TOKEN && !TELEGRAM_USER_BOT_TOKEN) {
             return;
         }
 
         await setupTelegramBotCommands();
 
-        /*
-        WEBHOOK
-        */
+        const userWebhookUrl =
+            TELEGRAM_WEBHOOK_URL;
 
-        if (
-            TELEGRAM_WEBHOOK_URL
-        ) {
+        const adminWebhookUrl =
+            process.env.TELEGRAM_ADMIN_WEBHOOK_URL ||
+            `${APP_BASE_URL}/api/telegram/admin-webhook`;
+
+        async function configureWebhook(label, token, url) {
+            if (!token || !url) return;
+
+            const webhookBody = {
+                url,
+                allowed_updates: ["callback_query", "message"],
+                drop_pending_updates: false
+            };
+
+            if (TELEGRAM_WEBHOOK_SECRET) {
+                webhookBody.secret_token = TELEGRAM_WEBHOOK_SECRET;
+            }
 
             try {
+                await telegramApi("setWebhook", webhookBody, token);
 
-                const webhookBody = {
-                    url:
-                        TELEGRAM_WEBHOOK_URL,
-
-                    allowed_updates: [
-                        "callback_query",
-                        "message"
-                    ],
-
-                    drop_pending_updates:
-                        false
-                };
-
-                if (TELEGRAM_WEBHOOK_SECRET) {
-                    webhookBody.secret_token =
-                        TELEGRAM_WEBHOOK_SECRET;
-                }
-
-                await telegramApi(
-                    "setWebhook",
-                    webhookBody,
-                    TELEGRAM_BOT_TOKEN
+                const info = await telegramApi(
+                    "getWebhookInfo",
+                    {},
+                    token
                 );
 
-                const webhookInfo =
-                    await telegramApi(
-                        "getWebhookInfo",
-                        {},
-                        TELEGRAM_BOT_TOKEN
-                    );
-
+                console.log(`Telegram ${label} updates: WEBHOOK`);
+                console.log(`${label} webhook URL: ${url}`);
                 console.log(
-                    "Telegram updates: WEBHOOK"
+                    `Telegram ${label} webhook status: ${info?.url || "not set"}`
                 );
 
-                console.log(
-                    `Webhook URL: ${TELEGRAM_WEBHOOK_URL}`
-                );
-
-                console.log(
-                    `Telegram webhook status: ${webhookInfo?.url || "not set"}`
-                );
-
-                if (webhookInfo?.last_error_message) {
+                if (info?.last_error_message) {
                     console.warn(
-                        `Telegram webhook last error: ${webhookInfo.last_error_message}`
+                        `Telegram ${label} webhook last error: ${info.last_error_message}`
                     );
                 }
 
-                return;
-
+                return true;
             } catch (error) {
-
                 console.error(
-                    "Telegram webhook setup error:",
+                    `Telegram ${label} webhook setup error:`,
                     error.message
                 );
-
-                try {
-                    await telegramApi(
-                        "deleteWebhook",
-                        {
-                            drop_pending_updates:
-                                false
-                        },
-                        TELEGRAM_BOT_TOKEN
-                    );
-
-                    console.warn(
-                        "Telegram webhook failed; falling back to LONG POLLING."
-                    );
-
-                    startTelegramPolling();
-                    return;
-
-                } catch (fallbackError) {
-                    console.error(
-                        "Telegram polling fallback error:",
-                        fallbackError.message
-                    );
-                    return;
-                }
+                return false;
             }
         }
 
+        // The Web App bot receives normal user messages.
+        const userConfigured = await configureWebhook(
+            "USER/Web App bot",
+            TELEGRAM_USER_BOT_TOKEN,
+            userWebhookUrl
+        );
 
-        /*
-        TERMUX / LOCAL MODE
-        */
+        // The admin bot receives approval callbacks/messages separately.
+        await configureWebhook(
+            "ADMIN bot",
+            TELEGRAM_ADMIN_BOT_TOKEN,
+            adminWebhookUrl
+        );
 
-        try {
-
-            await telegramApi(
-                "deleteWebhook",
-                {
-                    drop_pending_updates:
-                        false
-                }
+        if (!userConfigured && TELEGRAM_USER_BOT_TOKEN) {
+            console.warn(
+                "USER/Web App webhook could not be configured. Check TELEGRAM_WEBAPP_BOT_TOKEN and TELEGRAM_WEBHOOK_URL."
             );
-
-
-            startTelegramPolling();
-
-        } catch (error) {
-
-            console.error(
-                "Unable to start Telegram polling:",
-                error.message
-            );
-
         }
-
     }
 
 
@@ -8725,21 +8714,41 @@
 
             await setupTelegramUpdates();
 
-            if (TELEGRAM_BOT_TOKEN) {
+            if (TELEGRAM_ADMIN_BOT_TOKEN) {
                 try {
                     const botInfo =
                         await telegramApi(
                             "getMe",
                             {},
-                            TELEGRAM_BOT_TOKEN
+                            TELEGRAM_ADMIN_BOT_TOKEN
                         );
 
                     console.log(
-                        `Telegram bot connected: @${botInfo?.username || "unknown"} (id ${botInfo?.id || "unknown"})`
+                        `Telegram ADMIN bot connected: @${botInfo?.username || "unknown"} (id ${botInfo?.id || "unknown"})`
                     );
                 } catch (telegramStartupError) {
                     console.error(
-                        "Telegram bot connection check failed:",
+                        "Telegram ADMIN bot connection check failed:",
+                        telegramStartupError.message
+                    );
+                }
+            }
+
+            if (TELEGRAM_USER_BOT_TOKEN) {
+                try {
+                    const botInfo =
+                        await telegramApi(
+                            "getMe",
+                            {},
+                            TELEGRAM_USER_BOT_TOKEN
+                        );
+
+                    console.log(
+                        `Telegram USER/Web App bot connected: @${botInfo?.username || "unknown"} (id ${botInfo?.id || "unknown"})`
+                    );
+                } catch (telegramStartupError) {
+                    console.error(
+                        "Telegram USER/Web App bot connection check failed:",
                         telegramStartupError.message
                     );
                 }
