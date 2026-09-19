@@ -3,9 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* Telegram Mini App: open fullscreen on phones and keep it that way */
+(function () {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.platform || tg.platform === "unknown") return; /* normal browser: do nothing */
+
+  function has(v) { try { return tg.isVersionAtLeast(v); } catch (e) { return false; } }
+
+  try { tg.ready(); } catch (e) {}
+  try { tg.expand(); } catch (e) {}
+
+  /* scrolling / swiping down must never close or minimise the app */
+  if (has("7.7")) { try { tg.disableVerticalSwipes(); } catch (e) {} }
+
+  /* match Telegram's own bars to the page so nothing flashes white */
+  if (has("6.9")) { try { tg.setHeaderColor("#050b09"); tg.setBackgroundColor("#050b09"); } catch (e) {} }
+  if (has("7.10")) { try { tg.setBottomBarColor("#050b09"); } catch (e) {} }
+
+  /* fullscreen exists from Bot API 8.0 and is meant for phones */
+  if (has("8.0") && /^(android|ios)/.test(tg.platform) && !tg.isFullscreen) {
+    try { tg.requestFullscreen(); } catch (e) {}
+  }
+})();
+</script>
 <title>Deposit | Netnaira</title>
 
 <style>
+/* ---- Telegram fullscreen safe areas ----
+   In fullscreen, Telegram draws its own buttons (close / menu) over the top of
+   the page and the phone's home bar sits at the bottom. These give us the room
+   to keep content clear of both. Outside fullscreen they are 0. */
+:root{
+  --safe-top:max(env(safe-area-inset-top,0px),calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)));
+  --safe-bottom:max(env(safe-area-inset-bottom,0px),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px)));
+}
 :root{
   --bg:#050b09;--bg2:#09140f;--card:rgba(13,27,21,.78);--card-solid:#0d1c15;
   --green:#20e58f;--green2:#0fc878;--green-light:#72ffc0;--text:#f5fff9;
@@ -20,11 +53,11 @@ body{
  radial-gradient(circle at 90% -8%,rgba(32,229,143,.20),transparent 29%),
  radial-gradient(circle at -15% 25%,rgba(32,229,143,.08),transparent 30%),
  linear-gradient(180deg,#07130d 0%,#050b09 72%);
- padding-bottom:32px;
+ padding-bottom:calc(32px + var(--safe-bottom));
 }
 button,input{font-family:inherit;color:var(--text)}button{-webkit-tap-highlight-color:transparent}
 .header{
- height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+ height:calc(66px + var(--safe-top));display:flex;align-items:center;justify-content:space-between;padding:var(--safe-top) 16px 0;
  position:sticky;top:0;z-index:100;background:rgba(5,11,9,.76);border-bottom:1px solid var(--line);
  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)
 }
@@ -111,12 +144,12 @@ h1{font-size:28px;line-height:1;letter-spacing:-1.2px;margin-bottom:0;color:#fff
 
 /* Premium amount picker */
 .modal-overlay{
- position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:14px;
+ position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
  background:rgba(0,0,0,.76);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
 }
 .modal-overlay.show{display:flex}
 .modal{
- width:min(430px,100%);max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto;margin:auto;background:linear-gradient(160deg,#142b20,#08150f 85%);
+ width:min(430px,100%);max-height:calc(100vh - 28px - var(--safe-top) - var(--safe-bottom));max-height:calc(100dvh - 28px - var(--safe-top) - var(--safe-bottom));overflow:auto;margin:auto;background:linear-gradient(160deg,#142b20,#08150f 85%);
  color:var(--text);border:1px solid rgba(32,229,143,.20);border-radius:25px;padding:18px;
  box-shadow:0 35px 100px rgba(0,0,0,.68);animation:modalIn .28s cubic-bezier(.16,1,.3,1)
 }
@@ -157,15 +190,15 @@ input[type="file"]{display:none}
 .submit-btn{margin-top:3px}.submit-btn:disabled{opacity:.5;pointer-events:none}
 .success-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:17px;display:flex;align-items:center;justify-content:center;background:rgba(32,229,143,.1);color:var(--green-light);font-size:27px;box-shadow:0 10px 30px rgba(32,229,143,.08)}
 .success-modal{text-align:center}.success-modal h3{color:#fff;font-size:18px;margin-bottom:6px}.success-modal p{color:var(--muted2);font-size:10px;line-height:1.5;margin-bottom:16px}
-.toast{position:fixed;left:50%;bottom:22px;z-index:800;max-width:calc(100% - 28px);padding:11px 14px;border-radius:12px;background:#14291f;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:800;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s ease;box-shadow:0 12px 35px rgba(0,0,0,.35)}
+.toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-bottom));z-index:800;max-width:calc(100% - 28px);padding:11px 14px;border-radius:12px;background:#14291f;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:800;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s ease;box-shadow:0 12px 35px rgba(0,0,0,.35)}
 .toast.show{transform:translate(-50%,0);opacity:1}
 @media(max-width:390px){.account-number{font-size:21px;letter-spacing:.9px}.copy-btn{min-width:68px;padding:0 10px}.container{width:calc(100% - 18px)}h1{font-size:29px}.modal{padding:16px}.amount-grid{gap:7px}}
-@media(min-width:700px){.header{padding:0 32px}.hero{padding-top:26px}}
+@media(min-width:700px){.header{padding:var(--safe-top) 32px 0}.hero{padding-top:26px}}
 
 /* Short screens (small phones, Telegram in-app view): tighten the layout
    so the whole Deposit Account card is visible without scrolling. */
 @media(max-height:740px){
- .header{height:56px}
+ .header{height:calc(56px + var(--safe-top))}
  .back-btn{margin-top:6px;padding:7px 11px 7px 9px}
  .hero{padding:6px 2px 10px}
  h1{font-size:24px}
@@ -1248,6 +1281,7 @@ loadPageData();
 
 </body>
 </html>
+
 
 
 

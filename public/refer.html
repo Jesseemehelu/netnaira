@@ -10,9 +10,44 @@
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* Telegram Mini App: open fullscreen on phones and keep it that way */
+(function () {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.platform || tg.platform === "unknown") return; /* normal browser: do nothing */
+
+  function has(v) { try { return tg.isVersionAtLeast(v); } catch (e) { return false; } }
+
+  try { tg.ready(); } catch (e) {}
+  try { tg.expand(); } catch (e) {}
+
+  /* scrolling / swiping down must never close or minimise the app */
+  if (has("7.7")) { try { tg.disableVerticalSwipes(); } catch (e) {} }
+
+  /* match Telegram's own bars to the page so nothing flashes white */
+  if (has("6.9")) { try { tg.setHeaderColor("#06100b"); tg.setBackgroundColor("#06100b"); } catch (e) {} }
+  if (has("7.10")) { try { tg.setBottomBarColor("#06100b"); } catch (e) {} }
+
+  /* fullscreen exists from Bot API 8.0 and is meant for phones */
+  if (has("8.0") && /^(android|ios)/.test(tg.platform) && !tg.isFullscreen) {
+    try { tg.requestFullscreen(); } catch (e) {}
+  }
+})();
+</script>
+
 <title>Refer &amp; Earn | Netnaira</title>
 
 <style>
+
+/* ---- Telegram fullscreen safe areas ----
+   In fullscreen, Telegram draws its own buttons (close / menu) over the top of
+   the page and the phone's home bar sits at the bottom. These give us the room
+   to keep content clear of both. Outside fullscreen they are 0. */
+:root{
+  --safe-top:max(env(safe-area-inset-top,0px),calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)));
+  --safe-bottom:max(env(safe-area-inset-bottom,0px),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px)));
+}
 
 :root{
     --bg:#06100b;
@@ -52,7 +87,7 @@ body{
         Arial,
         sans-serif;
 
-    padding-bottom:40px;
+    padding-bottom:calc(40px + var(--safe-bottom));
 }
 
 body::before{
@@ -128,13 +163,13 @@ button{
 /* HEADER */
 
 .header{
-    height:68px;
+    height:calc(68px + var(--safe-top));
 
     display:flex;
     align-items:center;
     justify-content:space-between;
 
-    padding:0 18px;
+    padding:var(--safe-top) 18px 0;
 
     position:sticky;
     top:0;
@@ -966,7 +1001,7 @@ h1 span{
 
     left:50%;
 
-    bottom:26px;
+    bottom:calc(26px + var(--safe-bottom));
 
     z-index:800;
 
@@ -1004,7 +1039,7 @@ h1 span{
 @media(min-width:700px){
 
     .header{
-        padding:0 35px;
+        padding:var(--safe-top) 35px 0;
     }
 
     .hero{
@@ -2059,4 +2094,5 @@ loadBalance();
 </body>
 
 </html>
+
 

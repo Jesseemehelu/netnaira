@@ -259,29 +259,32 @@
     referral code, so there's nothing extra
     to generate or look up.
 
-    The link now points at the Telegram BOT
-    itself (not the Mini App), using
-    Telegram's standard bot deep link:
+    There are two kinds of referral link, and
+    both work the same way once someone uses one:
 
-        https://t.me/<bot>?start=<username>
+    1. REFER PAGE (refer.html, /api/referrals)
+       shares the Mini App link:
 
-    When someone taps it and presses START,
-    Telegram sends the bot "/start <username>".
-    The bot's /start handler
-    (getOrCreateTelegramBotUser) reads that
-    parameter as the referral code.
+           https://t.me/<bot>/<shortname>?startapp=<username>
 
-    Whoever starts the bot with a valid
-    referral code gets tied to that referrer,
-    and the referrer is credited
-    REFERRAL_BONUS once, at the moment the new
-    account is created. The referrer is also
-    sent a Telegram message right away
-    (notifyReferrerOfNewReferral).
+       Telegram opens the Web App straight away
+       and auth.html forwards start_param as `ref`
+       to POST /api/auth/telegram.
 
-    Old Mini App links (?startapp=<username>)
-    still work too — auth.html still forwards
-    start_param as `ref`.
+    2. BOT's "👥 Referral" message shares the bot
+       deep link:
+
+           https://t.me/<bot>?start=<username>
+
+       Telegram sends the bot "/start <username>",
+       which getOrCreateTelegramBotUser reads.
+
+    Either way, a brand-new account is tied to the
+    referrer, the referrer is credited
+    REFERRAL_BONUS once (credit_referral_bonus),
+    and the referrer is sent a Telegram message
+    right away (notifyReferrerOfNewReferral).
+    Existing users opening a link change nothing.
     ========================================
     */
 
@@ -307,13 +310,20 @@
     const REFERRAL_BONUS = 500;
 
     /*
-    Referral link that opens the BOT (not the
-    Mini App). Usernames are [a-z0-9_] only, so
-    they're always valid Telegram start
-    parameters.
+    Referral link that opens the BOT. Usernames
+    are [a-z0-9_] only, so they're always valid
+    Telegram start parameters.
     */
     function telegramBotReferralLink(username) {
         return `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}?start=${encodeURIComponent(username || "")}`;
+    }
+
+    /*
+    Referral link that opens the Web App (Mini
+    App) directly. Used by the refer page.
+    */
+    function telegramWebAppReferralLink(username) {
+        return `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}/${TELEGRAM_WEBAPP_SHORT_NAME}?startapp=${encodeURIComponent(username || "")}`;
     }
 
     /*
@@ -5207,7 +5217,20 @@
                         JSON.stringify(ref)
                     );
 
-                    if (ref) {
+                    /*
+                    Same clean-up the bot's /start handler
+                    does: trim, drop a leading @, lowercase.
+                    */
+
+                    const cleanRef =
+                        typeof ref === "string"
+                            ? ref
+                                .trim()
+                                .replace(/^@/, "")
+                                .toLowerCase()
+                            : "";
+
+                    if (cleanRef) {
 
                         const { data: referrerRow, error: referrerLookupError } =
                             await supabase
@@ -5215,7 +5238,7 @@
                                 .select("id, username")
                                 .eq(
                                     "username",
-                                    String(ref).toLowerCase()
+                                    cleanRef
                                 )
                                 .maybeSingle();
 
@@ -7255,7 +7278,7 @@
                         user.username,
 
                     referralLink:
-                        telegramBotReferralLink(user.username),
+                        telegramWebAppReferralLink(user.username),
 
                     bonusPerReferral:
                         REFERRAL_BONUS,

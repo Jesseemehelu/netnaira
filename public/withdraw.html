@@ -4,8 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#07110c">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* Telegram Mini App: open fullscreen on phones and keep it that way */
+(function () {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.platform || tg.platform === "unknown") return; /* normal browser: do nothing */
+
+  function has(v) { try { return tg.isVersionAtLeast(v); } catch (e) { return false; } }
+
+  try { tg.ready(); } catch (e) {}
+  try { tg.expand(); } catch (e) {}
+
+  /* scrolling / swiping down must never close or minimise the app */
+  if (has("7.7")) { try { tg.disableVerticalSwipes(); } catch (e) {} }
+
+  /* match Telegram's own bars to the page so nothing flashes white */
+  if (has("6.9")) { try { tg.setHeaderColor("#07110c"); tg.setBackgroundColor("#07110c"); } catch (e) {} }
+  if (has("7.10")) { try { tg.setBottomBarColor("#07110c"); } catch (e) {} }
+
+  /* fullscreen exists from Bot API 8.0 and is meant for phones */
+  if (has("8.0") && /^(android|ios)/.test(tg.platform) && !tg.isFullscreen) {
+    try { tg.requestFullscreen(); } catch (e) {}
+  }
+})();
+</script>
 <title>Netnaira — Withdraw</title>
 <style>
+/* ---- Telegram fullscreen safe areas ----
+   In fullscreen, Telegram draws its own buttons (close / menu) over the top of
+   the page and the phone's home bar sits at the bottom. These give us the room
+   to keep content clear of both. Outside fullscreen they are 0. */
+:root{
+  --safe-top:max(env(safe-area-inset-top,0px),calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)));
+  --safe-bottom:max(env(safe-area-inset-bottom,0px),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px)));
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --green:#16c784;--green-light:#27e59a;--dark:#07110c;--dark2:#0a1510;
@@ -16,7 +49,7 @@ html{scroll-behavior:smooth}
 body{
   font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   background:var(--dark);color:var(--text);min-height:100vh;overflow-x:hidden;
-  padding-bottom:35px;
+  padding-bottom:calc(35px + var(--safe-bottom));
 }
 body:before{
   content:"";position:fixed;width:330px;height:330px;right:-170px;top:-150px;
@@ -32,7 +65,7 @@ button,input,select{font:inherit}
 button{border:0;cursor:pointer}
 .app{width:min(560px,calc(100% - 24px));margin:auto}
 .header{
-  height:70px;display:flex;align-items:center;justify-content:space-between;
+  height:calc(70px + var(--safe-top));padding-top:var(--safe-top);display:flex;align-items:center;justify-content:space-between;
   border-bottom:1px solid var(--border);margin-bottom:18px;
 }
 .back{
@@ -144,7 +177,7 @@ input::placeholder{color:#5e6c64}
 .overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(7px);
   -webkit-backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;
-  padding:18px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease
+  padding:calc(18px + var(--safe-top)) 18px calc(18px + var(--safe-bottom));z-index:100;opacity:0;pointer-events:none;transition:opacity .2s ease
 }
 .overlay.show{opacity:1;pointer-events:auto}
 .modal{
@@ -735,4 +768,5 @@ input::placeholder{color:#5e6c64}
 </script>
 </body>
 </html>
+
 
