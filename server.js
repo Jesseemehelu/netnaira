@@ -1709,7 +1709,7 @@
                     0,
 
                 welcome_bonus_shown:
-                    false,
+                    true,
 
                 referred_by:
                     referrer
@@ -2438,13 +2438,17 @@
 
         await sendTelegramUserMessage(
             chatId,
-            `💸 *Withdraw funds*\n\nAvailable balance: *${telegramMoney(user.balance)}*\nMinimum withdrawal: *${telegramMoney(MIN_WITHDRAWAL)}*\n\nComplete your withdrawal securely in the Netnaira Web App.`,
+            `💸 *Withdraw funds*\n\nAvailable balance: *${telegramMoney(user.balance)}*\nMinimum withdrawal: *${telegramMoney(MIN_WITHDRAWAL)}*\n\nTap *Start Withdrawal* to continue securely in the Netnaira Web App.`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: "🏦 Start Withdrawal", callback_data: "bot:withdraw_start" }],
-                        [{ text: "🚀 Use Web App", web_app: { url: `${APP_BASE_URL}/auth.html` } }]
+                        [{
+                            text: "🏦 Start Withdrawal",
+                            web_app: {
+                                url: `${APP_BASE_URL}/auth.html?next=withdraw.html`
+                            }
+                        }]
                     ]
                 }
             }
@@ -2589,8 +2593,27 @@
             return;
         }
 
-        const referralCode =
-            user.username || "";
+        const {
+            count: referralCount,
+            error: referralCountError
+        } = await supabase
+            .from("referral_earnings")
+            .select("referred_user_id", {
+                count: "exact",
+                head: true
+            })
+            .eq("referrer_id", user.id);
+
+        if (referralCountError) {
+            console.error(
+                "Telegram referral count error:",
+                referralCountError
+            );
+        }
+
+        const count = Number(referralCount || 0);
+        const referralBalance = Number(user.referral_balance || 0);
+        const referralCode = user.username || "";
 
         const referralLink =
             `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}?start=${encodeURIComponent(referralCode)}`;
@@ -2598,24 +2621,20 @@
         await sendTelegramUserMessage(
             chatId,
             `👥 *Referral Program*\n\n` +
-            `Your referral code: *${referralCode}*\n` +
-            `Referral balance: *${telegramMoney(user.referral_balance)}*\n\n` +
-            `Share this link with friends:\n${referralLink}`,
+            `💰 Referral balance: *${telegramMoney(referralBalance)}*\n` +
+            `👥 Referral count: *${count}*\n` +
+            `🔗 Referral link:\n${referralLink}\n\n` +
+            `You can manage and withdraw your referral balance from your Referral page in the Web App.`,
             {
-                parse_mode:
-                    "Markdown",
+                parse_mode: "Markdown",
                 reply_markup: {
                     inline_keyboard: [
-                        [
-                            {
-                                text:
-                                    "🚀 Open Referral Page",
-                                web_app: {
-                                    url:
-                                        `${APP_BASE_URL}/auth.html`
-                                }
+                        [{
+                            text: "💸 Open Referral Page",
+                            web_app: {
+                                url: `${APP_BASE_URL}/auth.html?next=refer.html`
                             }
-                        ]
+                        }]
                     ]
                 }
             }
@@ -2703,7 +2722,7 @@
 
             if (data === "bot:withdraw_start") {
                 await telegramApi("answerCallbackQuery", { callback_query_id: callbackQuery.id }, botToken);
-                await beginTelegramBotWithdraw(callbackQuery.message.chat.id, telegramId);
+                await sendTelegramBotWithdraw(user, callbackQuery.message.chat.id);
                 return true;
             }
 

@@ -50,6 +50,14 @@
         return "/deposit.html";
       }
 
+      if (next === "refer.html") {
+        return "/refer.html";
+      }
+
+      if (next === "withdraw.html") {
+        return "/withdraw.html";
+      }
+
       return "/dashboard.html";
     }
 
@@ -92,7 +100,11 @@
         document.getElementById("msg").textContent =
           destination === "/deposit.html"
             ? "Welcome! Opening Deposit…"
-            : "Welcome! Redirecting…";
+            : destination === "/refer.html"
+              ? "Welcome! Opening Referrals…"
+              : destination === "/withdraw.html"
+                ? "Welcome! Opening Withdrawal…"
+                : "Welcome! Redirecting…";
 
         setTimeout(() => {
           location.replace(destination);
