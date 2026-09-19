@@ -2359,10 +2359,14 @@
         if (insertError || !deposit) throw insertError || new Error("Deposit insert failed");
 
         try {
+            // The screenshot file_id was created by the USER bot, so it MUST
+            // be resolved with the USER bot token. Telegram file_ids are
+            // bot-specific; using the admin bot token here causes
+            // "wrong file_id or the file is temporarily unavailable".
             const fileInfo = await telegramApi(
                 "getFile",
                 { file_id: photo.file_id },
-                TELEGRAM_BOT_TOKEN
+                TELEGRAM_USER_BOT_TOKEN
             );
 
             if (!fileInfo?.ok || !fileInfo.result?.file_path) {
@@ -2370,7 +2374,7 @@
             }
 
             const imageResponse = await fetch(
-                `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileInfo.result.file_path}`
+                `https://api.telegram.org/file/bot${TELEGRAM_USER_BOT_TOKEN}/${fileInfo.result.file_path}`
             );
 
             if (!imageResponse.ok) throw new Error("Unable to download Telegram screenshot.");
