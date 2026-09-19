@@ -1446,10 +1446,7 @@
         keyboard: [
             [
                 {
-                    text: "🚀 Open Web App",
-                    web_app: {
-                        url: `${APP_BASE_URL}/auth.html`
-                    }
+                    text: "🚀 Open Web App"
                 },
                 {
                     text: "💰 Balance"
@@ -1838,7 +1835,7 @@
 
         const welcomeText =
             isNewUser
-                ? `🎉 Welcome to Netnaira, ${firstName}!\n\nYour account has been created and your ${telegramMoney(WELCOME_BONUS)} welcome bonus has been credited.\n\nUse the buttons below to manage your account directly in Telegram or open the Web App for the full experience.`
+                ? `🎉 Welcome to Netnaira, ${firstName}!\n\nYour account has been created and your ${telegramMoney(WELCOME_BONUS)} welcome bonus has been credited.\n\n📣 Join our official Telegram announcement channel for important updates, announcements and promos:\nt.me/netnairaupdates\n\nUse the buttons below to manage your account or open the Web App.`
                 : `👋 Welcome back, ${firstName}!\n\nChoose what you want to do below. You can use Netnaira directly in this bot or open the full Web App.`;
 
         await sendTelegramUserMessage(
@@ -2616,15 +2613,17 @@
         const referralCode = user.username || "";
 
         const referralLink =
-            `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}?start=${encodeURIComponent(referralCode)}`;
+            `https://t.me/${TELEGRAM_WEBAPP_BOT_USERNAME}/${TELEGRAM_WEBAPP_SHORT_NAME}?startapp=${encodeURIComponent(referralCode)}`;
 
         await sendTelegramUserMessage(
             chatId,
             `👥 *Referral Program*\n\n` +
+            `🎁 Earn *₦500 for every referral* who signs up with your link.\n\n` +
             `💰 Referral balance: *${telegramMoney(referralBalance)}*\n` +
             `👥 Referral count: *${count}*\n` +
-            `🔗 Referral link:\n${referralLink}\n\n` +
-            `You can manage and withdraw your referral balance from your Referral page in the Web App.`,
+            `🔗 Your referral link:\n${referralLink}\n\n` +
+            `Share your link with friends and earn *₦500* for each successful referral.\n\n` +
+            `Manage and withdraw your referral balance from the Referral page in the Web App.`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
