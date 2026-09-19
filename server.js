@@ -3984,13 +3984,22 @@
         "/api/telegram/webhook",
         async (req, res) => {
 
+            /*
+            Validate the Telegram secret when one is configured.
+            The secret is optional, so a missing secret must not
+            disable the user-facing bot.
+            */
             if (
-                !TELEGRAM_WEBHOOK_SECRET ||
+                TELEGRAM_WEBHOOK_SECRET &&
                 req.get(
                     "X-Telegram-Bot-Api-Secret-Token"
                 ) !==
                     TELEGRAM_WEBHOOK_SECRET
             ) {
+
+                console.warn(
+                    "Rejected Telegram webhook request: invalid secret token."
+                );
 
                 return res.sendStatus(401);
 
@@ -4273,39 +4282,38 @@
             TELEGRAM_WEBHOOK_URL
         ) {
 
-            if (
-                !TELEGRAM_WEBHOOK_SECRET
-            ) {
-
-                console.error(
-                    "TELEGRAM_WEBHOOK_URL is set but TELEGRAM_WEBHOOK_SECRET is missing."
-                );
-
-                return;
-            }
-
-
             try {
+
+                const webhookBody = {
+                    url:
+                        TELEGRAM_WEBHOOK_URL,
+
+                    allowed_updates: [
+                        "callback_query",
+                        "message"
+                    ],
+
+                    drop_pending_updates:
+                        false
+                };
+
+                if (TELEGRAM_WEBHOOK_SECRET) {
+                    webhookBody.secret_token =
+                        TELEGRAM_WEBHOOK_SECRET;
+                }
 
                 await telegramApi(
                     "setWebhook",
-                    {
-                        url:
-                            TELEGRAM_WEBHOOK_URL,
-
-                        secret_token:
-                            TELEGRAM_WEBHOOK_SECRET,
-
-                        allowed_updates: [
-                            "callback_query",
-                            "message"
-                        ],
-
-                        drop_pending_updates:
-                            false
-                    }
+                    webhookBody,
+                    TELEGRAM_BOT_TOKEN
                 );
 
+                const webhookInfo =
+                    await telegramApi(
+                        "getWebhookInfo",
+                        {},
+                        TELEGRAM_BOT_TOKEN
+                    );
 
                 console.log(
                     "Telegram updates: WEBHOOK"
@@ -4315,6 +4323,18 @@
                     `Webhook URL: ${TELEGRAM_WEBHOOK_URL}`
                 );
 
+                console.log(
+                    `Telegram webhook status: ${webhookInfo?.url || "not set"}`
+                );
+
+                if (webhookInfo?.last_error_message) {
+                    console.warn(
+                        `Telegram webhook last error: ${webhookInfo.last_error_message}`
+                    );
+                }
+
+                return;
+
             } catch (error) {
 
                 console.error(
@@ -4322,9 +4342,31 @@
                     error.message
                 );
 
-            }
+                try {
+                    await telegramApi(
+                        "deleteWebhook",
+                        {
+                            drop_pending_updates:
+                                false
+                        },
+                        TELEGRAM_BOT_TOKEN
+                    );
 
-            return;
+                    console.warn(
+                        "Telegram webhook failed; falling back to LONG POLLING."
+                    );
+
+                    startTelegramPolling();
+                    return;
+
+                } catch (fallbackError) {
+                    console.error(
+                        "Telegram polling fallback error:",
+                        fallbackError.message
+                    );
+                    return;
+                }
+            }
         }
 
 
@@ -8682,6 +8724,26 @@
 
 
             await setupTelegramUpdates();
+
+            if (TELEGRAM_BOT_TOKEN) {
+                try {
+                    const botInfo =
+                        await telegramApi(
+                            "getMe",
+                            {},
+                            TELEGRAM_BOT_TOKEN
+                        );
+
+                    console.log(
+                        `Telegram bot connected: @${botInfo?.username || "unknown"} (id ${botInfo?.id || "unknown"})`
+                    );
+                } catch (telegramStartupError) {
+                    console.error(
+                        "Telegram bot connection check failed:",
+                        telegramStartupError.message
+                    );
+                }
+            }
 
 
             /*
