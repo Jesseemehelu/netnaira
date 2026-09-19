@@ -1247,6 +1247,9 @@
     user's chat with the bot, same as any other
     message from it.
 
+    Every user is reached, however many there
+    are (recipients are loaded in pages of 1000).
+
     Users who have blocked the bot or never
     started a chat with it will fail silently
     (Telegram returns 403 for those) - we just
@@ -1278,15 +1281,22 @@
 
         try {
 
-            const {
-                data: users,
-                error
-            } = await supabase
-                .from("users")
-                .select("telegram_id")
-                .not("telegram_id", "is", null);
+            /*
+            Every user with a linked Telegram account.
+            Paged (1000 at a time) because Supabase
+            returns at most 1000 rows per request, so
+            a single query silently dropped everyone
+            past the first 1000 users.
+            */
 
-            if (error) {
+            let recipients;
+
+            try {
+
+                recipients =
+                    await fetchAllBotRecipientIds();
+
+            } catch (error) {
 
                 console.error(
                     "Broadcast recipients fetch error:",
@@ -1307,11 +1317,6 @@
                 return;
 
             }
-
-            const recipients =
-                (users || [])
-                    .map((user) => user.telegram_id)
-                    .filter(Boolean);
 
             if (!recipients.length) {
 
@@ -1409,6 +1414,420 @@
             ).catch(() => {});
 
         }
+
+    }
+
+
+
+    /*
+    ========================================
+    WITHDRAWAL HIGHLIGHT (every hour)
+    ========================================
+
+    Every hour the bot sends every user
+    a "Withdrawal Highlight" message, e.g.
+
+        Withdrawal Highlight 👇
+        User - rig****6536 withdrew 135,000 naira
+
+        What are you waiting for? Deposit,
+        activate a plan and start withdrawing daily.
+
+        [ 💳 Deposit Now ]  [ 📈 View Plans ]
+
+    - Username: consonant + vowel + another
+      consonant, then ****, then 4 random digits.
+    - Amount: random between ₦300,000 and
+      ₦1,200,000 (in steps of ₦500).
+    - No repeats: a username is never used
+      twice, and an amount isn't reused until
+      every possible amount has been shown once.
+    - Timing: runs at the top of every hour on
+      the clock (00:00, 01:00, 02:00 ...), not
+      "an hour after boot". A restart or a
+      redeploy therefore never spams users with
+      an extra message or resets the schedule.
+    - Sent from the user bot as a normal message,
+      so it pings the user.
+    - Turn the whole thing off by setting the env
+      var WITHDRAWAL_HIGHLIGHTS_ENABLED=false.
+    ========================================
+    */
+
+    const HIGHLIGHT_INTERVAL_MS =
+        60 * 60 * 1000;
+
+    const HIGHLIGHT_MIN_AMOUNT =
+        300000;
+
+    const HIGHLIGHT_MAX_AMOUNT =
+        1200000;
+
+    const HIGHLIGHT_AMOUNT_STEP =
+        500;
+
+    const HIGHLIGHT_CONSONANTS =
+        "bcdfghjklmnpqrstvwxyz".split("");
+
+    const HIGHLIGHT_VOWELS =
+        "aeiou".split("");
+
+    const usedHighlightUsernames =
+        new Set();
+
+    const usedHighlightAmounts =
+        new Set();
+
+    let highlightRunning =
+        false;
+
+    let lastHighlightSlot =
+        null;
+
+    function pickRandom(list) {
+
+        return list[
+            crypto.randomInt(list.length)
+        ];
+
+    }
+
+    /*
+    e.g. "rig****6536": consonant, vowel, a
+    different consonant, ****, 4 random digits.
+    */
+
+    function generateHighlightUsername() {
+
+        for (let attempt = 0; attempt < 200; attempt++) {
+
+            const first =
+                pickRandom(HIGHLIGHT_CONSONANTS);
+
+            const vowel =
+                pickRandom(HIGHLIGHT_VOWELS);
+
+            let second =
+                pickRandom(HIGHLIGHT_CONSONANTS);
+
+            while (second === first) {
+                second =
+                    pickRandom(HIGHLIGHT_CONSONANTS);
+            }
+
+            const digits =
+                String(
+                    crypto.randomInt(10000)
+                ).padStart(4, "0");
+
+            const username =
+                `${first}${vowel}${second}****${digits}`;
+
+            if (!usedHighlightUsernames.has(username)) {
+
+                usedHighlightUsernames.add(username);
+
+                return username;
+
+            }
+
+        }
+
+        // ~21 million combinations, so this is practically unreachable.
+        usedHighlightUsernames.clear();
+
+        return generateHighlightUsername();
+
+    }
+
+    function generateHighlightAmount() {
+
+        const slots =
+            Math.floor(
+                (
+                    HIGHLIGHT_MAX_AMOUNT -
+                    HIGHLIGHT_MIN_AMOUNT
+                ) / HIGHLIGHT_AMOUNT_STEP
+            ) + 1;
+
+        // Every amount has been shown once: start a fresh round.
+        if (usedHighlightAmounts.size >= slots) {
+            usedHighlightAmounts.clear();
+        }
+
+        let amount;
+
+        do {
+
+            amount =
+                HIGHLIGHT_MIN_AMOUNT +
+                crypto.randomInt(slots) *
+                HIGHLIGHT_AMOUNT_STEP;
+
+        } while (usedHighlightAmounts.has(amount));
+
+        usedHighlightAmounts.add(amount);
+
+        return amount;
+
+    }
+
+    /*
+    Every user who has a Telegram account linked.
+    Paged, because Supabase returns at most 1000
+    rows per request.
+    */
+
+    async function fetchAllBotRecipientIds() {
+
+        const PAGE_SIZE =
+            1000;
+
+        const ids =
+            new Set();
+
+        for (let from = 0; ; from += PAGE_SIZE) {
+
+            const {
+                data,
+                error
+            } = await supabase
+                .from("users")
+                .select("telegram_id")
+                .not("telegram_id", "is", null)
+                .order("id", { ascending: true })
+                .range(from, from + PAGE_SIZE - 1);
+
+            if (error) {
+                throw error;
+            }
+
+            for (const row of data || []) {
+
+                if (row.telegram_id) {
+                    ids.add(String(row.telegram_id));
+                }
+
+            }
+
+            if (!data || data.length < PAGE_SIZE) {
+                break;
+            }
+
+        }
+
+        return [...ids];
+
+    }
+
+    async function sendWithdrawalHighlight() {
+
+        if (!TELEGRAM_USER_BOT_TOKEN) {
+            return;
+        }
+
+        if (highlightRunning) {
+
+            console.warn(
+                "Withdrawal highlight: previous send still running, skipping."
+            );
+
+            return;
+
+        }
+
+        highlightRunning =
+            true;
+
+        try {
+
+            const recipients =
+                await fetchAllBotRecipientIds();
+
+            if (!recipients.length) {
+                return;
+            }
+
+            const username =
+                generateHighlightUsername();
+
+            const amount =
+                generateHighlightAmount();
+
+            // HTML mode, because "****" would break Markdown.
+            const text =
+                `<b>Withdrawal Highlight</b> 👇\n\n` +
+                `User - ${username} withdrew ` +
+                `<b>${amount.toLocaleString("en-US")} naira</b>\n\n` +
+                `What are you waiting for? Deposit, activate a plan ` +
+                `and start withdrawing daily.`;
+
+            const replyMarkup = {
+                inline_keyboard: [[
+                    {
+                        text:
+                            "💳 Deposit Now",
+
+                        web_app: {
+                            url:
+                                `${APP_BASE_URL}/auth.html?next=deposit.html`
+                        }
+                    },
+                    {
+                        text:
+                            "📈 View Plans",
+
+                        callback_data:
+                            "bot:plans"
+                    }
+                ]]
+            };
+
+            let sent = 0;
+            let failed = 0;
+
+            for (
+                let i = 0;
+                i < recipients.length;
+                i += BROADCAST_BATCH_SIZE
+            ) {
+
+                const batch =
+                    recipients.slice(
+                        i,
+                        i + BROADCAST_BATCH_SIZE
+                    );
+
+                const results =
+                    await Promise.allSettled(
+                        batch.map(
+                            (telegramId) =>
+                                telegramApi(
+                                    "sendMessage",
+                                    {
+                                        chat_id:
+                                            telegramId,
+
+                                        text,
+
+                                        parse_mode:
+                                            "HTML",
+
+                                        reply_markup:
+                                            replyMarkup
+                                    },
+                                    TELEGRAM_USER_BOT_TOKEN
+                                )
+                        )
+                    );
+
+                for (const result of results) {
+
+                    if (result.status === "fulfilled") {
+                        sent += 1;
+                    } else {
+                        failed += 1;
+                    }
+
+                }
+
+                if (i + BROADCAST_BATCH_SIZE < recipients.length) {
+                    await sleep(BROADCAST_BATCH_DELAY_MS);
+                }
+
+            }
+
+            console.log(
+                `Withdrawal highlight sent (${username} / ${amount}): ${sent} delivered, ${failed} failed`
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Withdrawal highlight error:",
+                error.message || error
+            );
+
+        } finally {
+
+            highlightRunning =
+                false;
+
+        }
+
+    }
+
+    /*
+    Sleeps until the top of the next hour on the
+    clock, sends, then schedules the following one.
+    */
+
+    function scheduleNextWithdrawalHighlight() {
+
+        const delay =
+            Math.max(
+                1000,
+                HIGHLIGHT_INTERVAL_MS -
+                (Date.now() % HIGHLIGHT_INTERVAL_MS)
+            );
+
+        setTimeout(
+            async () => {
+
+                // Which hourly mark this is (timers can fire a hair early).
+                const slot =
+                    Math.round(
+                        Date.now() / HIGHLIGHT_INTERVAL_MS
+                    );
+
+                if (slot !== lastHighlightSlot) {
+
+                    lastHighlightSlot =
+                        slot;
+
+                    await sendWithdrawalHighlight();
+
+                }
+
+                scheduleNextWithdrawalHighlight();
+
+            },
+            delay
+        );
+
+    }
+
+    function startWithdrawalHighlights() {
+
+        if (
+            String(
+                process.env.WITHDRAWAL_HIGHLIGHTS_ENABLED
+            ).toLowerCase() === "false"
+        ) {
+
+            console.log(
+                "Withdrawal highlights: DISABLED"
+            );
+
+            return;
+
+        }
+
+        if (!TELEGRAM_USER_BOT_TOKEN) {
+
+            console.log(
+                "Withdrawal highlights: skipped (no user bot token)"
+            );
+
+            return;
+
+        }
+
+        scheduleNextWithdrawalHighlight();
+
+        console.log(
+            "Withdrawal highlights: RUNNING (every hour)"
+        );
 
     }
 
@@ -1571,6 +1990,38 @@
                 return telegramApi("sendMessage", payload, TELEGRAM_USER_BOT_TOKEN);
             }
             throw error;
+        }
+    }
+
+    /*
+    Tell a user, in the bot, that their deposit
+    was submitted and is waiting for approval.
+
+    Best-effort only: never throws, so a Telegram
+    hiccup can never affect the deposit itself.
+    Skipped silently for users with no linked
+    Telegram account (e.g. website email signups).
+    */
+    async function notifyUserDepositPending(
+        telegramId,
+        amount
+    ) {
+        try {
+            if (!telegramId) return;
+
+            await sendTelegramUserMessage(
+                String(telegramId),
+                `⏳ *Deposit submitted*\n\n` +
+                `Amount: *${telegramMoney(amount)}*\n` +
+                `Status: *Pending approval*\n\n` +
+                `We'll notify you as soon as it's reviewed.`,
+                { parse_mode: "Markdown" }
+            );
+        } catch (notifyError) {
+            console.error(
+                "Deposit pending notify error:",
+                notifyError.message || notifyError
+            );
         }
     }
 
@@ -2329,7 +2780,7 @@
     async function sendTelegramBotDeposit(chatId) {
         await sendTelegramUserMessage(
             chatId,
-            `💳 *Deposit*\n\nTap below to pay and submit your deposit for review.\n\nMinimum: *${telegramMoney(3000)}*`,
+            `💳 *Deposit*\n\nTap below to pay and submit your deposit for review.`,
             {
                 parse_mode: "Markdown",
                 reply_markup: {
@@ -7363,7 +7814,7 @@
                 } = await supabase
                     .from("users")
                     .select(
-                        "id, full_name, username"
+                        "id, full_name, username, telegram_id"
                     )
                     .eq(
                         "id",
@@ -7810,6 +8261,21 @@
                                 "id",
                                 depositId
                             );
+
+                    } else {
+
+                        /*
+                        The deposit reached the admin for review,
+                        so tell the user it's pending approval.
+                        Not awaited and fully self-contained, so
+                        it can never flip the deposit to
+                        telegram_failed.
+                        */
+
+                        notifyUserDepositPending(
+                            user.telegram_id,
+                            deposit.amount
+                        );
 
                     }
 
@@ -8903,6 +9369,8 @@
             console.log(
                 "Daily earnings sweep: RUNNING (every 15 min)"
             );
+
+            startWithdrawalHighlights();
 
             console.log("");
 
