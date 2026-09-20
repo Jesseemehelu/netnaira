@@ -1431,17 +1431,17 @@
 
     /*
     ========================================
-    WITHDRAWAL HIGHLIGHT (every hour)
+    WITHDRAWAL HIGHLIGHT (every 3 hours)
     ========================================
 
-    Every hour the bot sends every user
+    Every 3 hours the bot sends every user
     a "Withdrawal Highlight" message, e.g.
 
         Withdrawal Highlight 👇
-        User - rig****6536 withdrew 135,000 naira
+        User - rig****6536 withdrew 765,500 naira
 
-        What are you waiting for? Deposit,
-        activate a plan and start withdrawing daily.
+        Deposit, activate a plan and start
+        withdrawing daily.
 
         [ 💳 Deposit Now ]  [ 📈 View Plans ]
 
@@ -1452,9 +1452,10 @@
     - No repeats: a username is never used
       twice, and an amount isn't reused until
       every possible amount has been shown once.
-    - Timing: runs at the top of every hour on
-      the clock (00:00, 01:00, 02:00 ...), not
-      "an hour after boot". A restart or a
+    - Timing: runs at fixed 3-hour marks on the
+      clock (00:00, 03:00, 06:00 ... UTC, which is
+      01:00, 04:00, 07:00 ... in Nigeria), not
+      "3 hours after boot". A restart or a
       redeploy therefore never spams users with
       an extra message or resets the schedule.
     - Sent from the user bot as a normal message,
@@ -1465,7 +1466,7 @@
     */
 
     const HIGHLIGHT_INTERVAL_MS =
-        60 * 60 * 1000;
+        3 * 60 * 60 * 1000;
 
     const HIGHLIGHT_MIN_AMOUNT =
         300000;
@@ -1666,11 +1667,10 @@
 
             // HTML mode, because "****" would break Markdown.
             const text =
-                `<b>Withdrawal Highlight</b> 👇\n\n` +
+                `<b>Withdrawal Highlight</b> 👇\n` +
                 `User - ${username} withdrew ` +
                 `<b>${amount.toLocaleString("en-US")} naira</b>\n\n` +
-                `What are you waiting for? Deposit, activate a plan ` +
-                `and start withdrawing daily.`;
+                `Deposit, activate a plan and start withdrawing daily.`;
 
             const replyMarkup = {
                 inline_keyboard: [[
@@ -1768,7 +1768,7 @@
     }
 
     /*
-    Sleeps until the top of the next hour on the
+    Sleeps until the next 3-hour mark on the
     clock, sends, then schedules the following one.
     */
 
@@ -1784,7 +1784,7 @@
         setTimeout(
             async () => {
 
-                // Which hourly mark this is (timers can fire a hair early).
+                // Which 3-hour mark this is (timers can fire a hair early).
                 const slot =
                     Math.round(
                         Date.now() / HIGHLIGHT_INTERVAL_MS
@@ -1836,7 +1836,7 @@
         scheduleNextWithdrawalHighlight();
 
         console.log(
-            "Withdrawal highlights: RUNNING (every hour)"
+            "Withdrawal highlights: RUNNING (every 3 hours)"
         );
 
     }
