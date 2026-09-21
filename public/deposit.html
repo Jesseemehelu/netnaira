@@ -192,6 +192,19 @@ input[type="file"]{display:none}
 .success-modal{text-align:center}.success-modal h3{color:#fff;font-size:18px;margin-bottom:6px}.success-modal p{color:var(--muted2);font-size:10px;line-height:1.5;margin-bottom:16px}
 .toast{position:fixed;left:50%;bottom:calc(22px + var(--safe-bottom));z-index:800;max-width:calc(100% - 28px);padding:11px 14px;border-radius:12px;background:#14291f;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:800;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.2s ease;box-shadow:0 12px 35px rgba(0,0,0,.35)}
 .toast.show{transform:translate(-50%,0);opacity:1}
+/* Important notice popup */
+.notice-modal{text-align:center;border-color:rgba(255,125,125,.28);background:linear-gradient(160deg,#1c2a1f,#08150f 85%)}
+.notice-icon{width:58px;height:58px;margin:0 auto 12px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(255,216,106,.12);border:1px solid rgba(255,216,106,.28);font-size:28px;box-shadow:0 10px 30px rgba(255,216,106,.10)}
+.notice-modal h3{color:#fff;font-size:21px;font-weight:950;letter-spacing:-.5px;margin-bottom:14px}
+.notice-item{display:flex;align-items:flex-start;gap:11px;text-align:left;padding:13px;border-radius:15px;margin-bottom:10px}
+.notice-item .notice-emoji{font-size:22px;line-height:1.1;flex-shrink:0}
+.notice-item strong{display:block;font-size:14px;font-weight:950;line-height:1.35;letter-spacing:-.1px}
+.notice-item small{display:block;margin-top:4px;font-size:10px;font-weight:700;line-height:1.4}
+.notice-bad{background:rgba(255,90,90,.10);border:1px solid rgba(255,118,118,.38)}
+.notice-bad strong{color:#ff8e8e}.notice-bad small{color:#ffc4c4}
+.notice-good{background:rgba(32,229,143,.10);border:1px solid rgba(32,229,143,.38)}
+.notice-good strong{color:var(--green-light)}.notice-good small{color:#c8d8d1}
+.notice-modal .modal-btn{margin-top:6px}
 @media(max-width:390px){.account-number{font-size:21px;letter-spacing:.9px}.copy-btn{min-width:68px;padding:0 10px}.container{width:calc(100% - 18px)}h1{font-size:29px}.modal{padding:16px}.amount-grid{gap:7px}}
 @media(min-width:700px){.header{padding:var(--safe-top) 32px 0}.hero{padding-top:26px}}
 
@@ -286,7 +299,7 @@ input[type="file"]{display:none}
 
             <div class="account-row">
                 <div class="account-number" id="accountNumberMasked">
-                    668****981
+                    1014210848
                 </div>
 
                 <button
@@ -305,12 +318,12 @@ input[type="file"]{display:none}
 
             <div class="detail">
                 <span>Account name</span>
-                <strong>Vtuexpress Jes (paymentpoint)</strong>
+                <strong>Vtuexpress - Jesse1212</strong>
             </div>
 
             <div class="detail">
                 <span>Bank</span>
-                <strong>PalmPay</strong>
+                <strong>Moniepoint</strong>
             </div>
 
         </div>
@@ -521,6 +534,54 @@ input[type="file"]{display:none}
     </div>
 </div>
 
+<!-- IMPORTANT NOTICE POPUP -->
+
+<div
+    class="modal-overlay"
+    id="noticeModal"
+    aria-hidden="true"
+>
+
+    <div
+        class="modal notice-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="noticeModalTitle"
+    >
+
+        <div class="notice-icon">⚠️</div>
+
+        <h3 id="noticeModalTitle">Important Notice</h3>
+
+        <div class="notice-item notice-bad">
+            <span class="notice-emoji">🚫</span>
+            <div>
+                <strong>Do NOT use Opay or PalmPay to deposit.</strong>
+                <small>High traffic congestion.</small>
+            </div>
+        </div>
+
+        <div class="notice-item notice-good">
+            <span class="notice-emoji">✅</span>
+            <div>
+                <strong>Use other banks like GTBank, Access, Zenith, etc.</strong>
+                <small>Faster and smoother deposits.</small>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            class="modal-btn"
+            id="noticeGotItBtn"
+            onclick="closeNoticeModal()"
+        >
+            Got it
+        </button>
+
+    </div>
+
+</div>
+
 <!-- SUCCESS POPUP -->
 
 <div class="modal-overlay" id="successModal">
@@ -558,7 +619,7 @@ const uploadTitle = document.getElementById("uploadTitle");
 const uploadText = document.getElementById("uploadText");
 const submitBtn = document.getElementById("submitBtn");
 
-const REAL_ACCOUNT_NUMBER = "6682064981";
+const REAL_ACCOUNT_NUMBER = "1014210848";
 
 const MIN_DEPOSIT = 3000;
 const MAX_DEPOSIT = 10000000;
@@ -706,6 +767,29 @@ function confirmAmountSelection(){
         formatNaira(selectedAmount);
 
     closeAmountModal();
+    openNoticeModal();
+}
+
+function openNoticeModal(){
+    const overlay = document.getElementById("noticeModal");
+
+    if(!overlay){
+        return;
+    }
+
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden","false");
+}
+
+function closeNoticeModal(){
+    const overlay = document.getElementById("noticeModal");
+
+    if(!overlay){
+        return;
+    }
+
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden","true");
 }
 
 function openAmountModal(){
