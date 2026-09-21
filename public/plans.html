@@ -419,30 +419,6 @@
       pointer-events: none;
     }
 
-    /* Finished / unavailable plan */
-    .activate-btn:disabled,
-    .activate-btn:disabled:hover,
-    .activate-btn:disabled:active {
-      background: #2a3530;
-      color: #7d8c85;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .plan.sold-out {
-      border-color: rgba(255,255,255,.05);
-    }
-
-    .plan.sold-out .plan-icon,
-    .plan.sold-out .plan-name,
-    .plan.sold-out .plan-duration,
-    .plan.sold-out .price-label,
-    .plan.sold-out .price,
-    .plan.sold-out .earning-box {
-      opacity: .55;
-    }
-
     /* ================= NOTICE ================= */
 
     .notice {
@@ -804,8 +780,8 @@
       <div class="plans-grid">
 
 
-        <!-- STARTER (FINISHED) -->
-        <article class="plan sold-out">
+        <!-- STARTER -->
+        <article class="plan">
 
           <div class="plan-header">
             <div class="plan-title-wrap">
@@ -835,10 +811,9 @@
 
           <button
             class="activate-btn"
-            disabled
-            aria-disabled="true"
+            onclick="attemptActivation('Starter', 3000, 1000, 30000)"
           >
-            Unavailable / Finished
+            Activate Plan
           </button>
 
         </article>
@@ -856,8 +831,6 @@
                 <div class="plan-duration">30 day plan</div>
               </div>
             </div>
-
-            <div class="badge gold">LIMITED SLOTS</div>
           </div>
 
           <div class="price-label">Activation amount</div>
@@ -1386,20 +1359,12 @@
 
     /* ================= ACTIVATION CHECK ================= */
 
-    /* Plans that are finished and cannot be activated */
-    const FINISHED_PLANS = ["Starter"];
-
     function attemptActivation(
       name,
       cost,
       daily,
       total
     ) {
-
-      if (FINISHED_PLANS.includes(name)) {
-        showToast("This plan is finished and unavailable.");
-        return;
-      }
 
       selectedPlan = {
         name,
