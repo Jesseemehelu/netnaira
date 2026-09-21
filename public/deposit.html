@@ -128,6 +128,8 @@ h1{font-size:28px;line-height:1;letter-spacing:-1.2px;margin-bottom:0;color:#fff
 .detail span:first-child{color:var(--muted);font-size:9px;font-weight:750}.detail strong{color:#f5fffa;font-size:11px;font-weight:900;text-align:right}
 .simple-note{padding:11px 12px;margin-top:11px;border-radius:13px;background:rgba(32,229,143,.045);border:1px solid rgba(32,229,143,.11);color:#c8d9d1;font-size:10px;line-height:1.55}
 .simple-note strong{color:var(--green-light)}
+.simple-note.warn{background:rgba(255,216,106,.07);border-color:rgba(255,216,106,.28);color:var(--gold);font-weight:800}
+.simple-note.warn strong{color:var(--gold);font-weight:950}
 .verify-btn,.submit-btn,.continue-btn,.modal-btn{
  width:100%;min-height:51px;border:0;border-radius:14px;background:linear-gradient(145deg,#28eb98,#10bb76);color:#031009;
  font-size:12px;font-weight:950;cursor:pointer;box-shadow:0 12px 28px rgba(32,229,143,.14);transition:.18s
@@ -318,7 +320,7 @@ input[type="file"]{display:none}
 
             <div class="detail">
                 <span>Account name</span>
-                <strong>Vtuexpress - Jesse1212</strong>
+                <strong>Vtuexpress2-nke</strong>
             </div>
 
             <div class="detail">
@@ -328,10 +330,9 @@ input[type="file"]{display:none}
 
         </div>
 
-        <div class="simple-note">
-            <strong>After payment:</strong>
-            send the exact amount above to the account, then tap
-            Proceed and upload your payment screenshot for verification.
+        <div class="simple-note warn">
+            <strong>⚠️ Do not use Opay or PalmPay to deposit.</strong>
+            Use other banks like GTBank, Access, Zenith, etc.
         </div>
 
         <button
@@ -340,7 +341,7 @@ input[type="file"]{display:none}
             id="proceedBtn"
             onclick="handleProceedClick()"
         >
-            Proceed
+            I have paid
         </button>
 
     </section>
