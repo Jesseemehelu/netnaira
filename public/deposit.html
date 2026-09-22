@@ -330,11 +330,6 @@ input[type="file"]{display:none}
 
         </div>
 
-        <div class="simple-note warn">
-            <strong>⚠️ Do not use Opay or PalmPay to deposit.</strong>
-            Use other banks like GTBank, Access, Zenith, etc.
-        </div>
-
         <button
             type="button"
             class="verify-btn"
@@ -535,54 +530,6 @@ input[type="file"]{display:none}
     </div>
 </div>
 
-<!-- IMPORTANT NOTICE POPUP -->
-
-<div
-    class="modal-overlay"
-    id="noticeModal"
-    aria-hidden="true"
->
-
-    <div
-        class="modal notice-modal"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="noticeModalTitle"
-    >
-
-        <div class="notice-icon">⚠️</div>
-
-        <h3 id="noticeModalTitle">Important Notice</h3>
-
-        <div class="notice-item notice-bad">
-            <span class="notice-emoji">🚫</span>
-            <div>
-                <strong>Do NOT use Opay or PalmPay to deposit.</strong>
-                <small>High traffic congestion.</small>
-            </div>
-        </div>
-
-        <div class="notice-item notice-good">
-            <span class="notice-emoji">✅</span>
-            <div>
-                <strong>Use other banks like GTBank, Access, Zenith, etc.</strong>
-                <small>Faster and smoother deposits.</small>
-            </div>
-        </div>
-
-        <button
-            type="button"
-            class="modal-btn"
-            id="noticeGotItBtn"
-            onclick="closeNoticeModal()"
-        >
-            Got it
-        </button>
-
-    </div>
-
-</div>
-
 <!-- SUCCESS POPUP -->
 
 <div class="modal-overlay" id="successModal">
@@ -768,29 +715,6 @@ function confirmAmountSelection(){
         formatNaira(selectedAmount);
 
     closeAmountModal();
-    openNoticeModal();
-}
-
-function openNoticeModal(){
-    const overlay = document.getElementById("noticeModal");
-
-    if(!overlay){
-        return;
-    }
-
-    overlay.classList.add("show");
-    overlay.setAttribute("aria-hidden","false");
-}
-
-function closeNoticeModal(){
-    const overlay = document.getElementById("noticeModal");
-
-    if(!overlay){
-        return;
-    }
-
-    overlay.classList.remove("show");
-    overlay.setAttribute("aria-hidden","true");
 }
 
 function openAmountModal(){
